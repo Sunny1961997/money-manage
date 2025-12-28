@@ -1,0 +1,13 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/dashboard/account-stats/page": "app/dashboard/account-stats/page.js",
+  "/dashboard/customers/page": "app/dashboard/customers/page.js",
+  "/dashboard/onboarding/customer/page": "app/dashboard/onboarding/customer/page.js",
+  "/dashboard/onboarding/quick/page": "app/dashboard/onboarding/quick/page.js",
+  "/dashboard/profile/page": "app/dashboard/profile/page.js",
+  "/dashboard/screening/batch/page": "app/dashboard/screening/batch/page.js",
+  "/dashboard/screening/quick/page": "app/dashboard/screening/quick/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js"
+}

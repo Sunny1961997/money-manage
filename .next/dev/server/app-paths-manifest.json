@@ -1,0 +1,6 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/dashboard/onboarding/customer/page": "app/dashboard/onboarding/customer/page.js",
+  "/dashboard/profile/page": "app/dashboard/profile/page.js",
+  "/login/page": "app/login/page.js"
+}
