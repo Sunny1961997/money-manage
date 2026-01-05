@@ -69,10 +69,42 @@ export async function POST(req: Request) {
     body: forwardBody,
   })
 
+  const contentType = res.headers.get("content-type") || ""
+  const responseText = await res.text()
+  console.log("[API] Laravel onboarding response status:", res.status)
+  console.log("[API] Laravel onboarding response headers:", Object.fromEntries(res.headers.entries()))
+  console.log("[API] Laravel onboarding response body:", responseText)
+
   if (!res.ok) {
-    return NextResponse.json({ status: false, error: await res.text() }, { status: res.status })
+    // Try to return JSON error if possible, otherwise include raw text
+    if (contentType.includes("application/json")) {
+      try {
+        const jsonErr = JSON.parse(responseText)
+        return NextResponse.json(jsonErr, { status: res.status })
+      } catch {
+        // fallthrough to text
+      }
+    }
+    return NextResponse.json(
+      {
+        status: false,
+        message: responseText || "Unknown error",
+        error: responseText || "Unknown error",
+        statusCode: res.status,
+        headers: Object.fromEntries(res.headers.entries()),
+      },
+      { status: res.status }
+    )
   }
 
-  const data = await res.json()
-  return NextResponse.json(data)
+  // Success: parse JSON if possible, otherwise return text as a JSON message
+  if (contentType.includes("application/json")) {
+    try {
+      const data = JSON.parse(responseText)
+      return NextResponse.json(data)
+    } catch {
+      // fall through to send as message
+    }
+  }
+  return NextResponse.json({ status: true, message: responseText }, { status: res.status })
 }

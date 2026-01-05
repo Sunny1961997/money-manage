@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -222,6 +222,7 @@ function IndividualForm({
   const [fuzziness, setFuzziness] = useState("")
   const [remarks, setRemarks] = useState("")
   const [files, setFiles] = useState<File[]>([])
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const router = useRouter()
   const { toast } = useToast()
@@ -257,6 +258,8 @@ function IndividualForm({
     const valid = selected.filter(f => f.size <= 2 * 1024 * 1024).slice(0, 5)
     setFiles(valid)
   }
+
+  const openFilePicker = () => fileInputRef.current?.click()
 
   // Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
@@ -309,19 +312,23 @@ function IndividualForm({
         credentials: "include",
         body: formData,
       })
+      const data = await res.json().catch(async () => ({ message: await res.text() }))
       if (res.ok) {
+        const msg = data?.message || "Onboarding submitted successfully"
+        toast({ title: "Success", description: msg })
         router.push("/dashboard/customers")
       } else {
-        const err = await res.json()
-        toast({ title: "Onboarding failed", description: err?.error || "Unknown error", variant: "destructive" })
+        const details = data?.errors ? (Object.values(data.errors as Record<string, string[]>).flat().join("; ")) : ""
+        const errText = details || data?.message || data?.error || "Unknown error"
+        toast({ title: "Onboarding failed", description: errText, variant: "destructive" })
       }
     } catch (err: any) {
-      toast({ title: "Onboarding failed", description: err?.message || "Unknown error", variant: "destructive" })
+      toast({ title: "Onboarding failed", description: err?.message || "Network error", variant: "destructive" })
     }
   }
 
   return (
-    <form className="space-y-6" onSubmit={handleSubmit}>
+    <form className="space-y-6 pb-0" onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}>
       <div className="flex items-center gap-2 mb-4">
         <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Individual</span>
         <h3 className="text-lg font-semibold">New Individual Registration</h3>
@@ -496,15 +503,15 @@ function IndividualForm({
             <Label>Gender *</Label>
             <RadioGroup value={gender} onValueChange={handleGenderRadio} className="flex flex-col gap-2 mt-2">
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="male" id="male" />
+                <RadioGroupItem value="Male" id="male" />
                 <Label htmlFor="male">Male</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="female" id="female" />
+                <RadioGroupItem value="Female" id="female" />
                 <Label htmlFor="female">Female</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="other" id="other" />
+                <RadioGroupItem value="Other" id="other" />
                 <Label htmlFor="other">Other</Label>
               </div>
             </RadioGroup>
@@ -700,16 +707,20 @@ function IndividualForm({
           <Upload className="w-5 h-5 text-blue-600" />
           <h4 className="font-semibold">Upload Documents</h4>
         </div>
-        <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center">
+        <div
+          className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
+          onClick={openFilePicker}
+        >
           <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
           <p className="text-sm text-blue-600 mb-1">Add Documents</p>
           <p className="text-xs text-muted-foreground">Max 5 files, each up to 2MB (Images, PDFs, Docs)</p>
           <input
+            ref={fileInputRef}
             type="file"
             multiple
             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,.txt,.gif,.bmp,.tiff,.svg,.webp,.heic"
             onChange={handleFileChange}
-            className="mt-2"
+            className="mt-2 hidden"
             data-testid="file-input"
           />
           <div className="mt-2 flex flex-col items-center gap-1">
@@ -740,15 +751,28 @@ function CorporateForm({
   occupations: Array<{ value: string; label: string }>
   idTypes: Array<{ value: string; label: string }>
 }) {
-  const [ubos, setUbos] = useState([{ id: 1 }])
+  const [ubos, setUbos] = useState([
+    { id: 1, idType: "", role: "", type: "", name: "", isPep: false, nationality: "", idNo: "", idIssue: "", idExpiry: "", dob: "", ownershipPercentage: "" }
+  ])
+  const [corpFiles, setCorpFiles] = useState<File[]>([])
+  const corpFileInputRef = useRef<HTMLInputElement | null>(null)
 
   const addUBO = () => {
-    setUbos([...ubos, { id: ubos.length + 1 }])
+    setUbos([...ubos, { id: ubos.length + 1, idType: "", role: "", type: "", name: "", isPep: false, nationality: "", idNo: "", idIssue: "", idExpiry: "", dob: "", ownershipPercentage: "" }])
   }
 
   const removeUBO = (id: number) => {
     setUbos(ubos.filter((ubo) => ubo.id !== id))
   }
+
+  const setUboField = (
+    id: number,
+    field: "idType" | "role" | "type" | "name" | "isPep" | "nationality" | "idNo" | "idIssue" | "idExpiry" | "dob" | "ownershipPercentage",
+    value: string | boolean
+  ) => {
+    setUbos((prev) => prev.map(u => u.id === id ? { ...u, [field]: value } : u))
+  }
+
   const corporate_customer_type = [
     { value: "Supplier", label: "Supplier" },
     { value: "Buyer", label: "Buyer" },
@@ -831,8 +855,150 @@ function CorporateForm({
     { value: "Level 2", label: "Level 2" },
   ]
 
+  const [companyName, setCompanyName] = useState("")
+  const [companyAddress, setCompanyAddress] = useState("")
+  const [city, setCity] = useState("")
+  const [poBox, setPoBox] = useState("")
+  const [officeNo, setOfficeNo] = useState("")
+  const [mobileNo, setMobileNo] = useState("")
+  const [email, setEmail] = useState("")
+  const [tradeLicenseNo, setTradeLicenseNo] = useState("")
+  const [licenseIssueDate, setLicenseIssueDate] = useState("")
+  const [licenseExpiryDate, setLicenseExpiryDate] = useState("")
+  const [vatRegistrationNo, setVatRegistrationNo] = useState("")
+  const [tenancyContractExpiryDate, setTenancyContractExpiryDate] = useState("")
+  const [expectedNoOfTransactions, setExpectedNoOfTransactions] = useState<string>("")
+  const [expectedVolume, setExpectedVolume] = useState<string>("")
+  const [isImportExport, setIsImportExport] = useState(false)
+  const [dealWithGoods, setDealWithGoods] = useState(false)
+  const [kycCollected, setKycCollected] = useState(false)
+  const [isRegisteredGoAML, setIsRegisteredGoAML] = useState(false)
+  const [isAdverseNews, setIsAdverseNews] = useState(false)
+
+  const [companyCountry, setCompanyCountry] = useState("")
+  const [corporateCustomerType, setCorporateCustomerType] = useState("")
+  const [officeCountryCode, setOfficeCountryCode] = useState("")
+  const [mobileCountryCode, setMobileCountryCode] = useState("")
+  const [tradeLicenseIssuedAt, setTradeLicenseIssuedAt] = useState("")
+  const [tradeLicenseIssuedBy, setTradeLicenseIssuedBy] = useState("")
+  const [entityType, setEntityType] = useState("")
+  const [countriesOfOperation, setCountriesOfOperation] = useState<string[]>([])
+  const [businessActivity, setBusinessActivity] = useState("")
+  const [productSource, setProductSource] = useState("")
+  const [paymentMode, setPaymentMode] = useState("")
+  const [deliveryChannel, setDeliveryChannel] = useState("")
+  const [corpFuzziness, setCorpFuzziness] = useState("")
+  const [corpRemarks, setCorpRemarks] = useState("")
+  const [hasSisterConcern, setHasSisterConcern] = useState(false)
+  const [productTypesCorp, setProductTypesCorp] = useState<string[]>([])
+  const [accountHoldingBankName, setAccountHoldingBankName] = useState("")
+
+  const handleSingleSelect = (setter: (v: string) => void) => (value: string | string[]) => {
+    if (typeof value === "string") setter(value)
+  }
+  const handleMultiSelect = (setter: (v: string[]) => void) => (value: string | string[]) => {
+    if (Array.isArray(value)) setter(value)
+  }
+  const handleCorpFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return
+    const selected = Array.from(e.target.files)
+    // Max 5 files, each up to 5MB
+    const valid = selected.filter(f => f.size <= 5 * 1024 * 1024).slice(0, 5)
+    setCorpFiles(valid)
+  }
+
+  const openCorpFilePicker = () => corpFileInputRef.current?.click()
+
+  const router = useRouter()
+  const { toast } = useToast()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const payload: any = {
+      customer_type: "corporate",
+      onboarding_type: "full",
+      screening_fuzziness: corpFuzziness,
+      remarks: corpRemarks,
+      corporate_details: {
+        company_name: companyName,
+        company_address: companyAddress,
+        city,
+        country_incorporated: companyCountry,
+        po_box: poBox,
+        customer_type: corporateCustomerType,
+        office_country_code: officeCountryCode,
+        office_no: officeNo,
+        mobile_country_code: mobileCountryCode,
+        mobile_no: mobileNo,
+        email,
+        trade_license_no: tradeLicenseNo,
+        trade_license_issued_at: tradeLicenseIssuedAt,
+        trade_license_issued_by: tradeLicenseIssuedBy,
+        license_issue_date: licenseIssueDate,
+        license_expiry_date: licenseExpiryDate,
+        vat_registration_no: vatRegistrationNo,
+        tenancy_contract_expiry_date: tenancyContractExpiryDate,
+        entity_type: entityType,
+        business_activity: businessActivity,
+        is_entity_dealting_with_import_export: isImportExport,
+        has_sister_concern: hasSisterConcern,
+        account_holding_bank_name: accountHoldingBankName,
+        product_source: productSource,
+        payment_mode: paymentMode,
+        delivery_channel: deliveryChannel,
+        expected_no_of_transactions: expectedNoOfTransactions ? Number(expectedNoOfTransactions) : null,
+        expected_volume: expectedVolume ? Number(expectedVolume) : null,
+        dual_use_goods: dealWithGoods,
+        kyc_documents_collected_with_form: kycCollected,
+        is_entity_registered_in_GOAML: isRegisteredGoAML,
+        is_entity_having_adverse_news: isAdverseNews,
+      },
+      products: productTypesCorp.map(id => Number(id)),
+      country_operations: countriesOfOperation,
+      corporate_related_persons: ubos.map(u => ({
+        type: u.type,
+        name: u.name,
+        is_pep: !!u.isPep,
+        nationality: u.nationality,
+        id_type: u.idType,
+        id_no: u.idNo,
+        id_issue: u.idIssue || null,
+        id_expiry: u.idExpiry || null,
+        dob: u.dob || null,
+        role: u.role,
+        ownership_percentage: u.ownershipPercentage ? Number(u.ownershipPercentage) : null,
+      })),
+    }
+
+    try {
+      const formData = new FormData()
+      formData.append("data", JSON.stringify(payload))
+      corpFiles.forEach((file) => formData.append("documents[]", file))
+      const res = await fetch("/api/onboarding", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      })
+      const data = await res.json().catch(async () => ({ message: await res.text() }))
+      console.log("After calling onboarding api response", res.status, data.message)
+      // toast({ title: "Onboarding failed", description: data.message })
+
+      if (res.ok) {
+        const msg = data?.message || "Onboarding submitted successfully"
+        toast({ title: "Success", description: msg })
+        router.push("/dashboard/customers")
+      } else {
+        const details = data?.errors ? (Object.values(data.errors as Record<string, string[]>).flat().join("; ")) : ""
+        const errText = details || data?.message || data?.error || "Unknown error"
+        toast({ title: "Onboarding failed", description: data.message })
+      }
+    } catch (err: any) {
+      toast({ title: "Onboarding failed", description: err?.message || "Network error"})
+    }
+  }
+
   return (
-    <div className="space-y-6">
+    <form className="space-y-6 pb-0" onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}>
       <div className="flex items-center gap-2 mb-4">
         <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Corporate</span>
         <h3 className="text-lg font-semibold">New Corporate Registration</h3>
@@ -847,36 +1013,36 @@ function CorporateForm({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Company Name *</Label>
-            <Input placeholder="Enter the Company Name" />
+            <Input placeholder="Enter the Company Name" value={companyName} onChange={e => setCompanyName(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Company Address *</Label>
-            <Input placeholder="Enter the Company address" />
+            <Input placeholder="Enter the Company address" value={companyAddress} onChange={e => setCompanyAddress(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>City *</Label>
-            <Input placeholder="Enter the city" />
+            <Input placeholder="Enter the city" value={city} onChange={e => setCity(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Country of Incorporation *</Label>
             <Combobox
               options={countries}
-              value=""
-              onValueChange={() => {}}
+              value={companyCountry}
+              onValueChange={handleSingleSelect(setCompanyCountry)}
               placeholder="Select a country"
               searchPlaceholder="Search country..."
             />
           </div>
           <div className="space-y-2">
             <Label>PO Box No *</Label>
-            <Input placeholder="Enter the PO Box No" />
+            <Input placeholder="Enter the PO Box No" value={poBox} onChange={e => setPoBox(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Customer Type *</Label>
             <Combobox
               options={corporate_customer_type}
-              value=""
-              onValueChange={() => {}}
+              value={corporateCustomerType}
+              onValueChange={handleSingleSelect(setCorporateCustomerType)}
               placeholder="Select Customer Type"
               searchPlaceholder="Search type..."
             />
@@ -896,15 +1062,15 @@ function CorporateForm({
               <Label>Country Code *</Label>
               <Combobox
                 options={countryCodes}
-                value=""
-                onValueChange={() => {}}
+                value={officeCountryCode}
+                onValueChange={handleSingleSelect(setOfficeCountryCode)}
                 placeholder="Select"
                 searchPlaceholder="Search code..."
               />
             </div>
             <div className="space-y-2">
               <Label>Contact Office No</Label>
-              <Input placeholder="Enter the Contact Office No" />
+              <Input placeholder="Enter the Contact Office No" value={officeNo} onChange={e => setOfficeNo(e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -912,20 +1078,20 @@ function CorporateForm({
               <Label>Country Code *</Label>
               <Combobox
                 options={countryCodes}
-                value=""
-                onValueChange={() => {}}
+                value={mobileCountryCode}
+                onValueChange={handleSingleSelect(setMobileCountryCode)}
                 placeholder="Select"
                 searchPlaceholder="Search code..."
               />
             </div>
             <div className="space-y-2">
               <Label>Contact Mobile No *</Label>
-              <Input placeholder="Enter the Contact Mobile No" />
+              <Input placeholder="Enter the Contact Mobile No" value={mobileNo} onChange={e => setMobileNo(e.target.value)} />
             </div>
           </div>
           <div className="col-span-2 space-y-2">
             <Label>Email</Label>
-            <Input type="email" placeholder="Enter your email (abc@dom.com)" />
+            <Input type="email" placeholder="Enter your email (abc@dom.com)" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
         </div>
       </Card>
@@ -939,14 +1105,14 @@ function CorporateForm({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Trade License/CR No *</Label>
-            <Input placeholder="Enter Trade License/CR No" />
+            <Input placeholder="Enter Trade License/CR No" value={tradeLicenseNo} onChange={e => setTradeLicenseNo(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Trade License/CR Issued At *</Label>
             <Combobox
               options={countries}
-              value=""
-              onValueChange={() => {}}
+              value={tradeLicenseIssuedAt}
+              onValueChange={handleSingleSelect(setTradeLicenseIssuedAt)}
               placeholder="Select a country"
               searchPlaceholder="Search country..."
             />
@@ -955,27 +1121,27 @@ function CorporateForm({
             <Label>Trade License/COI Issued By *</Label>
             <Combobox
               options={licance_issue_authorities}
-              value=""
-              onValueChange={() => {}}
+              value={tradeLicenseIssuedBy}
+              onValueChange={handleSingleSelect(setTradeLicenseIssuedBy)}
               placeholder="Select a issuing authority"
               searchPlaceholder="Search issuing authority..."
             />
           </div>
           <div className="space-y-2">
             <Label>Trade License/CR Issued Date *</Label>
-            <Input type="date" placeholder="mm/dd/yyyy" />
+            <Input type="date" placeholder="mm/dd/yyyy" value={licenseIssueDate} onChange={e => setLicenseIssueDate(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Trade License/CR Expiry Date</Label>
-            <Input type="date" placeholder="mm/dd/yyyy" />
+            <Input type="date" placeholder="mm/dd/yyyy" value={licenseExpiryDate} onChange={e => setLicenseExpiryDate(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>VAT Registration Number</Label>
-            <Input placeholder="Enter VAT Registration Number" />
+            <Input placeholder="Enter VAT Registration Number" value={vatRegistrationNo} onChange={e => setVatRegistrationNo(e.target.value)} />
           </div>
           <div className="col-span-2 space-y-2">
             <Label>Tenancy Contract Expiry Date</Label>
-            <Input type="date" placeholder="mm/dd/yyyy" />
+            <Input type="date" placeholder="mm/dd/yyyy" value={tenancyContractExpiryDate} onChange={e => setTenancyContractExpiryDate(e.target.value)} />
           </div>
         </div>
       </Card>
@@ -991,8 +1157,8 @@ function CorporateForm({
             <Label>Entity Type *</Label>
             <Combobox
               options={entity_types}
-              value=""
-              onValueChange={() => {}}
+              value={entityType}
+              onValueChange={handleSingleSelect(setEntityType)}
               placeholder="Select entity type"
               searchPlaceholder="Search type..."
             />
@@ -1001,8 +1167,9 @@ function CorporateForm({
             <Label>Countries of Operation *</Label>
             <Combobox
               options={countries}
-              value=""
-              onValueChange={() => {}}
+              value={countriesOfOperation}
+              onValueChange={handleMultiSelect(setCountriesOfOperation)}
+              multiple
               placeholder="Select a country"
               searchPlaceholder="Search country..."
             />
@@ -1011,15 +1178,15 @@ function CorporateForm({
             <Label>Business Activity *</Label>
             <Combobox
               options={business_activities}
-              value=""
-              onValueChange={() => {}}
+              value={businessActivity}
+              onValueChange={handleSingleSelect(setBusinessActivity)}
               placeholder="Select business activity"
               searchPlaceholder="Search business activity..."
             />
           </div>
           <div className="space-y-2">
             <Label>Is entity dealing with Import/Export? *</Label>
-            <RadioGroup defaultValue="no" className="flex gap-6 mt-2">
+            <RadioGroup value={isImportExport ? "yes" : "no"} onValueChange={(v) => setIsImportExport(v === "yes")} className="flex gap-6 mt-2">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="yes" id="import-yes" />
                 <Label htmlFor="import-yes">Yes</Label>
@@ -1031,12 +1198,21 @@ function CorporateForm({
             </RadioGroup>
           </div>
           <div className="col-span-2 space-y-2">
-            <Label>Any other major countries/region *</Label>
-            <Input placeholder="Enter bank name (max 50 characters)" />
+            <Label>Any other sister concern/branch? *</Label>
+            <RadioGroup value={hasSisterConcern ? "yes" : "no"} onValueChange={(v) => setHasSisterConcern(v === "yes")} className="flex gap-6 mt-2">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yes" id="sister-yes" />
+                <Label htmlFor="sister-yes">Yes</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="no" id="sister-no" />
+                <Label htmlFor="sister-no">No</Label>
+              </div>
+            </RadioGroup>
           </div>
           <div className="col-span-2 space-y-2">
             <Label>Account Holding Bank Name *</Label>
-            <Input placeholder="Enter bank name (max 50 characters)" />
+            <Input placeholder="Enter bank name (max 50 characters)" value={accountHoldingBankName} onChange={e => setAccountHoldingBankName(e.target.value)} />
           </div>
         </div>
       </Card>
@@ -1052,8 +1228,9 @@ function CorporateForm({
             <Label>Product Type *</Label>
             <Combobox
               options={products}
-              value=""
-              onValueChange={() => {}}
+              value={productTypesCorp}
+              onValueChange={handleMultiSelect(setProductTypesCorp)}
+              multiple
               placeholder="Select Product Type"
               searchPlaceholder="Search type..."
             />
@@ -1062,8 +1239,8 @@ function CorporateForm({
             <Label>Product Source *</Label>
             <Combobox
               options={product_sources}
-              value=""
-              onValueChange={() => {}}
+              value={productSource}
+              onValueChange={handleSingleSelect(setProductSource)}
               placeholder="Select product source"
               searchPlaceholder="Search source..."
             />
@@ -1072,8 +1249,8 @@ function CorporateForm({
             <Label>Payment Mode *</Label>
             <Combobox
               options={payment_modes}
-              value=""
-              onValueChange={() => {}}
+              value={paymentMode}
+              onValueChange={handleSingleSelect(setPaymentMode)}
               placeholder="Select payment mode"
               searchPlaceholder="Search mode..."
             />
@@ -1082,23 +1259,23 @@ function CorporateForm({
             <Label>Delivery Channel *</Label>
             <Combobox
               options={delivery_channels}
-              value=""
-              onValueChange={() => {}}
+              value={deliveryChannel}
+              onValueChange={handleSingleSelect(setDeliveryChannel)}
               placeholder="Select delivery channel"
               searchPlaceholder="Search channel..."
             />
           </div>
           <div className="space-y-2">
             <Label>Expected No of Transactions</Label>
-            <Input type="number" placeholder="0" />
+            <Input type="number" placeholder="0" value={expectedNoOfTransactions} onChange={e => setExpectedNoOfTransactions(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Expected Volume</Label>
-            <Input type="number" placeholder="0" />
+            <Input type="number" placeholder="0" value={expectedVolume} onChange={e => setExpectedVolume(e.target.value)} />
           </div>
           <div className="col-span-2 space-y-2">
             <Label>Deal with Goods? *</Label>
-            <RadioGroup defaultValue="no" className="flex gap-6 mt-2">
+            <RadioGroup value={dealWithGoods ? "yes" : "no"} onValueChange={(v) => setDealWithGoods(v === "yes")} className="flex gap-6 mt-2">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="yes" id="goods-yes" />
                 <Label htmlFor="goods-yes">Yes</Label>
@@ -1121,7 +1298,7 @@ function CorporateForm({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>KYC documents collected with form *</Label>
-            <RadioGroup defaultValue="no" className="flex gap-6 mt-2">
+            <RadioGroup value={kycCollected ? "yes" : "no"} onValueChange={(v) => setKycCollected(v === "yes")} className="flex gap-6 mt-2">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="yes" id="kyc-yes" />
                 <Label htmlFor="kyc-yes">Yes</Label>
@@ -1134,7 +1311,7 @@ function CorporateForm({
           </div>
           <div className="space-y-2">
             <Label>Is entity registered in GOAML *</Label>
-            <RadioGroup defaultValue="no" className="flex gap-6 mt-2">
+            <RadioGroup value={isRegisteredGoAML ? "yes" : "no"} onValueChange={(v) => setIsRegisteredGoAML(v === "yes")} className="flex gap-6 mt-2">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="yes" id="goaml-yes" />
                 <Label htmlFor="goaml-yes">Yes</Label>
@@ -1148,7 +1325,7 @@ function CorporateForm({
           <div className="space-y-2">
             <Label>Is Entity Having Material Match *</Label>
             <p className="text-xs text-blue-600 mb-2">We don't Check adverse news feed</p>
-            <RadioGroup defaultValue="no" className="flex gap-6 mt-2">
+            <RadioGroup value={isAdverseNews ? "yes" : "no"} onValueChange={(v) => setIsAdverseNews(v === "yes")} className="flex gap-6 mt-2">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="yes" id="material-yes" />
                 <Label htmlFor="material-yes">Yes</Label>
@@ -1176,7 +1353,7 @@ function CorporateForm({
                 UBO {index + 1}
               </h5>
               {ubos.length > 1 && (
-                <Button variant="ghost" size="sm" onClick={() => removeUBO(ubo.id)}>
+                <Button variant="ghost" size="sm" type="button" onClick={() => removeUBO(ubo.id)}>
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </Button>
               )}
@@ -1184,20 +1361,24 @@ function CorporateForm({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Type *</Label>
-                <RadioGroup defaultValue="individual" className="flex gap-6 mt-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="individual" id={`type-individual-${ubo.id}`} />
-                    <Label htmlFor={`type-individual-${ubo.id}`}>Individual</Label>
-                  </div>
-                </RadioGroup>
+                <Combobox
+                  options={[
+                    { value: "Individual", label: "Individual" },
+                    { value: "Entity", label: "Entity" },
+                  ]}
+                  value={ubo.type}
+                  onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "type", v)}
+                  placeholder="Select type"
+                  searchPlaceholder="Search type..."
+                />
               </div>
               <div className="space-y-2">
                 <Label>Name *</Label>
-                <Input placeholder="Enter Name" />
+                <Input placeholder="Enter Name" value={ubo.name} onChange={e => setUboField(ubo.id, "name", e.target.value)} />
               </div>
               <div className="col-span-2 space-y-2">
                 <Label>Previously Exposed Person (PEP)? *</Label>
-                <RadioGroup defaultValue="no" className="flex gap-6 mt-2">
+                <RadioGroup value={ubo.isPep ? "yes" : "no"} onValueChange={(v) => setUboField(ubo.id, "isPep", v === "yes")} className="flex gap-6 mt-2">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="yes" id={`pep-yes-${ubo.id}`} />
                     <Label htmlFor={`pep-yes-${ubo.id}`}>Yes</Label>
@@ -1209,63 +1390,59 @@ function CorporateForm({
                 </RadioGroup>
               </div>
               <div className="space-y-2">
+                <Label>Nationality</Label>
+                <Combobox
+                  options={countries}
+                  value={ubo.nationality}
+                  onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "nationality", v)}
+                  placeholder="Select nationality"
+                  searchPlaceholder="Search nationality..."
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>ID Type *</Label>
                 <Combobox
                   options={idTypes}
-                  value=""
-                  onValueChange={() => {}}
+                  value={ubo.idType}
+                  onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "idType", v)}
                   placeholder="Passport"
                   searchPlaceholder="Search type..."
                 />
               </div>
               <div className="space-y-2">
                 <Label>ID No/License No  *</Label>
-                <Input placeholder="Enter ID License No" />
+                <Input placeholder="Enter ID License No" value={ubo.idNo} onChange={e => setUboField(ubo.id, "idNo", e.target.value)} />
               </div>
-              {/* <div className="space-y-2">
-                <Label>ID Issued By *</Label>
-                <Combobox
-                  options={countries}
-                  value=""
-                  onValueChange={() => {}}
-                  placeholder="Select Country"
-                  searchPlaceholder="Search country..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>ID Issued At *</Label>
-                <Input placeholder="Enter ID Issued No" />
-              </div> */}
               <div className="space-y-2">
                 <Label>ID Issue Date *</Label>
-                <Input type="date" placeholder="mm/dd/yyyy" />
+                <Input type="date" placeholder="mm/dd/yyyy" value={ubo.idIssue} onChange={e => setUboField(ubo.id, "idIssue", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>ID Expiry Date *</Label>
-                <Input type="date" placeholder="mm/dd/yyyy" />
+                <Input type="date" placeholder="mm/dd/yyyy" value={ubo.idExpiry} onChange={e => setUboField(ubo.id, "idExpiry", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Date of Birth *</Label>
-                <Input type="date" placeholder="mm/dd/yyyy" />
+                <Input type="date" placeholder="mm/dd/yyyy" value={ubo.dob} onChange={e => setUboField(ubo.id, "dob", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Role *</Label>
                 <Combobox
                   options={roles}
-                  value=""
-                  onValueChange={() => {}}
+                  value={ubo.role}
+                  onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "role", v)}
                   placeholder="UBO"
                   searchPlaceholder="Search role..."
                 />
               </div>
               <div className="space-y-2">
                 <Label>Percentage of Share *</Label>
-                <Input placeholder="Enter Percentage (0-100)" />
+                <Input placeholder="Enter Percentage (0-100)" value={ubo.ownershipPercentage as string} onChange={e => setUboField(ubo.id, "ownershipPercentage", e.target.value)} />
               </div>
             </div>
           </div>
         ))}
-        <Button variant="outline" onClick={addUBO} className="w-full bg-transparent">
+        <Button variant="outline" type="button" onClick={addUBO} className="w-full bg-transparent">
           <Plus className="w-4 h-4 mr-2" />
           Add Another Representative
         </Button>
@@ -1277,10 +1454,28 @@ function CorporateForm({
           <Upload className="w-5 h-5 text-blue-600" />
           <h4 className="font-semibold">Upload Documents</h4>
         </div>
-        <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center">
+        <div
+          className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
+          onClick={openCorpFilePicker}
+        >
           <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
           <p className="text-sm text-blue-600 mb-1">Add Documents</p>
           <p className="text-xs text-muted-foreground">Max 5 files, each up to 5MB (Images, PDFs, Docs)</p>
+          <input
+            ref={corpFileInputRef}
+            type="file"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,.txt,.gif,.bmp,.tiff,.svg,.webp,.heic"
+            onChange={handleCorpFileChange}
+            className="mt-2 hidden"
+          />
+          <div className="mt-2 flex flex-col items-center gap-1">
+            {corpFiles.map((file, idx) => (
+              <span key={idx} className="text-xs text-gray-700">
+                {file.name} ({(file.size / 1024).toFixed(1)} KB)
+              </span>
+            ))}
+          </div>
         </div>
       </Card>
 
@@ -1295,20 +1490,20 @@ function CorporateForm({
             <Label>Screening Fuzziness *</Label>
             <Combobox
               options={screeningFuzziness}
-              value=""
-              onValueChange={() => {}}
+              value={corpFuzziness}
+              onValueChange={handleSingleSelect(setCorpFuzziness)}
               placeholder="OFF"
               searchPlaceholder="Search fuzziness..."
             />
           </div>
           <div className="space-y-2">
             <Label>Remarks</Label>
-            <Textarea placeholder="Enter any remarks" rows={3} />
+            <Textarea placeholder="Enter any remarks" rows={3} value={corpRemarks} onChange={e => setCorpRemarks(e.target.value)} />
           </div>
         </div>
       </Card>
 
-      <Button className="w-full bg-blue-600 hover:bg-blue-700">Submit Registration</Button>
-    </div>
+      <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">Submit Registration</Button>
+    </form>
   )
 }

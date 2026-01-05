@@ -96,17 +96,17 @@ export default function CustomersPage() {
                 </thead>
                 <tbody>
                   {customers.map((customer) => {
-                    const detail = customer.customer_type === "individual" ? customer.individual_detail : customer.corporate_detail
+                    // const detail = customer.customer_type === "individual" ? customer.individual_detail : customer.corporate_detail
                     return (
                       <tr key={customer.id} className="border-b hover:bg-slate-50">
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             <Building2 className="w-4 h-4 text-muted-foreground" />
-                            <span className="font-medium">{detail?.first_name || detail?.company_name || "-"}</span>
+                            <span className="font-medium">{customer.name || "-"}</span>
                           </div>
                         </td>
-                        <td className="p-4">{detail?.country || "-"}</td>
-                        <td className="p-4 text-muted-foreground">{detail?.email || "-"}</td>
+                        <td className="p-4">{customer.country || "-"}</td>
+                        <td className="p-4 text-muted-foreground">{customer.email || "-"}</td>
                         <td className="p-4 text-muted-foreground">{customer.customer_type === "individual" ? "Individual" : "Corporate"}</td>
                         <td className="p-4">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
