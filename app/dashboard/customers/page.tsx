@@ -131,7 +131,7 @@ export default function CustomersPage() {
                           <td className="p-4 text-muted-foreground">{customer.customer_type === "individual" ? "Individual" : "Corporate"}</td>
                           <td className="p-4">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              {customer.status || "Onboarded"}
+                              {customer.status}
                             </span>
                           </td>
                           <td className="p-4">{new Date(customer.created_at).toLocaleDateString()}</td>
@@ -361,7 +361,7 @@ export default function CustomersPage() {
                                               {data.documents.map((doc: any) => (
                                                 <div key={doc.id} className="border rounded p-3">
                                                   <div className="text-sm font-medium mb-2">{doc.file_name}</div>
-                                                  <a href={`http://127.0.0.1:8000/storage/${doc.file_path}`} target="_blank" rel="noreferrer" className="text-blue-600 text-sm underline">View</a>
+                                                  <a href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/storage/${doc.file_path}`} target="_blank" rel="noreferrer" className="text-blue-600 text-sm underline">View</a>
                                                 </div>
                                               ))}
                                             </div>

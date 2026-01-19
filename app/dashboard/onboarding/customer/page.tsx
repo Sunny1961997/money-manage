@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type CustomerType = "individual" | "corporate"
 
@@ -223,6 +224,9 @@ function IndividualForm({
   const [remarks, setRemarks] = useState("")
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState("personal")
 
   const router = useRouter()
   const { toast } = useToast()
@@ -264,6 +268,50 @@ function IndividualForm({
   // Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validation
+    const requiredFields = {
+      'First Name': firstName,
+      'Last Name': lastName,
+      'Date of Birth': dob,
+      'Address': address,
+      'City': city,
+      'Country': country,
+      'Nationality': nationality,
+      'Country Code': countryCode,
+      'Contact No': contactNo,
+      'Email': email,
+      'Gender': gender,
+      'Occupation': occupation,
+      'Source of Income': sourceIncome,
+      'Purpose': purpose,
+      'Payment Mode': paymentMethod,
+      'Product Type': productTypes.length > 0 ? 'filled' : '',
+      'Mode of Approach': approach,
+      'ID Type': idType,
+      'ID No': idNo,
+      'ID Issued By': issuingAuthority,
+      'ID Issued At': idIssueAtCountry,
+      'ID Issued Date': idIssueDate,
+      'ID Expiry Date': idExpiryDate,
+      'Place of Birth': placeOfBirth,
+      'Country of Residence': countryOfResidence,
+      'Screening Fuzziness': fuzziness,
+    }
+
+    const emptyFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value)
+      .map(([field, _]) => field)
+
+    if (emptyFields.length > 0) {
+      toast({
+        title: "Required fields missing",
+        description: `Please fill in: ${emptyFields.join(', ')}`,
+        // variant: "destructive"
+      })
+      return
+    }
+
     const payload = {
       customer_type: "individual",
       onboarding_type: "full",
@@ -313,428 +361,483 @@ function IndividualForm({
         body: formData,
       })
       const data = await res.json().catch(async () => ({ message: await res.text() }))
+      console.log("[Frontend] Onboarding API response:", { status: res.status, data })
+
       if (res.ok) {
         const msg = data?.message || "Onboarding submitted successfully"
         toast({ title: "Success", description: msg })
         router.push("/dashboard/customers")
       } else {
+        console.log("[Frontend] Error response data:", data)
         const details = data?.errors ? (Object.values(data.errors as Record<string, string[]>).flat().join("; ")) : ""
         const errText = details || data?.message || data?.error || "Unknown error"
-        toast({ title: "Onboarding failed", description: errText, variant: "destructive" })
+        console.log("[Frontend] Final error text for toast:", errText)
+        toast({ title: "Onboarding failed", description: errText })
       }
     } catch (err: any) {
-      toast({ title: "Onboarding failed", description: err?.message || "Network error", variant: "destructive" })
+      console.error("[Frontend] Caught error:", err)
+      toast({ title: "Onboarding failed", description: err?.message || "Network error" })
     }
   }
 
   return (
-    <form className="space-y-6 pb-0" onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}>
+    <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
         <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Individual</span>
         <h3 className="text-lg font-semibold">New Individual Registration</h3>
       </div>
 
-      {/* Personal Information */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <User className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Personal Information</h4>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur py-3 border-b mb-4">
+          <TabsList className="w-full h-auto flex flex-wrap justify-start gap-2 bg-transparent p-0">
+            <TabsTrigger value="personal" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Personal Information
+            </TabsTrigger>
+            <TabsTrigger value="address" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Address Information
+            </TabsTrigger>
+            <TabsTrigger value="contact" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Contact Information
+            </TabsTrigger>
+            <TabsTrigger value="gender-pep" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Gender and PEP Status
+            </TabsTrigger>
+            <TabsTrigger value="occupation" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Occupation and Income
+            </TabsTrigger>
+            <TabsTrigger value="financial" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Financial Details
+            </TabsTrigger>
+            <TabsTrigger value="transactions" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Transactions and ID Details
+            </TabsTrigger>
+            <TabsTrigger value="identification" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Identification Details
+            </TabsTrigger>
+            <TabsTrigger value="additional-info" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Additional Information
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Upload Documents
+            </TabsTrigger>
+          </TabsList>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>First Name *</Label>
-            <Input placeholder="Enter first name" value={firstName} onChange={e => setFirstName(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Last Name *</Label>
-            <Input placeholder="Enter last name" value={lastName} onChange={e => setLastName(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Date of Birth *</Label>
-            <Input type="date" placeholder="mm/dd/yyyy" value={dob} onChange={e => setDob(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Residential Status *</Label>
-            <RadioGroup value={residentialStatus} onValueChange={setResidentialStatus} className="flex gap-6 mt-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="resident" id="resident" />
-                <Label htmlFor="resident">Resident</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="non-resident" id="non-resident" />
-                <Label htmlFor="non-resident">Non-Resident</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        </div>
-      </Card>
 
-      {/* Address Information */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <MapPin className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Address Information</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 space-y-2">
-            <Label>Address *</Label>
-            <Input placeholder="Enter address" value={address} onChange={e => setAddress(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>City *</Label>
-            <Input placeholder="Enter city" value={city} onChange={e => setCity(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Country *</Label>
-            <Combobox
-              options={countries}
-              value={country}
-              onValueChange={handleSingleSelect(setCountry)}
-              placeholder="Select a country"
-              searchPlaceholder="Search country..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Nationality *</Label>
-            <Combobox
-              options={countries}
-              value={nationality}
-              onValueChange={handleSingleSelect(setNationality)}
-              placeholder="Select a nationality"
-              searchPlaceholder="Search nationality..."
-            />
-          </div>
-        </div>
-      </Card>
-
-      {/* Contact Information */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <Phone className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Contact Information</h4>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label>Country Code *</Label>
-            <Combobox
-              options={countryCodes}
-              value={countryCode}
-              onValueChange={handleSingleSelect(setCountryCode)}
-              placeholder="Select"
-              searchPlaceholder="Search code..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Contact No *</Label>
-            <Input placeholder="Enter contact number" value={contactNo} onChange={e => setContactNo(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} />
-          </div>
-        </div>
-      </Card>
-
-      {/* Additional Information */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <FileText className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Additional Information</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Place of Birth *</Label>
-            <Combobox
-              options={countries}
-              value={placeOfBirth}
-              onValueChange={handleSingleSelect(setPlaceOfBirth)}
-              placeholder="Select a country"
-              searchPlaceholder="Search country..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Country of Residence *</Label>
-            <Combobox
-              options={countries}
-              value={countryOfResidence}
-              onValueChange={handleSingleSelect(setCountryOfResidence)}
-              placeholder="Select a country"
-              searchPlaceholder="Search country..."
-            />
-          </div>
-          <div className="col-span-2 space-y-2">
-            <Label>Dual Nationality *</Label>
-            <RadioGroup value={dualNationality ? "yes" : "no"} onValueChange={handleBooleanRadio(setDualNationality)} className="flex gap-6 mt-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="dual-yes" />
-                <Label htmlFor="dual-yes">Yes</Label>
+        <form className="space-y-6 pb-0" onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}>
+          <TabsContent value="personal" className="mt-0">
+            {/* Personal Information */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <User className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Personal Information</h4>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="dual-no" />
-                <Label htmlFor="dual-no">No</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>First Name *</Label>
+                  <Input placeholder="Enter first name" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Last Name *</Label>
+                  <Input placeholder="Enter last name" value={lastName} onChange={e => setLastName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Date of Birth *</Label>
+                  <Input type="date" placeholder="mm/dd/yyyy" value={dob} onChange={e => setDob(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Residential Status *</Label>
+                  <RadioGroup value={residentialStatus} onValueChange={setResidentialStatus} className="flex gap-6 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="resident" id="resident" />
+                      <Label htmlFor="resident">Resident</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="non-resident" id="non-resident" />
+                      <Label htmlFor="non-resident">Non-Resident</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
               </div>
-            </RadioGroup>
-          </div>
-          <div className="col-span-2 space-y-2">
-            <Label>Is Customer Facing any adverse event? *</Label>
-            <p className="text-xs text-blue-600 mb-2">We don't Check adverse news feed</p>
-            <RadioGroup value={adverseNews ? "yes" : "no"} onValueChange={handleBooleanRadio(setAdverseNews)} className="flex gap-6 mt-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="adverse-yes" />
-                <Label htmlFor="adverse-yes">Yes</Label>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="address" className="mt-0">
+            {/* Address Information */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Address Information</h4>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="adverse-no" />
-                <Label htmlFor="adverse-no">No</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 space-y-2">
+                  <Label>Address *</Label>
+                  <Input placeholder="Enter address" value={address} onChange={e => setAddress(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>City *</Label>
+                  <Input placeholder="Enter city" value={city} onChange={e => setCity(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Country *</Label>
+                  <Combobox
+                    options={countries}
+                    value={country}
+                    onValueChange={handleSingleSelect(setCountry)}
+                    placeholder="Select a country"
+                    searchPlaceholder="Search country..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Nationality *</Label>
+                  <Combobox
+                    options={countries}
+                    value={nationality}
+                    onValueChange={handleSingleSelect(setNationality)}
+                    placeholder="Select a nationality"
+                    searchPlaceholder="Search nationality..."
+                  />
+                </div>
               </div>
-            </RadioGroup>
-          </div>
-        </div>
-      </Card>
+            </Card>
+          </TabsContent>
 
-      {/* Gender and PEP Status */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <User className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Gender and PEP Status</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Gender *</Label>
-            <RadioGroup value={gender} onValueChange={handleGenderRadio} className="flex flex-col gap-2 mt-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Male" id="male" />
-                <Label htmlFor="male">Male</Label>
+          <TabsContent value="contact" className="mt-0">
+            {/* Contact Information */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Phone className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Contact Information</h4>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Female" id="female" />
-                <Label htmlFor="female">Female</Label>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Country Code *</Label>
+                  <Combobox
+                    options={countryCodes}
+                    value={countryCode}
+                    onValueChange={handleSingleSelect(setCountryCode)}
+                    placeholder="Select"
+                    searchPlaceholder="Search code..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Contact No *</Label>
+                  <Input placeholder="Enter contact number" value={contactNo} onChange={e => setContactNo(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email *</Label>
+                  <Input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} />
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Other" id="other" />
-                <Label htmlFor="other">Other</Label>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="gender-pep" className="mt-0">
+            {/* Gender and PEP Status */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <User className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Gender and PEP Status</h4>
               </div>
-            </RadioGroup>
-          </div>
-          <div className="space-y-2">
-            <Label>Politically Exposed Person (PEP)? *</Label>
-            <RadioGroup value={isPep ? "yes" : "no"} onValueChange={handlePepRadio} className="flex gap-6 mt-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="pep-yes" />
-                <Label htmlFor="pep-yes">Yes</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Gender *</Label>
+                  <RadioGroup value={gender} onValueChange={handleGenderRadio} className="flex flex-col gap-2 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="Male" id="male" />
+                      <Label htmlFor="male">Male</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="Female" id="female" />
+                      <Label htmlFor="female">Female</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="Other" id="other" />
+                      <Label htmlFor="other">Other</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="space-y-2">
+                  <Label>Politically Exposed Person (PEP)? *</Label>
+                  <RadioGroup value={isPep ? "yes" : "no"} onValueChange={handlePepRadio} className="flex gap-6 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="pep-yes" />
+                      <Label htmlFor="pep-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="pep-no" />
+                      <Label htmlFor="pep-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="pep-no" />
-                <Label htmlFor="pep-no">No</Label>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="occupation" className="mt-0">
+            {/* Occupation and Income */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Briefcase className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Occupation and Income</h4>
               </div>
-            </RadioGroup>
-          </div>
-        </div>
-      </Card>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Occupation *</Label>
+                  <Combobox
+                    options={occupations}
+                    value={occupation}
+                    onValueChange={handleOccupation}
+                    placeholder="Select an occupation"
+                    searchPlaceholder="Search occupation..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Source of Income *</Label>
+                  <Combobox
+                    options={sourceOfIncome}
+                    value={sourceIncome}
+                    onValueChange={handleSourceIncome}
+                    placeholder="Select a source"
+                    searchPlaceholder="Search source..."
+                  />
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
 
-      {/* Occupation and Income */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <Briefcase className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Occupation and Income</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Occupation *</Label>
-            <Combobox
-              options={occupations}
-              value={occupation}
-              onValueChange={handleOccupation}
-              placeholder="Select an occupation"
-              searchPlaceholder="Search occupation..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Source of Income *</Label>
-            <Combobox
-              options={sourceOfIncome}
-              value={sourceIncome}
-              onValueChange={handleSourceIncome}
-              placeholder="Select a source"
-              searchPlaceholder="Search source..."
-            />
-          </div>
-        </div>
-      </Card>
+          <TabsContent value="financial" className="mt-0">
+            {/* Financial Details */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <DollarSign className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Financial Details</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Purpose *</Label>
+                  <Combobox
+                    options={purposes}
+                    value={purpose}
+                    onValueChange={handleSingleSelect(setPurpose)}
+                    placeholder="Select a purpose"
+                    searchPlaceholder="Search purpose..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Payment Mode *</Label>
+                  <Combobox
+                    options={paymentMethods}
+                    value={paymentMethod}
+                    onValueChange={handleSingleSelect(setPaymentMethod)}
+                    placeholder="Select a payment mode"
+                    searchPlaceholder="Search mode..."
+                  />
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
 
-      {/* Financial Details */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <DollarSign className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Financial Details</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Purpose *</Label>
-            <Combobox
-              options={purposes}
-              value={purpose}
-              onValueChange={handleSingleSelect(setPurpose)}
-              placeholder="Select a purpose"
-              searchPlaceholder="Search purpose..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Payment Mode *</Label>
-            <Combobox
-              options={paymentMethods}
-              value={paymentMethod}
-              onValueChange={handleSingleSelect(setPaymentMethod)}
-              placeholder="Select a payment mode"
-              searchPlaceholder="Search mode..."
-            />
-          </div>
-        </div>
-      </Card>
+          <TabsContent value="transactions" className="mt-0">
+            {/* Transactions and ID Details */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Transactions and ID Details</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Product Type *</Label>
+                  <Combobox
+                    options={products}
+                    value={productTypes}
+                    onValueChange={handleMultiSelect(setProductTypes)}
+                    multiple
+                    placeholder="Select product type"
+                    searchPlaceholder="Search type..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Mode of Approach *</Label>
+                  <Combobox
+                    options={modeOfApproach}
+                    value={approach}
+                    onValueChange={handleSingleSelect(setApproach)}
+                    placeholder="Select mode of approach"
+                    searchPlaceholder="Search approach..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Expected No of Transactions</Label>
+                  <Input type="number" placeholder="0" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Expected Volume</Label>
+                  <Input type="number" placeholder="0" />
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
 
-      {/* Transactions and ID Details */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <FileText className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Transactions and ID Details</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Product Type *</Label>
-            <Combobox
-              options={products}
-              value={productTypes}
-              onValueChange={handleMultiSelect(setProductTypes)}
-              multiple
-              placeholder="Select product type"
-              searchPlaceholder="Search type..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Mode of Approach *</Label>
-            <Combobox
-              options={modeOfApproach}
-              value={approach}
-              onValueChange={handleSingleSelect(setApproach)}
-              placeholder="Select mode of approach"
-              searchPlaceholder="Search approach..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Expected No of Transactions</Label>
-            <Input type="number" placeholder="0" />
-          </div>
-          <div className="space-y-2">
-            <Label>Expected Volume</Label>
-            <Input type="number" placeholder="0" />
-          </div>
-        </div>
-      </Card>
+          <TabsContent value="identification" className="mt-0">
+            {/* Identification Details */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <IdCard className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Identification Details</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>ID Type *</Label>
+                  <Combobox
+                    options={idTypes}
+                    value={idType}
+                    onValueChange={handleSingleSelect(setIdType)}
+                    placeholder="Select an ID type"
+                    searchPlaceholder="Search type..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>ID No*</Label>
+                  <Input placeholder="Enter ID number" value={idNo} onChange={e => setIdNo(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>ID Issued By *</Label>
+                  <Input placeholder="Enter issuing authority" value={issuingAuthority} onChange={e => setIssuingAuthority(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>ID Issued At *</Label>
+                  <Combobox
+                    options={countries}
+                    value={idIssueAtCountry}
+                    onValueChange={handleSingleSelect(setIdIssueAtCountry)}
+                    placeholder="Select a country"
+                    searchPlaceholder="Search country..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>ID Issued Date *</Label>
+                  <Input type="date" placeholder="mm/dd/yyyy" value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>ID Expiry Date *</Label>
+                  <Input type="date" placeholder="mm/dd/yyyy" value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
 
-      {/* Identification Details */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <IdCard className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Identification Details</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>ID Type *</Label>
-            <Combobox
-              options={idTypes}
-              value={idType}
-              onValueChange={handleSingleSelect(setIdType)}
-              placeholder="Select an ID type"
-              searchPlaceholder="Search type..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>ID No*</Label>
-            <Input placeholder="Enter ID number" value={idNo} onChange={e => setIdNo(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>ID Issued By *</Label>
-            <Input placeholder="Enter issuing authority" value={issuingAuthority} onChange={e => setIssuingAuthority(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>ID Issued At *</Label>
-            <Combobox
-              options={countries}
-              value={idIssueAtCountry}
-              onValueChange={handleSingleSelect(setIdIssueAtCountry)}
-              placeholder="Select a country"
-              searchPlaceholder="Search country..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>ID Issued Date *</Label>
-            <Input type="date" placeholder="mm/dd/yyyy" value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>ID Expiry Date *</Label>
-            <Input type="date" placeholder="mm/dd/yyyy" value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
-          </div>
-        </div>
-      </Card>
+          <TabsContent value="additional-info" className="mt-0">
+            {/* Additional Information */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Additional Information</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Place of Birth *</Label>
+                  <Combobox
+                    options={countries}
+                    value={placeOfBirth}
+                    onValueChange={handleSingleSelect(setPlaceOfBirth)}
+                    placeholder="Select a country"
+                    searchPlaceholder="Search country..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Country of Residence *</Label>
+                  <Combobox
+                    options={countries}
+                    value={countryOfResidence}
+                    onValueChange={handleSingleSelect(setCountryOfResidence)}
+                    placeholder="Select a country"
+                    searchPlaceholder="Search country..."
+                  />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Dual Nationality *</Label>
+                  <RadioGroup value={dualNationality ? "yes" : "no"} onValueChange={handleBooleanRadio(setDualNationality)} className="flex gap-6 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="dual-yes" />
+                      <Label htmlFor="dual-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="dual-no" />
+                      <Label htmlFor="dual-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Is Customer Facing any adverse event? *</Label>
+                  <p className="text-xs text-blue-600 mb-2">We don't Check adverse news feed</p>
+                  <RadioGroup value={adverseNews ? "yes" : "no"} onValueChange={handleBooleanRadio(setAdverseNews)} className="flex gap-6 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="adverse-yes" />
+                      <Label htmlFor="adverse-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="adverse-no" />
+                      <Label htmlFor="adverse-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Screening Fuzziness *</Label>
+                  <Combobox
+                    options={screeningFuzziness}
+                    value={fuzziness}
+                    onValueChange={handleSingleSelect(setFuzziness)}
+                    placeholder="Select fuzziness level"
+                    searchPlaceholder="Search fuzziness..."
+                  />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Remarks</Label>
+                  <Textarea placeholder="Enter any remarks" rows={3} value={remarks} onChange={e => setRemarks(e.target.value)} />
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
 
-      {/* Additional Information */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <FileText className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Additional Information</h4>
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Screening Fuzziness *</Label>
-            <Combobox
-              options={screeningFuzziness}
-              value={fuzziness}
-              onValueChange={handleSingleSelect(setFuzziness)}
-              placeholder="Select fuzziness level"
-              searchPlaceholder="Search fuzziness..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Remarks</Label>
-            <Textarea placeholder="Enter any remarks" rows={3} value={remarks} onChange={e => setRemarks(e.target.value)} />
-          </div>
-        </div>
+          <TabsContent value="documents" className="mt-0">
+            {/* Upload Documents */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Upload className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Upload Documents</h4>
+              </div>
+              <div
+                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
+                onClick={openFilePicker}
+              >
+                <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                <p className="text-sm text-blue-600 mb-1">Add Documents</p>
+                <p className="text-xs text-muted-foreground">Max 5 files, each up to 2MB (Images, PDFs, Docs)</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,.txt,.gif,.bmp,.tiff,.svg,.webp,.heic"
+                  onChange={handleFileChange}
+                  className="mt-2 hidden"
+                  data-testid="file-input"
+                />
+                <div className="mt-2 flex flex-col items-center gap-1">
+                  {files.map((file, idx) => (
+                    <span key={idx} className="text-xs text-gray-700">
+                      {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                    </span>
+                  ))}
+                </div>        </div>
       </Card>
+          </TabsContent>
 
-      {/* Upload Documents */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <Upload className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Upload Documents</h4>
-        </div>
-        <div
-          className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
-          onClick={openFilePicker}
-        >
-          <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-          <p className="text-sm text-blue-600 mb-1">Add Documents</p>
-          <p className="text-xs text-muted-foreground">Max 5 files, each up to 2MB (Images, PDFs, Docs)</p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,.txt,.gif,.bmp,.tiff,.svg,.webp,.heic"
-            onChange={handleFileChange}
-            className="mt-2 hidden"
-            data-testid="file-input"
-          />
-          <div className="mt-2 flex flex-col items-center gap-1">
-            {files.map((file, idx) => (
-              <span key={idx} className="text-xs text-gray-700">
-                {file.name} ({(file.size / 1024).toFixed(1)} KB)
-              </span>
-            ))}
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t mt-6">
+            <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">Submit Registration</Button>
           </div>
-        </div>
-      </Card>
-
-      <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">Submit Registration</Button>
-    </form>
+        </form>
+      </Tabs>
+    </div>
   )
 }
 
@@ -893,6 +996,9 @@ function CorporateForm({
   const [productTypesCorp, setProductTypesCorp] = useState<string[]>([])
   const [accountHoldingBankName, setAccountHoldingBankName] = useState("")
 
+  // Tab state for corporate
+  const [activeTabCorp, setActiveTabCorp] = useState("company")
+
   const handleSingleSelect = (setter: (v: string) => void) => (value: string | string[]) => {
     if (typeof value === "string") setter(value)
   }
@@ -914,6 +1020,74 @@ function CorporateForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validation - check required fields
+    const requiredFields = {
+      'Company Name': companyName,
+      'Company Address': companyAddress,
+      'City': city,
+      'Country of Incorporation': companyCountry,
+      'PO Box No': poBox,
+      'Customer Type': corporateCustomerType,
+      'Country Code (Mobile)': mobileCountryCode,
+      'Contact Mobile No': mobileNo,
+      'Email': email,
+      'Trade License/CR No': tradeLicenseNo,
+      'Trade License/CR Issued At': tradeLicenseIssuedAt,
+      'Trade License/COI Issued By': tradeLicenseIssuedBy,
+      'Trade License/CR Issued Date': licenseIssueDate,
+      'Entity Type': entityType,
+      'Countries of Operation': countriesOfOperation.length > 0 ? 'filled' : '',
+      'Business Activity': businessActivity,
+      'Account Holding Bank Name': accountHoldingBankName,
+      'Product Type': productTypesCorp.length > 0 ? 'filled' : '',
+      'Product Source': productSource,
+      'Payment Mode': paymentMode,
+      'Delivery Channel': deliveryChannel,
+    }
+
+    const emptyFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value)
+      .map(([field, _]) => field)
+
+    if (emptyFields.length > 0) {
+      toast({
+        title: "Required fields missing",
+        description: `Please fill in: ${emptyFields.join(', ')}`,
+        // variant: "destructive"
+      })
+      return
+    }
+
+    // Validate UBO/Related persons
+    for (let i = 0; i < ubos.length; i++) {
+      const ubo = ubos[i]
+      const uboRequiredFields = {
+        [`UBO ${i + 1} - Type`]: ubo.type,
+        [`UBO ${i + 1} - Name`]: ubo.name,
+        [`UBO ${i + 1} - ID Type`]: ubo.idType,
+        [`UBO ${i + 1} - ID No`]: ubo.idNo,
+        [`UBO ${i + 1} - ID Issue Date`]: ubo.idIssue,
+        [`UBO ${i + 1} - ID Expiry Date`]: ubo.idExpiry,
+        [`UBO ${i + 1} - Date of Birth`]: ubo.dob,
+        [`UBO ${i + 1} - Role`]: ubo.role,
+        [`UBO ${i + 1} - Percentage of Share`]: ubo.ownershipPercentage,
+      }
+      
+      const uboEmptyFields = Object.entries(uboRequiredFields)
+        .filter(([_, value]) => !value)
+        .map(([field, _]) => field)
+
+      if (uboEmptyFields.length > 0) {
+        toast({
+          title: "Required fields missing",
+          description: `Please fill in: ${uboEmptyFields.join(', ')}`,
+          // variant: "destructive"
+        })
+        return
+      }
+    }
+    
     const payload: any = {
       customer_type: "corporate",
       onboarding_type: "full",
@@ -980,32 +1154,76 @@ function CorporateForm({
         body: formData,
       })
       const data = await res.json().catch(async () => ({ message: await res.text() }))
-      console.log("After calling onboarding api response", res.status, data.message)
-      // toast({ title: "Onboarding failed", description: data.message })
+      console.log("After calling onboarding api response", res.status, data)
 
       if (res.ok) {
         const msg = data?.message || "Onboarding submitted successfully"
         toast({ title: "Success", description: msg })
         router.push("/dashboard/customers")
       } else {
+        console.log("After calling onboarding api response else")
         const details = data?.errors ? (Object.values(data.errors as Record<string, string[]>).flat().join("; ")) : ""
         const errText = details || data?.message || data?.error || "Unknown error"
-        toast({ title: "Onboarding failed", description: data.message })
+        toast({ 
+          title: "Onboarding failed", 
+          description: errText, 
+          // variant: "destructive" 
+        })
       }
     } catch (err: any) {
-      toast({ title: "Onboarding failed", description: err?.message || "Network error"})
+      console.log("After calling onboarding api response catch")
+      toast({ 
+        title: "Onboarding failed", 
+        description: err?.message || "Network error", 
+        // variant: "destructive" 
+      })
     }
   }
 
   return (
-    <form className="space-y-6 pb-0" onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}>
+    <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
         <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Corporate</span>
         <h3 className="text-lg font-semibold">New Corporate Registration</h3>
       </div>
 
-      {/* Company Information */}
-      <Card className="p-6 bg-blue-50/30">
+      <Tabs value={activeTabCorp} onValueChange={setActiveTabCorp} className="w-full">
+        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur py-3 border-b mb-4">
+          <TabsList className="w-full h-auto flex flex-wrap justify-start gap-2 bg-transparent p-0">
+            <TabsTrigger value="company" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Company Information
+            </TabsTrigger>
+            <TabsTrigger value="contact" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Contact Information
+            </TabsTrigger>
+            <TabsTrigger value="identity" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Identity Information
+            </TabsTrigger>
+            <TabsTrigger value="operations" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Operations Information
+            </TabsTrigger>
+            <TabsTrigger value="product" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Product Details
+            </TabsTrigger>
+            <TabsTrigger value="aml" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              AML Compliance
+            </TabsTrigger>
+            <TabsTrigger value="related" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Partner/Representative
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Upload Documents
+            </TabsTrigger>
+            <TabsTrigger value="additional" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Additional Information
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <form className="space-y-6 pb-0" onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}>
+          <TabsContent value="company" className="mt-0">
+            {/* Company Information */}
+            <Card className="p-6 bg-blue-50/30">
         <div className="flex items-center gap-2 mb-4">
           <Building2 className="w-5 h-5 text-blue-600" />
           <h4 className="font-semibold">Company Information</h4>
@@ -1049,7 +1267,9 @@ function CorporateForm({
           </div>
         </div>
       </Card>
+          </TabsContent>
 
+          <TabsContent value="contact" className="mt-0">
       {/* Contact Information */}
       <Card className="p-6 bg-blue-50/30">
         <div className="flex items-center gap-2 mb-4">
@@ -1059,7 +1279,7 @@ function CorporateForm({
         <div className="grid grid-cols-2 gap-4">
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-2">
-              <Label>Country Code *</Label>
+              <Label>Country Code</Label>
               <Combobox
                 options={countryCodes}
                 value={officeCountryCode}
@@ -1090,12 +1310,14 @@ function CorporateForm({
             </div>
           </div>
           <div className="col-span-2 space-y-2">
-            <Label>Email</Label>
+            <Label>Email *</Label>
             <Input type="email" placeholder="Enter your email (abc@dom.com)" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
         </div>
       </Card>
+          </TabsContent>
 
+          <TabsContent value="identity" className="mt-0">
       {/* Identity Information */}
       <Card className="p-6 bg-blue-50/30">
         <div className="flex items-center gap-2 mb-4">
@@ -1145,7 +1367,9 @@ function CorporateForm({
           </div>
         </div>
       </Card>
+          </TabsContent>
 
+          <TabsContent value="operations" className="mt-0">
       {/* Operations Information */}
       <Card className="p-6 bg-blue-50/30">
         <div className="flex items-center gap-2 mb-4">
@@ -1216,7 +1440,9 @@ function CorporateForm({
           </div>
         </div>
       </Card>
+          </TabsContent>
 
+          <TabsContent value="product" className="mt-0">
       {/* Product Details */}
       <Card className="p-6 bg-blue-50/30">
         <div className="flex items-center gap-2 mb-4">
@@ -1288,7 +1514,9 @@ function CorporateForm({
           </div>
         </div>
       </Card>
+          </TabsContent>
 
+          <TabsContent value="aml" className="mt-0">
       {/* AML Compliance Questionnaire */}
       <Card className="p-6 bg-blue-50/30">
         <div className="flex items-center gap-2 mb-4">
@@ -1338,7 +1566,9 @@ function CorporateForm({
           </div>
         </div>
       </Card>
+          </TabsContent>
 
+          <TabsContent value="related" className="mt-0">
       {/* Partner/Representative/Authorized Person Details */}
       <Card className="p-6 bg-blue-50/30">
         <div className="flex items-center gap-2 mb-4">
@@ -1447,7 +1677,9 @@ function CorporateForm({
           Add Another Representative
         </Button>
       </Card>
+          </TabsContent>
 
+          <TabsContent value="documents" className="mt-0">
       {/* Upload Documents */}
       <Card className="p-6 bg-blue-50/30">
         <div className="flex items-center gap-2 mb-4">
@@ -1478,7 +1710,9 @@ function CorporateForm({
           </div>
         </div>
       </Card>
+          </TabsContent>
 
+          <TabsContent value="additional" className="mt-0">
       {/* Additional Information */}
       <Card className="p-6 bg-blue-50/30">
         <div className="flex items-center gap-2 mb-4">
@@ -1502,8 +1736,13 @@ function CorporateForm({
           </div>
         </div>
       </Card>
+          </TabsContent>
 
-      <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">Submit Registration</Button>
-    </form>
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t mt-6">
+            <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">Submit Registration</Button>
+          </div>
+        </form>
+      </Tabs>
+    </div>
   )
 }

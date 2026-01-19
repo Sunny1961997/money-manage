@@ -27,7 +27,7 @@ export default function Home() {
             <div className="bg-[#2563EB] text-white p-1 rounded">
               <span className="font-bold text-sm">WM</span>
             </div>
-            <span className="font-semibold text-sm">Winnow MS</span>
+            <span className="font-semibold text-sm">AML MS</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-sm hover:text-[#2563EB]">
@@ -65,7 +65,7 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <h1 className="text-5xl font-bold mb-6 text-balance">Winnow Management Solutions</h1>
+              <h1 className="text-5xl font-bold mb-6 text-balance">AML Management Solutions</h1>
               <p className="text-lg text-muted-foreground mb-8 text-pretty">
                 Streamline your anti-money laundering processes with our cutting-edge solutions. Stay compliant, reduce
                 risks, and protect your business.
@@ -81,9 +81,9 @@ export default function Home() {
       {/* About Section */}
       <section id="about" className="py-20 bg-slate-900 text-white">
         <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-6">About Winnow Management Solutions LLC</h2>
+          <h2 className="text-3xl font-bold text-center mb-6">About AML Management Solutions LLC</h2>
           <p className="text-center text-slate-300 max-w-4xl mx-auto mb-16">
-            Winnow Management Solutions LLC, based in the UAE, specializes in Compliance Consultancy services. Founded
+            AML Management Solutions LLC, based in the UAE, specializes in Compliance Consultancy services. Founded
             by ACAMS-certified professionals with extensive knowledge and experience in Anti-Money Laundering (AML)/CFT,
             sanctions compliance, and managing a dedicated risk-based approach- navigates complex regulatory landscapes
             and provides enhanced AML/CFT solutions and consultancy frameworks.
@@ -418,10 +418,10 @@ export default function Home() {
                 <div className="bg-[#2563EB] text-white p-2 rounded">
                   <span className="font-bold">WM</span>
                 </div>
-                <span className="font-semibold">Winnow Management Solutions</span>
+                <span className="font-semibold">AML Management Solutions</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Winnow MS is a provider of an advanced and cutting-edge anti-money laundering compliance solution. Your
+                AML MS is a provider of an advanced and cutting-edge anti-money laundering compliance solution. Your
                 trusted partner toward compliance learning.
               </p>
             </div>
@@ -440,13 +440,13 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Mail className="w-5 h-5 text-[#2563EB]" />
-                <span className="text-muted-foreground">support@winnowms.com</span>
+                <span className="text-muted-foreground">support@AMLms.com</span>
               </div>
             </div>
           </div>
 
           <div className="border-t pt-8 text-center text-sm text-muted-foreground">
-            © 2025 All rights reserved Winnow MS v2.0. All rights reserved
+            © 2025 All rights reserved AML MS v2.0. All rights reserved
           </div>
         </div>
       </footer>

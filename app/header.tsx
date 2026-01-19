@@ -29,7 +29,7 @@ export default function Header() {
                     <div className="bg-[#2563EB] text-white p-1 rounded">
                         <span className="font-bold text-sm">WM</span>
                     </div>
-                    <span className="font-semibold text-sm">Winnow MS</span>
+                    <span className="font-semibold text-sm">AML MS</span>
                 </div>
 
                 {/* Desktop Navigation - Hidden on Mobile */}
@@ -52,7 +52,7 @@ export default function Header() {
                                 </Button>
                             </SheetTrigger>
                             <SheetContent side="right">
-                                <SheetTitle className="text-left m-4">Winnow MS</SheetTitle>
+                                <SheetTitle className="text-left m-4">AML MS</SheetTitle>
                                 <nav className="flex flex-col gap-4 mt-8 ml-3">
                                     <NavLinks />
                                 </nav>

@@ -20,7 +20,7 @@ export async function GET(req: Request) {
   // Forward query params
   const url = new URL(req.url)
   const query = url.search ? url.search : ""
-  const apiUrl = `http://127.0.0.1:8000/api/onboarding/customers${query}`
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/onboarding/customers${query}`
   const res = await fetch(apiUrl, {
     method: "GET",
     headers,

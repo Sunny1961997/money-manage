@@ -19,7 +19,7 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const query = url.search ? url.search : "";
-  const apiUrl = `http://127.0.0.1:8000/api/onboarding/short-data-customers${query}`;
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/onboarding/short-data-customers${query}`;
   const res = await fetch(apiUrl, {
     method: "GET",
     headers,

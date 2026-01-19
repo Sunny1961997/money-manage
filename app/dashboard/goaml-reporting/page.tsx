@@ -1,44 +1,76 @@
 "use client"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 export default function GoamlReportingPage() {
   const [reports, setReports] = useState<any[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  // Debounce search input by 500ms
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 500)
+    return () => clearTimeout(t)
+  }, [search])
+
+  const fetchReports = useCallback(async () => {
+    const qs = new URLSearchParams()
+    qs.set("limit", "10")
+    qs.set("offset", String(page))
+    if (debouncedSearch.trim()) qs.set("search", debouncedSearch.trim())
+
+    const res = await fetch(`/api/goaml/reports?${qs.toString()}`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    })
+
+    const json = await res.json()
+    console.log("Fetched GOAML Reports:", json)
+
+    if (json?.status) {
+      setReports(json.data?.reports || [])
+      setTotal(json.data?.total || 0)
+    } else {
+      setReports([])
+      setTotal(0)
+    }
+  }, [page, debouncedSearch])
+
+  // When debounced search changes, reset to page 1
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch])
 
   useEffect(() => {
-    async function fetchReports() {
-      const res = await fetch(`/api/goaml/reports?limit=10&offset=${page}` , {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      })
-      const json = await res.json()
-      console.log("Fetched GOAML Reports:", json)
-      if (json?.status) {
-        setReports(json.data?.reports || [])
-        setTotal(json.data?.total || 0)
-      }
-    }
     fetchReports()
-  }, [page])
+  }, [fetchReports, refreshKey])
 
   return (
     <div className="p-6">
       {/* Notice banner */}
-      <div className="mb-4 rounded border border-orange-300 bg-orange-50 text-orange-800 p-3">
+      {/* <div className="mb-4 rounded border border-orange-300 bg-orange-50 text-orange-800 p-3">
         <b>Notice !</b> Please update the identification issue details for all existing corporate customers' UBO, Partner, or Authorised Person to facilitate a seamless GOAML process.
-      </div>
+      </div> */}
 
       {/* Header actions */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">GOAML Reporting</h2>
         <div className="flex gap-2">
-          <button className="px-3 py-2 rounded border text-sm" onClick={() => setPage(1)}>Refresh</button>
+          <button
+            className="px-3 py-2 rounded border text-sm"
+            onClick={() => setRefreshKey((k) => k + 1)}
+          >
+            Refresh
+          </button>
           <Link href="/dashboard/goaml-reporting/create" className="px-3 py-2 rounded bg-blue-600 text-white text-sm">+ Create New Report</Link>
-          <button className="px-3 py-2 rounded border text-sm">Validate XML File</button>
+          {/* <button className="px-3 py-2 rounded border text-sm">Validate XML File</button> */}
         </div>
       </div>
 

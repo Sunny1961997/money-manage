@@ -1,4 +1,5 @@
 // auth.ts
+
 // IMPORTANT: No backend URL here
 const BASE_URL = "" // use Next.js API routes only
 
@@ -42,7 +43,6 @@ export async function login(email: string, password: string) {
   });
   console.log("Response status from /api/auth/login:", res);
 
-  if (!res.ok) throw new Error("Login failed");
   return res.json();
 }
 

@@ -1,7 +1,9 @@
 "use client"
-import { useEffect, useState } from "react"
+
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import { buildGoamlXml, downloadXml } from "./goamlXml"
 
 export default function ViewGoamlReportPage() {
   const params = useParams()
@@ -9,6 +11,7 @@ export default function ViewGoamlReportPage() {
   const [report, setReport] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [xmlBusy, setXmlBusy] = useState(false)
 
   useEffect(() => {
     if (!id) {
@@ -40,6 +43,22 @@ export default function ViewGoamlReportPage() {
     fetchReport()
   }, [id])
 
+  const xmlFilename = useMemo(() => {
+    const rid = report?.id ?? id ?? "report"
+    return `goaml-report-${rid}.xml`
+  }, [report?.id, id])
+
+  const onGenerateXml = () => {
+    if (!report) return
+    setXmlBusy(true)
+    try {
+      const xml = buildGoamlXml(report)
+      downloadXml(xmlFilename, xml)
+    } finally {
+      setXmlBusy(false)
+    }
+  }
+
   if (loading) {
     return <div className="p-6">Loading...</div>
   }
@@ -55,7 +74,13 @@ export default function ViewGoamlReportPage() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">View GOAML Report</h2>
         <div className="flex gap-2">
-          <button className="px-3 py-2 rounded border text-sm">Generate XML</button>
+          <button
+            className="px-3 py-2 rounded border text-sm disabled:opacity-60"
+            onClick={onGenerateXml}
+            disabled={xmlBusy}
+          >
+            {xmlBusy ? "Generating..." : "Generate XML"}
+          </button>
           <button className="px-3 py-2 rounded border text-sm">Edit</button>
           <button className="px-3 py-2 rounded border text-sm">Delete</button>
         </div>

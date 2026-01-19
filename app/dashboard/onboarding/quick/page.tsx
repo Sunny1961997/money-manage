@@ -2,24 +2,102 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { User, Users, Upload, Download, Info } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/use-toast"
 
 type EntryType = "single" | "batch"
 
+const idTypes = [
+  { value: "Passport", label: "Passport" },
+  { value: "EID", label: "EID" },
+  { value: "GCC ID", label: "GCC ID" },
+  { value: "Govt. Issued ID", label: "Govt. Issued ID" },
+]
+
+const screeningFuzziness = [
+  { value: "OFF", label: "OFF" },
+  { value: "Level 1", label: "Level 1" },
+  { value: "Level 2", label: "Level 2" },
+]
+
 export default function QuickOnboardingPage() {
+  const router = useRouter()
+  const { toast } = useToast()
+  
   const [entryType, setEntryType] = useState<EntryType>("single")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isIdCardExpanded, setIsIdCardExpanded] = useState(false)
+  const [idCardFile, setIdCardFile] = useState<File | null>(null)
+  
+  // Meta data
+  const [countries, setCountries] = useState<Array<{ value: string; label: string }>>([])
+  const [countryCodes, setCountryCodes] = useState<Array<{ value: string; label: string }>>([])
+  const [loading, setLoading] = useState(true)
+  
+  // Form fields
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [email, setEmail] = useState("")
+  const [dob, setDob] = useState("")
+  const [residentialStatus, setResidentialStatus] = useState("resident")
+  const [address, setAddress] = useState("")
+  const [nationality, setNationality] = useState("")
+  const [countryCode, setCountryCode] = useState("")
+  const [contactNo, setContactNo] = useState("")
+  const [idType, setIdType] = useState("")
+  const [idNo, setIdNo] = useState("")
+  const [idIssueDate, setIdIssueDate] = useState("")
+  const [idExpiryDate, setIdExpiryDate] = useState("")
+  const [fuzziness, setFuzziness] = useState("OFF")
+  
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    async function fetchMeta() {
+      try {
+        const res = await fetch("/api/onboarding/meta", { credentials: "include" })
+        const json = await res.json()
+        const countryList = json.data.countries.countries.map((c: any) => ({
+          value: c.name,
+          label: c.name,
+          code: c.sortname,
+          phoneCode: c.phoneCode,
+        }))
+        setCountries(countryList)
+        setCountryCodes(
+          countryList
+            .filter((c: any) => c.phoneCode && c.phoneCode !== "+0")
+            .map((c: any) => ({
+              value: `${c.phoneCode}|${c.code}`,
+              label: `${c.phoneCode} (${c.label})`
+            }))
+        )
+      } catch (e) {
+        console.error("Failed to fetch meta:", e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMeta()
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0])
+    }
+  }
+
+  const handleIdCardFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setIdCardFile(e.target.files[0])
     }
   }
 
@@ -29,6 +107,115 @@ export default function QuickOnboardingPage() {
       setSelectedFile(e.dataTransfer.files[0])
     }
   }
+
+  const handleIdCardDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setIdCardFile(e.dataTransfer.files[0])
+    }
+  }
+
+  const handleSingleSelect = (setter: (v: string) => void) => (value: string | string[]) => {
+    if (typeof value === "string") setter(value)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+
+    // Validation
+    const requiredFields = {
+      'First Name': firstName,
+      'Last Name': lastName,
+      'Email': email,
+      'Date of Birth': dob,
+      'Address': address,
+      'Nationality': nationality,
+      'Country Code': countryCode,
+      'Contact No': contactNo,
+      'ID Type': idType,
+      'ID No': idNo,
+      'ID Issue Date': idIssueDate,
+      'ID Expiry Date': idExpiryDate,
+    }
+
+    const emptyFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value)
+      .map(([field, _]) => field)
+
+    if (emptyFields.length > 0) {
+      toast({
+        title: "Required fields missing",
+        description: `Please fill in: ${emptyFields.join(', ')}`,
+      })
+      setSubmitting(false)
+      return
+    }
+
+    const payload = {
+      customer_type: "individual",
+      onboarding_type: "quick_single",
+      screening_fuzziness: fuzziness,
+      individual_details: {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        dob,
+        residential_status: residentialStatus,
+        address,
+        nationality,
+        country_code: countryCode,
+        contact_no: contactNo,
+        id_type: idType,
+        id_no: idNo,
+        id_issue_date: idIssueDate,
+        id_expiry_date: idExpiryDate,
+      },
+    }
+
+    try {
+      const formData = new FormData()
+      formData.append("data", JSON.stringify(payload))
+      if (selectedFile) {
+        formData.append("documents[]", selectedFile)
+      }
+
+      const res = await fetch("/api/onboarding", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      })
+
+      const data = await res.json().catch(async () => ({ message: await res.text() }))
+      console.log("[Quick Onboarding] API response:", { status: res.status, data })
+
+      if (res.ok) {
+        const msg = data?.message || "Quick onboarding submitted successfully"
+        toast({ title: "Success", description: msg })
+        router.push("/dashboard/customers")
+      } else {
+        const details = data?.errors
+          ? Object.values(data.errors as Record<string, string[]>)
+              .flat()
+              .join("; ")
+          : ""
+        const errText = details || data?.message || data?.error || "Unknown error"
+        toast({
+          title: "Onboarding failed",
+          description: errText,
+        })
+      }
+    } catch (err: any) {
+      toast({
+        title: "Onboarding failed",
+        description: err?.message || "Network error",
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) return <div className="max-w-6xl mx-auto p-6">Loading...</div>
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -90,26 +277,100 @@ export default function QuickOnboardingPage() {
       {/* Single Entry Form */}
       {entryType === "single" && (
         <div className="space-y-6">
-          <div className="bg-white rounded-lg border p-6">
+          <form onSubmit={handleSubmit} className="bg-white rounded-lg border p-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">Individual</span>
               <h3 className="text-lg font-semibold">New Individual Registration</h3>
             </div>
 
             {/* Onboard with ID card */}
-            <div className="mb-6 p-4 bg-slate-50 rounded-lg">
-              <button className="flex items-center justify-between w-full text-sm font-medium">
+            {/* <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => setIsIdCardExpanded(!isIdCardExpanded)}
+                className="flex items-center justify-between w-full p-4 bg-slate-50 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors"
+              >
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-gray-400 rounded flex items-center justify-center">
-                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full" />
-                  </div>
-                  Onboard with ID card
+                  <Upload className="w-4 h-4 text-gray-600" />
+                  <span>Onboard with ID card</span>
                 </div>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className={cn("w-4 h-4 transition-transform", isIdCardExpanded && "rotate-180")}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-            </div>
+
+              {isIdCardExpanded && (
+                <div className="mt-4 p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+                  <div
+                    className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center bg-white cursor-pointer hover:bg-blue-50/30 transition-colors"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={handleIdCardDrop}
+                    onClick={() => document.getElementById("idCardUpload")?.click()}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Upload className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <p className="text-sm font-medium text-blue-700">Upload ID Card</p>
+                      <p className="text-xs text-muted-foreground">
+                        {idCardFile ? idCardFile.name : "Drag & drop files here, or click to select"}
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      id="idCardUpload"
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={handleIdCardFileChange}
+                    />
+                  </div>
+
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <div className="flex items-start gap-2 mb-2">
+                      <Info className="w-4 h-4 text-blue-600 mt-0.5" />
+                      <h5 className="text-sm font-semibold text-gray-900">File Requirements</h5>
+                    </div>
+                    <ul className="text-xs text-gray-600 space-y-1 ml-6">
+                      <li>• Max size: 5MB</li>
+                      <li>• Formats: JPG, PNG, PDF</li>
+                      <li>• Maximum pages in PDF: 2</li>
+                      <li>• One file only at a time</li>
+                    </ul>
+                  </div>
+
+                  <div className="mt-4 p-3 bg-amber-50 rounded-lg">
+                    <div className="flex items-start gap-2 mb-2">
+                      <svg className="w-4 h-4 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                      <h5 className="text-sm font-semibold text-gray-900">Scanning Tips</h5>
+                    </div>
+                    <ul className="text-xs text-gray-600 space-y-1 ml-6">
+                      <li>• Good lighting, no shadows or glare</li>
+                      <li>• Ensure all text is clearly visible</li>
+                      <li>• Make sure the text is straight and not skewed or rotated</li>
+                      <li>• Use high-resolution scan or photo</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div> */}
 
             {/* Personal Information */}
             <div className="mb-6">
@@ -123,28 +384,66 @@ export default function QuickOnboardingPage() {
                   <Label htmlFor="firstName">
                     First Name <span className="text-red-500">*</span>
                   </Label>
-                  <Input id="firstName" placeholder="Enter first name" className="mt-1.5" />
+                  <Input 
+                    id="firstName" 
+                    placeholder="Enter first name" 
+                    className="mt-1.5" 
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="lastName">
                     Last Name <span className="text-red-500">*</span>
                   </Label>
-                  <Input id="lastName" placeholder="Enter last name" className="mt-1.5" />
+                  <Input 
+                    id="lastName" 
+                    placeholder="Enter last name" 
+                    className="mt-1.5"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
+                  <Label htmlFor="email">
+                    Email <span className="text-red-500">*</span>
+                  </Label>
+                  <Input 
+                    id="email" 
+                    type="email"
+                    placeholder="Enter email address" 
+                    className="mt-1.5" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div>
                   <Label htmlFor="dob">
                     Date of Birth<span className="text-red-500">*</span>
                   </Label>
-                  <Input id="dob" type="date" className="mt-1.5" />
+                  <Input 
+                    id="dob" 
+                    type="date" 
+                    className="mt-1.5"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                  />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <Label>
                     Residential Status<span className="text-red-500">*</span>
                   </Label>
-                  <RadioGroup defaultValue="resident" className="flex gap-6 mt-2">
+                  <RadioGroup 
+                    value={residentialStatus} 
+                    onValueChange={setResidentialStatus}
+                    className="flex gap-6 mt-2"
+                  >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="resident" id="resident" />
                       <Label htmlFor="resident" className="font-normal cursor-pointer">
@@ -159,55 +458,59 @@ export default function QuickOnboardingPage() {
                     </div>
                   </RadioGroup>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <Label htmlFor="address">
                     Address <span className="text-red-500">*</span>
                   </Label>
-                  <Input id="address" placeholder="Enter address" className="mt-1.5" />
-                </div>
-                <div>
-                  <Label htmlFor="nationality">
-                    Nationality<span className="text-red-500">*</span>
-                  </Label>
-                  <Select>
-                    <SelectTrigger className="mt-1.5">
-                      <SelectValue placeholder="Select a nationality" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="india">India</SelectItem>
-                      <SelectItem value="uae">United Arab Emirates</SelectItem>
-                      <SelectItem value="usa">United States</SelectItem>
-                      <SelectItem value="uk">United Kingdom</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input 
+                    id="address" 
+                    placeholder="Enter address" 
+                    className="mt-1.5"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
+                  <Label htmlFor="nationality">
+                    Nationality<span className="text-red-500">*</span>
+                  </Label>
+                  <Combobox
+                    options={countries}
+                    value={nationality}
+                    onValueChange={handleSingleSelect(setNationality)}
+                    placeholder="Select a nationality"
+                    searchPlaceholder="Search nationality..."
+                  />
+                </div>
+                <div>
                   <Label htmlFor="countryCode">
                     Country Code <span className="text-red-500">*</span>
                   </Label>
-                  <Select>
-                    <SelectTrigger className="mt-1.5">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="+91">+91 (India)</SelectItem>
-                      <SelectItem value="+971">+971 (UAE)</SelectItem>
-                      <SelectItem value="+1">+1 (USA)</SelectItem>
-                      <SelectItem value="+44">+44 (UK)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={countryCodes}
+                    value={countryCode}
+                    onValueChange={handleSingleSelect(setCountryCode)}
+                    placeholder="Select"
+                    searchPlaceholder="Search code..."
+                  />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <Label htmlFor="contactNo">
                     Contact No <span className="text-red-500">*</span>
                   </Label>
-                  <Input id="contactNo" placeholder="Enter contact number" className="mt-1.5" />
+                  <Input 
+                    id="contactNo" 
+                    placeholder="Enter contact number" 
+                    className="mt-1.5"
+                    value={contactNo}
+                    onChange={(e) => setContactNo(e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -231,23 +534,25 @@ export default function QuickOnboardingPage() {
                   <Label htmlFor="idType">
                     ID Type <span className="text-red-500">*</span>
                   </Label>
-                  <Select>
-                    <SelectTrigger className="mt-1.5">
-                      <SelectValue placeholder="Select an ID type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="passport">Passport</SelectItem>
-                      <SelectItem value="driving-license">Driving License</SelectItem>
-                      <SelectItem value="national-id">National ID</SelectItem>
-                      <SelectItem value="eid">Emirates ID</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={idTypes}
+                    value={idType}
+                    onValueChange={handleSingleSelect(setIdType)}
+                    placeholder="Select an ID type"
+                    searchPlaceholder="Search type..."
+                  />
                 </div>
                 <div>
                   <Label htmlFor="idNo">
                     ID No <span className="text-red-500">*</span>
                   </Label>
-                  <Input id="idNo" placeholder="Enter ID number" className="mt-1.5" />
+                  <Input 
+                    id="idNo" 
+                    placeholder="Enter ID number" 
+                    className="mt-1.5"
+                    value={idNo}
+                    onChange={(e) => setIdNo(e.target.value)}
+                  />
                 </div>
               </div>
 
@@ -256,13 +561,25 @@ export default function QuickOnboardingPage() {
                   <Label htmlFor="idIssued">
                     ID Issued Date<span className="text-red-500">*</span>
                   </Label>
-                  <Input id="idIssued" type="date" className="mt-1.5" />
+                  <Input 
+                    id="idIssued" 
+                    type="date" 
+                    className="mt-1.5"
+                    value={idIssueDate}
+                    onChange={(e) => setIdIssueDate(e.target.value)}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="idExpiry">
                     ID Expiry Date<span className="text-red-500">*</span>
                   </Label>
-                  <Input id="idExpiry" type="date" className="mt-1.5" />
+                  <Input 
+                    id="idExpiry" 
+                    type="date" 
+                    className="mt-1.5"
+                    value={idExpiryDate}
+                    onChange={(e) => setIdExpiryDate(e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -275,18 +592,27 @@ export default function QuickOnboardingPage() {
               </div>
 
               <div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50/30"
+                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50/30 cursor-pointer"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
+                onClick={() => document.getElementById("fileUpload")?.click()}
               >
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
                     <Upload className="w-6 h-6 text-blue-600" />
                   </div>
                   <p className="text-sm font-medium text-blue-700">Add Documents</p>
-                  <p className="text-xs text-muted-foreground">Drag & drop a .xlsx file here, or click to select</p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedFile ? selectedFile.name : "Drag & drop files here, or click to select"}
+                  </p>
                 </div>
-                <input type="file" className="hidden" id="fileUpload" onChange={handleFileChange} />
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  id="fileUpload" 
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                  onChange={handleFileChange} 
+                />
               </div>
               <p className="text-xs text-amber-600 flex items-center gap-1 mt-2">
                 <Info className="w-3 h-3" />
@@ -320,27 +646,23 @@ export default function QuickOnboardingPage() {
                     />
                   </svg>
                 </Label>
-                <Select defaultValue="off">
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="off">OFF</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={screeningFuzziness}
+                  value={fuzziness}
+                  onValueChange={handleSingleSelect(setFuzziness)}
+                  placeholder="Select fuzziness level"
+                  searchPlaceholder="Search fuzziness..."
+                />
               </div>
             </div>
 
-            <Button className="w-full bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={submitting}>
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              Submit Quick Onboard
+              {submitting ? "Submitting..." : "Submit Quick Onboard"}
             </Button>
-          </div>
+          </form>
         </div>
       )}
 

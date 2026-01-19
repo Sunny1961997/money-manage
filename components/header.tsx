@@ -51,6 +51,7 @@ export function Header() {
               <div className="text-right">
                 <div className="text-sm font-medium">{user?.name || "User"}</div>
                 <div className="text-xs text-muted-foreground">{user?.email}</div>
+                <div className="text-xs text-muted-foreground">{user?.role}</div>
               </div>
             </Button>
           </DropdownMenuTrigger>

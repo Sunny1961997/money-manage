@@ -62,17 +62,50 @@ export async function POST(req: Request) {
   }
 
   // Forward request to Laravel
-  const res = await fetch("http://127.0.0.1:8000/api/onboarding", {
-    method: "POST",
-    headers: forwardHeaders,
-    credentials: "include",
-    body: forwardBody,
-  })
+  let res: Response
+  try {
+    console.log("[API] Forwarding to Laravel...")
+    console.log(`[API] Target URL: ${process.env.NEXT_PUBLIC_API_BASE_URL}/api/onboarding`)
+    console.log("[API] Headers being sent:", forwardHeaders)
+    console.log("[API] Body type:", forwardBody instanceof FormData ? "FormData" : typeof forwardBody)
+    
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => {
+      console.log("[API] Request timeout after 30 seconds")
+      controller.abort()
+    }, 30000) // 30 second timeout
+
+    const startTime = Date.now()
+    res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/onboarding`, {
+      method: "POST",
+      headers: forwardHeaders,
+      credentials: "include",
+      body: forwardBody,
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+    const elapsed = Date.now() - startTime
+    console.log(`[API] Laravel responded with status ${res.status} in ${elapsed}ms`)
+  } catch (fetchErr: any) {
+    console.error("[API] Failed to reach Laravel backend:", fetchErr)
+    console.error("[API] Error name:", fetchErr.name)
+    console.error("[API] Error message:", fetchErr.message)
+    return NextResponse.json(
+      {
+        status: false,
+        message: fetchErr.name === "AbortError" 
+          ? "Request timeout - Laravel server not responding" 
+          : `Cannot connect to Laravel backend: ${fetchErr.message}`,
+        error: "Backend connection failed",
+      },
+      { status: 503 }
+    )
+  }
 
   const contentType = res.headers.get("content-type") || ""
   const responseText = await res.text()
   console.log("[API] Laravel onboarding response status:", res.status)
-  console.log("[API] Laravel onboarding response headers:", Object.fromEntries(res.headers.entries()))
   console.log("[API] Laravel onboarding response body:", responseText)
 
   if (!res.ok) {
@@ -80,18 +113,19 @@ export async function POST(req: Request) {
     if (contentType.includes("application/json")) {
       try {
         const jsonErr = JSON.parse(responseText)
+        console.log("[API] Returning parsed error JSON:", jsonErr)
         return NextResponse.json(jsonErr, { status: res.status })
-      } catch {
+      } catch (parseErr) {
+        console.error("[API] Failed to parse error JSON:", parseErr)
         // fallthrough to text
       }
     }
+    console.log("[API] Returning error as plain text")
     return NextResponse.json(
       {
         status: false,
         message: responseText || "Unknown error",
         error: responseText || "Unknown error",
-        statusCode: res.status,
-        headers: Object.fromEntries(res.headers.entries()),
       },
       { status: res.status }
     )
@@ -101,6 +135,7 @@ export async function POST(req: Request) {
   if (contentType.includes("application/json")) {
     try {
       const data = JSON.parse(responseText)
+      console.log("[API] Returning success JSON:", data)
       return NextResponse.json(data)
     } catch {
       // fall through to send as message

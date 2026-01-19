@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 export async function GET(req: Request) {
   const cookie = req.headers.get("cookie") || ""
 
-  const res = await fetch("http://127.0.0.1:8000/api/me", {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/me`, {
     headers: {
       cookie,
       "Content-Type": "application/json",

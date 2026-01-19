@@ -9,35 +9,65 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuthStore } from "@/lib/store"
 import { login } from "@/lib/auth"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const router = useRouter()
-  const { setUser, setLoading, setError, error } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
-
+  const { setUser } = useAuthStore()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
+    setIsLoading(true)
+    setError("")
 
-    setIsLoading(true);
     try {
-      const data = await login(email, password);
-      setIsLoading(true);
+      const data = await login(email, password)
+      
       if (data && data.user) {
-        setUser(data.user);
-        router.push("/dashboard/profile");
-        router.refresh(); 
+        setUser(data.user)
+        toast({
+          title: "Success",
+          description: "Login successful!",
+        })
+        
+        // Redirect based on user role
+        const userRole = data.user.role?.toLowerCase().trim()
+        if (userRole === "admin") {
+          router.push("/dashboard/admin")
+        } else if (userRole === "company admin") {
+          router.push("/dashboard/profile")
+        } else {
+          // Default redirect for other roles
+          router.push("/dashboard/profile")
+        }
+        router.refresh()
       } else {
-        console.error("Login failed: No user data returned");
+        const errorMsg = data?.message || "Login failed: No user data returned"
+        setError(errorMsg)
+        toast({
+          title: "Login Failed",
+          description: errorMsg,
+          // variant: "destructive",
+        })
       }
-    } catch (error) {
-      console.error("An error occurred during login:", error);
+    } catch (error: any) {
+      const errorMsg = error?.message || "An error occurred during login"
+      setError(errorMsg)
+      toast({
+        title: "Login Failed",
+        description: errorMsg,
+        // variant: "destructive",
+      })
+      console.error("An error occurred during login:", error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
@@ -48,7 +78,7 @@ export default function LoginPage() {
               <span className="text-white font-bold text-xl">W</span>
             </div>
             <div>
-              <CardTitle className="text-2xl">Winnow Management Solutions</CardTitle>
+              <CardTitle className="text-2xl">AML Management Solutions</CardTitle>
               <CardDescription>WMS Dashboard v2.0</CardDescription>
             </div>
           </div>

@@ -18,7 +18,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   const { id } = await params
-  const apiUrl = `http://127.0.0.1:8000/api/goaml-reports/${id}`
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/goaml-reports/${id}`
 
   const res = await fetch(apiUrl, {
     method: "GET",

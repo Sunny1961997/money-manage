@@ -2,6 +2,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/components/ui/use-toast"
 
 interface Customer {
   id: number
@@ -48,6 +49,7 @@ export default function CreateGoamlReportPage() {
     estimated_value: "",
     currency_code: "",
   })
+  const { toast } = useToast()
 
   useEffect(() => {
     async function fetchMetadata() {
@@ -89,12 +91,19 @@ export default function CreateGoamlReportPage() {
 
   const handleSubmit = async () => {
     if (!selectedCustomer) {
-      alert("Please select a customer")
+      // alert("Please select a customer")
+      toast({
+        title: "Required fields missing",
+        description: `Please select a customer`,
+      })
       return
     }
 
     if (!selectedCustomer.id) {
-      alert("Error: Customer ID is missing. Please re-select the customer.")
+      toast({
+        title: "Error",
+        description: "Customer ID is missing. Please re-select the customer.",
+      })
       return
     }
 
@@ -112,15 +121,24 @@ export default function CreateGoamlReportPage() {
       })
 
       const json = await res.json()
+      
       if (json?.status) {
         router.refresh()
         router.push("/dashboard/goaml-reporting")
       } else {
-        alert(json?.message || "Failed to create report")
+        const errorDetails = JSON.parse(json.error);
+        console.log("GOAML Report Creation Response:", errorDetails.message);
+        toast({
+          title: errorDetails.message,
+          description: errorDetails.error || "Failed to create report",
+        })
       }
     } catch (error) {
       console.error("Failed to submit report", error)
-      alert("An error occurred while submitting the report")
+      toast({
+        title: "Error",
+        description: "An error occurred while submitting the report",
+      })
     }
   }
 
@@ -129,51 +147,103 @@ export default function CreateGoamlReportPage() {
       <h2 className="text-xl font-bold mb-4">Create GOAML Report</h2>
 
       {/* Customer Selection */}
-      <div className="mb-4">
-        <label>Customer Type</label>
-        <select
-          className="border p-2 rounded w-full"
-          value={customerType}
-          onChange={(e) => setCustomerType(e.target.value)}
-        >
-          <option value="all">All Customers</option>
-          <option value="individual">Individual</option>
-          <option value="corporate">Corporate</option>
-        </select>
+      {/* <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="mb-4">
+          <label>Customer Type</label>
+          <select
+            className="border p-2 rounded w-full"
+            value={customerType}
+            onChange={(e) => setCustomerType(e.target.value)}
+          >
+            <option value="all">All Customers</option>
+            <option value="individual">Individual</option>
+            <option value="corporate">Corporate</option>
+          </select>
 
-        <label>Pick Customer</label>
-        <select
-          className="border p-2 rounded w-full"
-          onChange={async (e) => {
-            const id = e.target.value
-            console.log("Selected customer ID:", id)
-            if (!id) {
-              setSelectedCustomer(null)
-              return
-            }
-            try {
-              const res = await fetch(`/api/onboarding/customers/${id}`)
-              const json = await res.json()
-              if (json?.status) {
-                const customerData = json.data
-                // Ensure id is present in the customer data
-                if (!customerData.id) {
-                  customerData.id = parseInt(id)
-                }
-                setSelectedCustomer(customerData)
+          <label>Pick Customer</label>
+          <select
+            className="border p-2 rounded w-full"
+            onChange={async (e) => {
+              const id = e.target.value
+              console.log("Selected customer ID:", id)
+              if (!id) {
+                setSelectedCustomer(null)
+                return
               }
-            } catch (error) {
-              console.error("Failed to fetch customer details", error)
-            }
-          }}
-        >
-          <option value="">Select Customer</option>
-          {customers.map((customer) => (
-            <option key={customer.id} value={customer.id}>
-              {customer.name}
-            </option>
-          ))}
-        </select>
+              try {
+                const res = await fetch(`/api/onboarding/customers/${id}`)
+                const json = await res.json()
+                if (json?.status) {
+                  const customerData = json.data
+                  // Ensure id is present in the customer data
+                  if (!customerData.id) {
+                    customerData.id = parseInt(id)
+                  }
+                  setSelectedCustomer(customerData)
+                }
+              } catch (error) {
+                console.error("Failed to fetch customer details", error)
+              }
+            }}
+          >
+            <option value="">Select Customer</option>
+            {customers.map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div> */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        {/* First Column: Customer Type */}
+        <div>
+          <label className="block mb-1">Customer Type</label>
+          <select
+            className="border p-2 rounded w-full"
+            value={customerType}
+            onChange={(e) => setCustomerType(e.target.value)}
+          >
+            <option value="all">All Customers</option>
+            <option value="individual">Individual</option>
+            <option value="corporate">Corporate</option>
+          </select>
+        </div>
+
+        {/* Second Column: Pick Customer */}
+        <div>
+          <label className="block mb-1">Pick Customer</label>
+          <select
+            className="border p-2 rounded w-full"
+            onChange={async (e) => {
+              const id = e.target.value;
+              if (!id) {
+                setSelectedCustomer(null);
+                return;
+              }
+              try {
+                const res = await fetch(`/api/onboarding/customers/${id}`);
+                const json = await res.json();
+                if (json?.status) {
+                  const customerData = json.data;
+                  if (!customerData.id) {
+                    customerData.id = parseInt(id);
+                  }
+                  setSelectedCustomer(customerData);
+                }
+              } catch (error) {
+                console.error("Failed to fetch customer details", error);
+              }
+            }}
+          >
+            <option value="">Select Customer</option>
+            {customers.map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Selected Customer Details */}
@@ -262,7 +332,7 @@ export default function CreateGoamlReportPage() {
         <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Disposed Value</label>
-                <input className="border p-2 rounded w-full" value={formData.disposed_value} onChange={(e) => setFormData({ ...formData, disposed_value: e.target.value })} />
+                <input type="number" className="border p-2 rounded w-full" value={formData.disposed_value} onChange={(e) => setFormData({ ...formData, disposed_value: e.target.value })} />
             </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status Comments</label>
@@ -273,7 +343,7 @@ export default function CreateGoamlReportPage() {
         <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Value</label>
-                <input className="border p-2 rounded w-full" value={formData.estimated_value} onChange={(e) => setFormData({ ...formData, estimated_value: e.target.value })} />
+                <input type="number" className="border p-2 rounded w-full" value={formData.estimated_value} onChange={(e) => setFormData({ ...formData, estimated_value: e.target.value })} />
             </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Currency Code</label>
@@ -289,7 +359,7 @@ export default function CreateGoamlReportPage() {
         </div>
       </div>
 
-      <button className="btn btn-primary" onClick={handleSubmit}>Submit</button>
+      <button className="px-3 py-2 rounded bg-blue-600 text-white text-sm" onClick={handleSubmit}>Submit</button>
     </div>
   )
 }
