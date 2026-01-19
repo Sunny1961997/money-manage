@@ -57,7 +57,8 @@ const companyAdminNavigation: NavItem[] = [
 const adminNavigation: NavItem[] = [
   { name: "Dashboard", href: "/dashboard/admin", icon: Settings },
   { name: "Companies", href: "/dashboard/admin/companies", icon: Building2 },
-  { name: "Users", href: "/dashboard/admin/users", icon: Users },
+  { name: "Company Users", href: "/dashboard/admin/company-users", icon: Building2 },
+  { name: "System Users", href: "/dashboard/admin/users", icon: Users },
   // { name: "System Settings", href: "/dashboard/admin/settings", icon: Shield },
   // { name: "Audit Logs", href: "/dashboard/admin/audit-logs", icon: FileCheck },
 ]
@@ -114,7 +115,7 @@ function getNavigationByRole(): NavItem[] {
 
   // Normalize role to lowercase for comparison
   const normalizedRole = user?.role.toLowerCase().trim()
-  console.log("[Sidebar] Determining navigation for role:", user?.role)
+  console.log("[Sidebar] Determining navigation for role:", normalizedRole)
 
   switch (normalizedRole) {
     case "admin":
@@ -124,8 +125,9 @@ function getNavigationByRole(): NavItem[] {
     case "author":
       return authorNavigation
     case "mlro":
+      console.log("[Sidebar] MLRO role detected")
       return mlroNavigation
-    case "fla":
+    case "analyst":
       return flaNavigation
     default:
       // console.warn(`[Sidebar] Unknown role: ${role}, defaulting to company admin navigation`)

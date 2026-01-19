@@ -105,7 +105,7 @@ export default function CompaniesPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold">{companies.length}</div>
@@ -128,7 +128,7 @@ export default function CompaniesPage() {
             <p className="text-sm text-muted-foreground">Total Remaining Screenings</p>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Search and Filter */}
       <Card>
