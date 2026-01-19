@@ -214,7 +214,7 @@ export default function CustomerDetailPage() {
                 {data.documents.map((doc: any) => (
                   <div key={doc.id} className="border rounded p-3">
                     <div className="text-sm font-medium mb-2">{doc.file_name}</div>
-                    <a href={`http://127.0.0.1:8000/storage/${doc.file_path}`} target="_blank" rel="noreferrer" className="text-blue-600 text-sm underline">View</a>
+                    <a href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/storage/${doc.file_path}`} target="_blank" rel="noreferrer" className="text-blue-600 text-sm underline">View</a>
                   </div>
                 ))}
               </div>

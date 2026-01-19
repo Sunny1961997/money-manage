@@ -20,7 +20,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/company-users", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/company-users`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${decodedToken}`,
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     console.log("[API] Request body:", body)
 
-    const res = await fetch("http://127.0.0.1:8000/api/company-users", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/company-users`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${decodedToken}`,

@@ -56,11 +56,11 @@ export async function verifyAuth() {
 }
 
 // export async function login(email: string, password: string) {
-//   await fetch("http://127.0.0.1:8000/sanctum/csrf-cookie", {
+//   await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/sanctum/csrf-cookie`, {
 //     credentials: "include",
 //   })
 
-//   const res = await fetch("http://127.0.0.1:8000/api/login", {
+//   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/login`, {
 //     method: "POST",
 //     headers: { "Content-Type": "application/json" },
 //     credentials: "include",

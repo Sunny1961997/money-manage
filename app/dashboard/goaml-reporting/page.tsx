@@ -1,6 +1,7 @@
 "use client"
 import Link from "next/link"
 import { useState, useEffect, useCallback } from "react"
+import { useAuthStore } from "@/lib/store"
 
 export default function GoamlReportingPage() {
   const [reports, setReports] = useState<any[]>([])
@@ -11,6 +12,8 @@ export default function GoamlReportingPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("")
 
   const [refreshKey, setRefreshKey] = useState(0)
+  const { user } = useAuthStore()
+  const normalizedRole = user?.role.toLowerCase().trim()
 
   // Debounce search input by 500ms
   useEffect(() => {
@@ -69,7 +72,9 @@ export default function GoamlReportingPage() {
           >
             Refresh
           </button>
-          <Link href="/dashboard/goaml-reporting/create" className="px-3 py-2 rounded bg-blue-600 text-white text-sm">+ Create New Report</Link>
+          {normalizedRole !== "analyst" && (
+            <Link href="/dashboard/goaml-reporting/create" className="px-3 py-2 rounded bg-blue-600 text-white text-sm">+ Create New Report</Link>
+          )}
           {/* <button className="px-3 py-2 rounded border text-sm">Validate XML File</button> */}
         </div>
       </div>

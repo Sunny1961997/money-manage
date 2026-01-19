@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     console.log("[API] Request body:", body)
 
-    const res = await fetch("http://127.0.0.1:8000/api/users", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${decodedToken}`,
