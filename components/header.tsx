@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, MessageSquare, Settings, LogOut, LinkIcon } from "lucide-react"
+import { Bell, MessageSquare, Settings, LogOut, LinkIcon, KeyRound } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
@@ -51,14 +51,17 @@ export function Header() {
               <div className="text-right">
                 <div className="text-sm font-medium">{user?.name || "User"}</div>
                 <div className="text-xs text-muted-foreground">{user?.email}</div>
-                <div className="text-xs text-muted-foreground">{user?.role}</div>
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
               <Settings className="w-4 h-4 mr-2" />
               Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/dashboard/change-password')}>
+              <KeyRound className="w-4 h-4 mr-2" />
+              Change Password
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout} disabled={isLoading}>
               <LogOut className="w-4 h-4 mr-2" />

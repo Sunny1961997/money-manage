@@ -219,6 +219,8 @@ function IndividualForm({
   const [productTypes, setProductTypes] = useState<string[]>([])
   const [operationCountries, setOperationCountries] = useState<string[]>([])
   const [approach, setApproach] = useState("")
+  const [expectedNoOfTransactions, setExpectedNoOfTransactions] = useState("")
+  const [expectedVolume, setExpectedVolume] = useState("")
   // Screening & remarks
   const [fuzziness, setFuzziness] = useState("")
   const [remarks, setRemarks] = useState("")
@@ -339,6 +341,9 @@ function IndividualForm({
         source_of_income: sourceIncome,
         purpose_of_onboarding: purpose,
         payment_mode: paymentMethod,
+        mode_of_approach: approach,
+        expected_no_of_transactions: expectedNoOfTransactions ? Number(expectedNoOfTransactions) : null,
+        expected_volume: expectedVolume ? Number(expectedVolume) : null,
         id_type: idType,
         id_no: idNo,
         issuing_authority: issuingAuthority,
@@ -668,11 +673,21 @@ function IndividualForm({
                 </div>
                 <div className="space-y-2">
                   <Label>Expected No of Transactions</Label>
-                  <Input type="number" placeholder="0" />
+                  <Input 
+                    type="number" 
+                    placeholder="0" 
+                    value={expectedNoOfTransactions}
+                    onChange={e => setExpectedNoOfTransactions(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Expected Volume</Label>
-                  <Input type="number" placeholder="0" />
+                  <Input 
+                    type="number" 
+                    placeholder="0" 
+                    value={expectedVolume}
+                    onChange={e => setExpectedVolume(e.target.value)}
+                  />
                 </div>
               </div>
             </Card>

@@ -38,7 +38,7 @@ const companyAdminNavigation: NavItem[] = [
     icon: Search,
     children: [
       { name: "Quick Screening", href: "/dashboard/screening/quick" },
-      { name: "Batch Screening", href: "/dashboard/screening/batch" },
+      // { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   {
@@ -71,7 +71,7 @@ const authorNavigation: NavItem[] = [
     icon: Search,
     children: [
       { name: "Quick Screening", href: "/dashboard/screening/quick" },
-      { name: "Batch Screening", href: "/dashboard/screening/batch" },
+      // { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   { name: "Screening Logs", href: "/dashboard/screening-logs", icon: FileCheck },
@@ -86,7 +86,15 @@ const mlroNavigation: NavItem[] = [
     icon: Search,
     children: [
       { name: "Quick Screening", href: "/dashboard/screening/quick" },
-      { name: "Batch Screening", href: "/dashboard/screening/batch" },
+      // { name: "Batch Screening", href: "/dashboard/screening/batch" },
+    ],
+  },
+  {
+    name: "Onboarding",
+    icon: UserPlus,
+    children: [
+      { name: "Customer Onboarding", href: "/dashboard/onboarding/customer" },
+      { name: "Quick Onboarding", href: "/dashboard/onboarding/quick" },
     ],
   },
   { name: "Adverse Search", href: "/dashboard/adverse-search", icon: AlertCircle },
@@ -102,7 +110,15 @@ const flaNavigation: NavItem[] = [
     icon: Search,
     children: [
       { name: "Quick Screening", href: "/dashboard/screening/quick" },
-      { name: "Batch Screening", href: "/dashboard/screening/batch" },
+      // { name: "Batch Screening", href: "/dashboard/screening/batch" },
+    ],
+  },
+  {
+    name: "Onboarding",
+    icon: UserPlus,
+    children: [
+      { name: "Customer Onboarding", href: "/dashboard/onboarding/customer" },
+      { name: "Quick Onboarding", href: "/dashboard/onboarding/quick" },
     ],
   },
   { name: "Screening Logs", href: "/dashboard/screening-logs", icon: FileCheck },

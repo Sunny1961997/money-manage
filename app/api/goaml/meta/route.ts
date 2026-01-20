@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     headers["Authorization"] = `Bearer ${decodedToken}`;
   }
 
-  const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/goaml-reports/meta`;
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/goaml-reports/meta`;
   const res = await fetch(apiUrl, {
     method: "GET",
     headers,

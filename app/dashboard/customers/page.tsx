@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useEffect, useState, Fragment } from "react"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuthStore } from "@/lib/store"
+import { generateCustomerPDF } from "@/lib/pdf-generator"
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<any[]>([])
@@ -17,6 +19,7 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [detailsById, setDetailsById] = useState<Record<number, any>>({})
+  const { user } = useAuthStore()
 
   const toggleExpand = async (id: number) => {
     if (expandedId === id) {
@@ -164,8 +167,19 @@ export default function CustomersPage() {
                                   return (
                                     <div className="border rounded-lg">
                                       <div className="flex items-center justify-end gap-2 p-2">
-                                        <Button variant="outline" size="sm">Edit User</Button>
-                                        <Button variant="outline" size="sm">Download Details</Button>
+                                        {user?.role !== "Analyst" && (
+                                          <Link href={`/dashboard/onboarding/customer/edit/${customer.id}`}>
+                                            <Button variant="outline" size="sm">Edit User</Button>
+                                          </Link>
+                                        )}
+
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm"
+                                          onClick={() => generateCustomerPDF(data)}
+                                        >
+                                          Download Details
+                                        </Button>
                                         <Button variant="outline" size="sm" onClick={() => setExpandedId(null)}>Close</Button>
                                       </div>
                                       <Tabs defaultValue="company-info" className="p-4">

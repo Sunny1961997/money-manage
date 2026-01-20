@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { buildGoamlXml, downloadXml } from "./goamlXml"
+import { useAuthStore } from "@/lib/store"
 
 export default function ViewGoamlReportPage() {
   const params = useParams()
@@ -12,6 +13,7 @@ export default function ViewGoamlReportPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [xmlBusy, setXmlBusy] = useState(false)
+  const { user } = useAuthStore()
 
   useEffect(() => {
     if (!id) {
@@ -81,8 +83,14 @@ export default function ViewGoamlReportPage() {
           >
             {xmlBusy ? "Generating..." : "Generate XML"}
           </button>
-          <button className="px-3 py-2 rounded border text-sm">Edit</button>
-          <button className="px-3 py-2 rounded border text-sm">Delete</button>
+          {user?.role !== "Analyst" && (
+            <>
+              <Link href={`/dashboard/goaml-reporting/edit/${id}`}>
+                <button className="px-3 py-2 rounded border text-sm">Edit</button>
+              </Link>
+              <button className="px-3 py-2 rounded border text-sm text-red-600">Delete</button>
+            </>
+          )}
         </div>
       </div>
 

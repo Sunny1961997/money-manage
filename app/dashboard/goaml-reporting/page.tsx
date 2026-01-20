@@ -72,9 +72,9 @@ export default function GoamlReportingPage() {
           >
             Refresh
           </button>
-          {normalizedRole !== "analyst" && (
+          {/* {normalizedRole !== "analyst" && ( */}
             <Link href="/dashboard/goaml-reporting/create" className="px-3 py-2 rounded bg-blue-600 text-white text-sm">+ Create New Report</Link>
-          )}
+          {/* )} */}
           {/* <button className="px-3 py-2 rounded border text-sm">Validate XML File</button> */}
         </div>
       </div>
@@ -120,8 +120,14 @@ export default function GoamlReportingPage() {
                   <td className="p-3 border-b">{r.created_at ? new Date(r.created_at).toLocaleDateString() : r.createdDate || "-"}</td>
                   <td className="p-3 border-b">
                     <div className="flex gap-2">
-                      <button className="px-2 py-1 rounded border text-xs">✏️</button>
-                      <button className="px-2 py-1 rounded border text-xs">🗑️</button>
+                      {user?.role !== "Analyst" && (
+                        <>
+                          <Link href={`/dashboard/goaml-reporting/edit/${r.id}`}>
+                            <button className="px-2 py-1 rounded border text-xs">✏️</button>
+                          </Link>
+                          <button className="px-2 py-1 rounded border text-xs">🗑️</button>
+                        </>
+                      )}
                       <Link href={`/dashboard/goaml-reporting/${r.id}`} className="px-2 py-1 rounded border text-xs">View</Link>
                     </div>
                   </td>
