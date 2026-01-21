@@ -20,8 +20,11 @@ interface Customer {
     id: number
     customer_id: number
     company_name: string
-    trade_license_number: string
+    trade_license_no: string
     company_address: string
+    office_country_code: string
+    office_no:string
+
   }
 }
 
@@ -256,7 +259,7 @@ export default function CreateGoamlReportPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Trade License Number</label>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{selectedCustomer.corporate_detail?.trade_license_number || "-"}</div>
+              <div className="mt-1 p-2 bg-gray-50 rounded border">{selectedCustomer.corporate_detail?.office_country_code}{selectedCustomer.corporate_detail?.office_no}</div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Contact Office Number</label>

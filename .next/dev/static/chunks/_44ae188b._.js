@@ -1220,7 +1220,7 @@ function CustomerOnboardingPage() {
                         "CustomerOnboardingPage.useEffect.fetchMeta": (c)=>c.phoneCode && c.phoneCode !== "+0"
                     }["CustomerOnboardingPage.useEffect.fetchMeta"]).map({
                         "CustomerOnboardingPage.useEffect.fetchMeta": (c)=>({
-                                value: `${c.phoneCode}|${c.code}`,
+                                value: `${c.phoneCode}`,
                                 label: `${c.phoneCode} (${c.label})`
                             })
                     }["CustomerOnboardingPage.useEffect.fetchMeta"]));

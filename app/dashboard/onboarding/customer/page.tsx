@@ -100,7 +100,7 @@ export default function CustomerOnboardingPage() {
           countryList
             .filter((c: any) => c.phoneCode && c.phoneCode !== "+0")
             .map((c: any) => ({
-              value: `${c.phoneCode}|${c.code}`,
+              value: `${c.phoneCode}`,
               label: `${c.phoneCode} (${c.label})`
             }))
         )
