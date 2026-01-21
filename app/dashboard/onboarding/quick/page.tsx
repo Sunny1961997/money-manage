@@ -218,7 +218,7 @@ export default function QuickOnboardingPage() {
   if (loading) return <div className="max-w-6xl mx-auto p-6">Loading...</div>
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-8xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-2 text-xl font-semibold mb-1">
           <User className="w-5 h-5" />

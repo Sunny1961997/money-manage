@@ -59,14 +59,14 @@ export default function AccountStatsPage() {
         toast({
           title: "Error",
           description: data.message || "Failed to fetch account statistics",
-          variant: "destructive",
+          // variant: "destructive",
         })
       }
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "An error occurred",
-        variant: "destructive",
+        // variant: "destructive",
       })
     } finally {
       setLoading(false)

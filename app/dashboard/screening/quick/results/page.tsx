@@ -187,61 +187,63 @@ export default function QuickScreeningResultsPage() {
                     const anno = sourceAnnotationChoice[src.source] ?? "needs_review"
                     const showAnnoText = anno === "other"
 
-                    if (!hasData) return null
+                    // if (!hasData) return null
 
                     return (
                         <Card key={src.source} className="h-full">
                             <CardHeader className="space-y-3">
-                                {/* Candidates list */}
+                                <div className="font-bold">Source: {src.source}</div>
                                 <div className="space-y-2">
-                                            {candidates.map((c) => {
-                                                const conf = confidenceNum(c.confidence)
-                                                const b = band(conf)
-                                                const key = `${c.source}:${c.id}`
-                                                const isDownloading = downloadingKey === key
+                                    {candidates.map((c) => {
+                                        const conf = confidenceNum(c.confidence)
+                                        const b = band(conf)
+                                        const key = `${c.source}:${c.id}`
+                                        const isDownloading = downloadingKey === key
 
-                                                return (
-                                                    <div
-                                                        key={`${src.source}:${c.id}`}
-                                                        className="w-full rounded-md border px-3 py-2 flex items-start justify-between gap-3"
-                                                    >
-                                                        {/* LEFT: name + subject */}
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="flex items-start justify-between gap-2">
-                                                                <div className="min-w-0">
-                                                                    <div className="text-sm font-semibold break-words leading-snug">{c.name || "-"}</div>
-                                                                </div>
-
-                                                                {/* Download icon button (right side of name) */}
-                                                                <Button
-                                                                    type="button"
-                                                                    size="icon"
-                                                                    variant="ghost"
-                                                                    onClick={() => downloadPdfForCandidate(c)}
-                                                                    disabled={isDownloading}
-                                                                    className="h-8 w-8 shrink-0 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"
-                                                                    title={isDownloading ? "Preparing..." : "Download PDF"}
-                                                                    aria-label={isDownloading ? "Preparing PDF" : "Download PDF"}
-                                                                >
-                                                                    <Download className="h-4 w-4" />
-                                                                </Button>
-                                                            </div>
-
-                                                            <div className="text-xs text-muted-foreground break-words">{c.subject_type || "-"}</div>
+                                        return (
+                                            <div
+                                                key={`${src.source}:${c.id}`}
+                                                className="w-full rounded-md border px-3 py-2 flex items-start justify-between gap-3"
+                                            >
+                                                {/* LEFT: name + subject */}
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div className="min-w-0">
+                                                            <div className="text-sm font-semibold break-words leading-snug">{c.name || "-"}</div>
                                                         </div>
 
-                                                        {/* RIGHT: confidence badge + percent */}
-                                                        <div className="flex flex-col items-end gap-1 shrink-0">
-                                                            <div className={`px-2 py-0.5 rounded-md border text-xs font-medium ${b.cls}`}>{b.label}</div>
-                                                            <div className="text-xs text-muted-foreground tabular-nums">{conf.toFixed(2)}%</div>
-                                                        </div>
+                                                        {/* Download icon button (right side of name) */}
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            onClick={() => downloadPdfForCandidate(c)}
+                                                            disabled={isDownloading}
+                                                            className="h-8 w-8 shrink-0 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"
+                                                            title={isDownloading ? "Preparing..." : "Download PDF"}
+                                                            aria-label={isDownloading ? "Preparing PDF" : "Download PDF"}
+                                                        >
+                                                            <Download className="h-4 w-4" />
+                                                        </Button>
                                                     </div>
-                                                )
-                                            })}
-                                        </div>
 
-                                    {/* Annotation (for this source) -> ONLY if there is data */}
-                                    <div className="space-y-2">
+                                                    <div className="text-xs text-muted-foreground break-words">{c.subject_type || "-"}</div>
+                                                </div>
+
+                                                {/* RIGHT: confidence badge + percent */}
+                                                <div className="flex flex-col items-end gap-1 shrink-0">
+                                                    <div className={`px-2 py-0.5 rounded-md border text-xs font-medium ${b.cls}`}>{b.label}</div>
+                                                    <div className="text-xs text-muted-foreground tabular-nums">{conf.toFixed(2)}%</div>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+
+                                {/* Annotation (for this source) -> ONLY if there is data */}
+                                {hasData ? (
+                                    <>
+                                        <div className="space-y-2">
                                             <Label className="text-xs text-muted-foreground">Annotation (for this source)</Label>
                                             <Select
                                                 value={anno}
@@ -269,8 +271,8 @@ export default function QuickScreeningResultsPage() {
                                             ) : null}
                                         </div>
 
-                                    {/* Decision (for this source) -> ONLY if there is data */}
-                                    <div className="flex flex-col gap-2">
+                                        
+                                        <div className="flex flex-col gap-2">
                                             <div className="text-xs text-muted-foreground">Decision (for this source)</div>
 
                                             <div className="flex flex-wrap items-center gap-4">
@@ -305,8 +307,13 @@ export default function QuickScreeningResultsPage() {
                                                 </label>
                                             </div>
                                         </div>
-                                </CardHeader>
-                            </Card>
+                                    </>
+                                    ) : (
+                                        <div className="text-xs text-muted-foreground">No screening result found</div>
+                                    )
+                                }
+                            </CardHeader>
+                        </Card>
                     )
                 })}
             </div>

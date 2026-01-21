@@ -1,17 +1,29 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Building2, Users, FileCheck, Shield } from "lucide-react"
-import Link from "next/link"
+import Link from "next/link";
+import { useToast } from "@/components/ui/use-toast";
+
+interface AccountStats {
+  company_count: number,
+  system_users: number,
+  screening_logs: number,
+  active_users: number
+}
 
 export default function AdminDashboardPage() {
+  const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
+  const [stats, setStats] = useState<AccountStats | null>(null)
   const adminCards = [
     {
       title: "Companies",
       description: "Manage company accounts and subscriptions",
       icon: Building2,
       href: "/dashboard/admin/companies",
-      count: "-",
+      count: `${stats?.company_count}`,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
@@ -20,29 +32,61 @@ export default function AdminDashboardPage() {
       description: "Manage system users and permissions",
       icon: Users,
       href: "/dashboard/admin/users",
-      count: "-",
+      count: `${stats?.system_users}`,
       color: "text-green-600",
       bgColor: "bg-green-50",
     },
-    {
-      title: "System Settings",
-      description: "Configure system-wide settings",
-      icon: Shield,
-      href: "/dashboard/admin/settings",
-      count: "-",
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-    },
+    // {
+    //   title: "System Settings",
+    //   description: "Configure system-wide settings",
+    //   icon: Shield,
+    //   href: "/dashboard/admin/settings",
+    //   count: "-",
+    //   color: "text-purple-600",
+    //   bgColor: "bg-purple-50",
+    // },
     {
       title: "Audit Logs",
       description: "View system activity and audit trails",
       icon: FileCheck,
       href: "/dashboard/admin/audit-logs",
-      count: "-",
+      count: `${stats?.screening_logs}`,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
     },
-  ]
+  ];
+
+  useEffect(() => {
+      fetchStats()
+    }, [])
+  
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("/api/admin/dashboard", {
+          credentials: "include",
+        })
+  
+        const data = await res.json();
+  
+        if (res.ok && data.status) {
+          setStats(data.data)
+        } else {
+          toast({
+            title: "Error",
+            description: data.message || "Failed to fetch account statistics",
+            // variant: "destructive",
+          })
+        }
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message || "An error occurred",
+          // variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
 
   return (
     <div className="space-y-6">
@@ -84,15 +128,15 @@ export default function AdminDashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="border-l-4 border-blue-600 pl-4">
               <div className="text-sm text-muted-foreground">Total Companies</div>
-              <div className="text-2xl font-bold">-</div>
+              <div className="text-2xl font-bold">{stats?.company_count}</div>
             </div>
             <div className="border-l-4 border-green-600 pl-4">
               <div className="text-sm text-muted-foreground">Active Users</div>
-              <div className="text-2xl font-bold">-</div>
+              <div className="text-2xl font-bold">{stats?.active_users}</div>
             </div>
             <div className="border-l-4 border-purple-600 pl-4">
               <div className="text-sm text-muted-foreground">Total Screenings</div>
-              <div className="text-2xl font-bold">-</div>
+              <div className="text-2xl font-bold">{stats?.screening_logs}</div>
             </div>
           </div>
         </CardContent>

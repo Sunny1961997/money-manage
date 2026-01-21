@@ -119,7 +119,7 @@ export default function CustomerOnboardingPage() {
   if (loading) return <div>Loading...</div>
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-8xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <UsersIcon className="w-5 h-5" />

@@ -22,7 +22,7 @@ function toMessage(e: unknown) {
 function clampPercent(value: string) {
   const n = Number(value)
   if (!Number.isFinite(n)) return ""
-  return String(Math.min(90, Math.max(10, n)))
+  return String(Math.min(100, Math.max(10, n)))
 }
 
 export default function QuickScreeningPage() {
@@ -158,7 +158,7 @@ export default function QuickScreeningPage() {
 
   const ConfidenceInput = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
     const v = value === "" ? 10 : Number(value)
-    const safe = Number.isFinite(v) ? Math.min(90, Math.max(10, v)) : 10
+    const safe = Number.isFinite(v) ? Math.min(100, Math.max(10, v)) : 10
 
     return (
       <div className="space-y-2">
@@ -171,11 +171,11 @@ export default function QuickScreeningPage() {
           <Input
             type="number"
             min={10}
-            max={90}
+            max={100}
             step={1}
             value={value}
             onChange={(e) => onChange(clampPercent(e.target.value))}
-            placeholder="10 - 90"
+            placeholder="10 - 100"
             className="w-28"
           />
           <div className="flex-1">
@@ -183,7 +183,7 @@ export default function QuickScreeningPage() {
               aria-label="Confidence rating"
               type="range"
               min={10}
-              max={90}
+              max={100}
               step={1}
               value={safe}
               onChange={(e) => onChange(clampPercent(String(e.target.value)))}
@@ -234,7 +234,7 @@ export default function QuickScreeningPage() {
                   transition-all duration-300"
               >
                 <Building2 className="w-4 h-8" />
-                Non-individual
+                Corporate
               </TabsTrigger>
 
               <TabsTrigger

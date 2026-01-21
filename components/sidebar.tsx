@@ -61,6 +61,7 @@ const adminNavigation: NavItem[] = [
   { name: "System Users", href: "/dashboard/admin/users", icon: Users },
   // { name: "System Settings", href: "/dashboard/admin/settings", icon: Shield },
   // { name: "Audit Logs", href: "/dashboard/admin/audit-logs", icon: FileCheck },
+  { name: "Products", href: "/dashboard/admin/product", icon: FileCheck },
 ]
 
 const authorNavigation: NavItem[] = [
