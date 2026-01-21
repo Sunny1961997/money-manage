@@ -1,30 +1,44 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
 
 interface User {
-  id: string
+  id: number
   name: string
   email: string
+  phone?: string
   role: string
+  email_verified_at?: string
+  created_at?: string
+  updated_at?: string
 }
 
 interface AuthStore {
   user: User | null
   isAuthenticated: boolean
-  login: (user: User) => void
-  logout: () => void
+  isLoading: boolean
+  error: string | null
+  setUser: (user: User) => void
+  clearAuth: () => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
 }
 
-export const useAuthStore = create<AuthStore>()(
-  persist(
-    (set) => ({
+export const useAuthStore = create<AuthStore>((set) => ({
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+  error: null,
+  setUser: (user) =>
+    set({
+      user,
+      isAuthenticated: true,
+      error: null,
+    }),
+  clearAuth: () =>
+    set({
       user: null,
       isAuthenticated: false,
-      login: (user) => set({ user, isAuthenticated: true }),
-      logout: () => set({ user: null, isAuthenticated: false }),
+      error: null,
     }),
-    {
-      name: "auth-storage",
-    },
-  ),
-)
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+}))

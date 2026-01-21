@@ -1,19 +1,24 @@
 "use client"
 
-import { Bell, MessageSquare, Settings, LogOut, LinkIcon } from "lucide-react"
+import { Bell, MessageSquare, Settings, LogOut, LinkIcon, KeyRound } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useAuth } from "@/components/auth-provider"
 import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/lib/store"
+import { logout } from "@/lib/auth"
 
 export function Header() {
-  const { user, logout } = useAuth()
   const router = useRouter()
+  const { user, clearAuth, isLoading, setLoading, setError } = useAuthStore()
 
-  const handleLogout = () => {
-    logout()
-    router.push("/login")
-  }
+  const handleLogout = async () => {
+    const res = await fetch('/api/auth/logout', { method: 'POST' });
+    
+    if (res.ok) {
+      // Redirect to login page after cookie is cleared
+      window.location.href = '/login';
+    }
+  };
 
   return (
     <header className="h-16 border-b border-border bg-background flex items-center justify-between px-6">
@@ -50,13 +55,17 @@ export function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={() => router.push('/dashboard/change-password')}>
+              <KeyRound className="w-4 h-4 mr-2" />
+              Change Password
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} disabled={isLoading}>
               <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              {isLoading ? "Logging out..." : "Logout"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

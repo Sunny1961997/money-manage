@@ -14,18 +14,20 @@ import {
   Mail,
   MapPin,
 } from "lucide-react"
+import Header from "./header"
 
 export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="border-b bg-white sticky top-0 z-50">
+      <Header />
+      {/* <header className="border-b bg-white sticky top-0 z-50">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <div className="bg-[#2563EB] text-white p-1 rounded">
               <span className="font-bold text-sm">WM</span>
             </div>
-            <span className="font-semibold text-sm">Money MS</span>
+            <span className="font-semibold text-sm">AML MS</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-sm hover:text-[#2563EB]">
@@ -48,7 +50,7 @@ export default function Home() {
             <Button className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white">Get Started</Button>
           </Link>
         </div>
-      </header>
+      </header> */}
 
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-gray-50 to-white py-20">
@@ -63,7 +65,7 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <h1 className="text-5xl font-bold mb-6 text-balance">Money Management Solutions</h1>
+              <h1 className="text-5xl font-bold mb-6 text-balance">AML Management Solutions</h1>
               <p className="text-lg text-muted-foreground mb-8 text-pretty">
                 Streamline your anti-money laundering processes with our cutting-edge solutions. Stay compliant, reduce
                 risks, and protect your business.
@@ -79,9 +81,9 @@ export default function Home() {
       {/* About Section */}
       <section id="about" className="py-20 bg-slate-900 text-white">
         <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-6">About Money Management Solutions LLC</h2>
+          <h2 className="text-3xl font-bold text-center mb-6">About AML Management Solutions LLC</h2>
           <p className="text-center text-slate-300 max-w-4xl mx-auto mb-16">
-            Money Management Solutions LLC, based in the UAE, specializes in Compliance Consultancy services. Founded
+            AML Management Solutions LLC, based in the UAE, specializes in Compliance Consultancy services. Founded
             by ACAMS-certified professionals with extensive knowledge and experience in Anti-Money Laundering (AML)/CFT,
             sanctions compliance, and managing a dedicated risk-based approach- navigates complex regulatory landscapes
             and provides enhanced AML/CFT solutions and consultancy frameworks.
@@ -93,7 +95,7 @@ export default function Home() {
                 <div className="bg-[#2563EB] w-12 h-12 rounded-full flex items-center justify-center mb-4">
                   <Target className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Our Expertise</h3>
+                <h3 className="text-xl font-bold mb-3 text-white">Our Expertise</h3>
                 <p className="text-slate-300 text-sm">
                   Our team specializes in navigating the complex regulatory landscape of the UAE's Financial Services
                   Industry. We take pride in bringing the deep industry expertise, enabling business leaders to develop
@@ -107,7 +109,7 @@ export default function Home() {
                 <div className="bg-[#2563EB] w-12 h-12 rounded-full flex items-center justify-center mb-4">
                   <ShieldCheck className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Our Approach</h3>
+                <h3 className="text-xl font-bold mb-3 text-white">Our Approach</h3>
                 <p className="text-slate-300 text-sm">
                   We provide expert guidance and tailored consultancy services to help businesses navigate regulatory
                   requirements efficiently. Our solutions are customized to staying ahead of regulatory changes.
@@ -120,7 +122,7 @@ export default function Home() {
                 <div className="bg-[#2563EB] w-12 h-12 rounded-full flex items-center justify-center mb-4">
                   <Users className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Our Mission</h3>
+                <h3 className="text-xl font-bold mb-3 text-white">Our Mission</h3>
                 <p className="text-slate-300 text-sm">
                   We are dedicated to ensuring our clients meet industry and regulatory standards, mitigating risks and
                   maintaining compliance. Our goal is to help our clients to navigate the complex regulatory
@@ -416,10 +418,10 @@ export default function Home() {
                 <div className="bg-[#2563EB] text-white p-2 rounded">
                   <span className="font-bold">WM</span>
                 </div>
-                <span className="font-semibold">Money Management Solutions</span>
+                <span className="font-semibold">AML Management Solutions</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Money MS is a provider of an advanced and cutting-edge anti-money laundering compliance solution. Your
+                AML MS is a provider of an advanced and cutting-edge anti-money laundering compliance solution. Your
                 trusted partner toward compliance learning.
               </p>
             </div>
@@ -438,13 +440,13 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Mail className="w-5 h-5 text-[#2563EB]" />
-                <span className="text-muted-foreground">support@moneyms.com</span>
+                <span className="text-muted-foreground">support@AMLms.com</span>
               </div>
             </div>
           </div>
 
           <div className="border-t pt-8 text-center text-sm text-muted-foreground">
-            © 2025 All rights reserved Money MS v2.0. All rights reserved
+            © 2025 All rights reserved AML MS v2.0. All rights reserved
           </div>
         </div>
       </footer>

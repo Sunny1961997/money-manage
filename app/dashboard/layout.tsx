@@ -4,6 +4,7 @@ import type React from "react"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/lib/store"
+import { verifyAuth } from "@/lib/auth"
 import { DashboardLayout } from "@/components/dashboard-layout"
 
 export default function DashboardLayoutWrapper({
@@ -12,13 +13,29 @@ export default function DashboardLayoutWrapper({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const { isAuthenticated, setUser, setLoading } = useAuthStore()
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login")
+    const checkAuth = async () => {
+      setLoading(true)
+      try {
+        const user = await verifyAuth()
+        if (user) {
+          setUser(user)
+        } else {
+          router.push("/login")
+        }
+      } catch {
+        router.push("/login")
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [isAuthenticated, router])
+
+    if (!isAuthenticated) {
+      checkAuth()
+    }
+  }, [isAuthenticated, setUser, setLoading, router])
 
   if (!isAuthenticated) {
     return null

@@ -1,37 +1,71 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { login } from "@/lib/auth"
 import { useAuthStore } from "@/lib/store"
+import { login } from "@/lib/auth"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const loginStore = useAuthStore((state) => state.login)
+  const { setUser } = useAuthStore()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
     setError("")
-    setLoading(true)
 
     try {
-      const user = await login(email, password)
-      loginStore(user)
-      router.push("/dashboard/profile")
-    } catch (err) {
-      setError("Invalid email or password")
+      const data = await login(email, password)
+      
+      if (data && data.user) {
+        setUser(data.user)
+        toast({
+          title: "Success",
+          description: "Login successful!",
+        })
+        
+        // Redirect based on user role
+        const userRole = data.user.role?.toLowerCase().trim()
+        if (userRole === "admin") {
+          router.push("/dashboard/admin")
+        } else if (userRole === "company admin") {
+          router.push("/dashboard/profile")
+        } else {
+          // Default redirect for other roles
+          router.push("/dashboard/profile")
+        }
+        router.refresh()
+      } else {
+        const errorMsg = data?.message || "Login failed: No user data returned"
+        setError(errorMsg)
+        toast({
+          title: "Login Failed",
+          description: errorMsg,
+          // variant: "destructive",
+        })
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || "An error occurred during login"
+      setError(errorMsg)
+      toast({
+        title: "Login Failed",
+        description: errorMsg,
+        // variant: "destructive",
+      })
+      console.error("An error occurred during login:", error)
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
@@ -44,7 +78,7 @@ export default function LoginPage() {
               <span className="text-white font-bold text-xl">W</span>
             </div>
             <div>
-              <CardTitle className="text-2xl">Money Management Solutions</CardTitle>
+              <CardTitle className="text-2xl">AML Management Solutions</CardTitle>
               <CardDescription>WMS Dashboard v2.0</CardDescription>
             </div>
           </div>
@@ -56,7 +90,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="alhazfla@moneyms.com"
+                placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -74,12 +108,9 @@ export default function LoginPage() {
               />
             </div>
             {error && <div className="text-sm text-red-500 bg-red-50 p-3 rounded-md">{error}</div>}
-            <Button type="submit" className="w-full bg-[#2563EB] hover:bg-[#1D4ED8]" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
+            <Button type="submit" className="w-full bg-[#2563EB] hover:bg-[#1D4ED8]" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
             </Button>
-            <div className="text-sm text-muted-foreground text-center pt-2">
-              Demo credentials: alhazfla@moneyms.com / password
-            </div>
           </form>
         </CardContent>
       </Card>

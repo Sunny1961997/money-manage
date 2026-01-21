@@ -14,12 +14,13 @@ export interface ComboboxOption {
 
 interface ComboboxProps {
   options: ComboboxOption[]
-  value?: string
-  onValueChange?: (value: string) => void
+  value?: string | string[]
+  onValueChange?: (value: string | string[]) => void
   placeholder?: string
   searchPlaceholder?: string
   emptyText?: string
   className?: string
+  multiple?: boolean
 }
 
 export function Combobox({
@@ -30,8 +31,32 @@ export function Combobox({
   searchPlaceholder = "Search...",
   emptyText = "No option found.",
   className,
+  multiple = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+
+  // For multi-select, value is string[]
+  const isMulti = multiple
+  const selectedValues = isMulti
+    ? (Array.isArray(value) ? value : [])
+    : (typeof value === 'string' ? value : "")
+
+  const handleSelect = (currentValue: string) => {
+    if (isMulti) {
+      let newValues: string[]
+      if (Array.isArray(selectedValues) && selectedValues.includes(currentValue)) {
+        newValues = selectedValues.filter((v: string) => v !== currentValue)
+      } else if (Array.isArray(selectedValues)) {
+        newValues = [...selectedValues, currentValue]
+      } else {
+        newValues = [currentValue]
+      }
+      onValueChange?.(newValues)
+    } else {
+      onValueChange?.(currentValue === selectedValues ? "" : currentValue)
+      setOpen(false)
+    }
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -42,7 +67,14 @@ export function Combobox({
           aria-expanded={open}
           className={cn("w-full justify-between", className)}
         >
-          {value ? options.find((option) => option.value === value)?.label : placeholder}
+          {isMulti
+            ? (selectedValues.length > 0
+                ? options.filter(option => selectedValues.includes(option.value)).map(option => option.label).join(", ")
+                : placeholder)
+            : (selectedValues
+                ? options.find(option => option.value === selectedValues)?.label
+                : placeholder)
+          }
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -56,12 +88,18 @@ export function Combobox({
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  onSelect={(currentValue) => {
-                    onValueChange?.(currentValue === value ? "" : currentValue)
-                    setOpen(false)
-                  }}
+                  onSelect={() => handleSelect(option.value)}
                 >
-                  <Check className={cn("mr-2 h-4 w-4", value === option.value ? "opacity-100" : "opacity-0")} />
+                  <Check className={cn(
+                    "mr-2 h-4 w-4",
+                    isMulti
+                      ? selectedValues.includes(option.value)
+                        ? "opacity-100"
+                        : "opacity-0"
+                      : selectedValues === option.value
+                        ? "opacity-100"
+                        : "opacity-0"
+                  )} />
                   {option.label}
                 </CommandItem>
               ))}
