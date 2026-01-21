@@ -1,0 +1,3 @@
+{
+  "/api/sanction-entities/[id]/route": "app/api/sanction-entities/[id]/route.js"
+}

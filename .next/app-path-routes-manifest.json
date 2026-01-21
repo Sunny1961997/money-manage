@@ -1,0 +1,13 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/dashboard/account-stats/page": "/dashboard/account-stats",
+  "/dashboard/customers/page": "/dashboard/customers",
+  "/dashboard/onboarding/customer/page": "/dashboard/onboarding/customer",
+  "/dashboard/onboarding/quick/page": "/dashboard/onboarding/quick",
+  "/dashboard/profile/page": "/dashboard/profile",
+  "/dashboard/screening/batch/page": "/dashboard/screening/batch",
+  "/dashboard/screening/quick/page": "/dashboard/screening/quick",
+  "/login/page": "/login",
+  "/page": "/"
+}
