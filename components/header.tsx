@@ -23,7 +23,7 @@ export function Header() {
   return (
     <header className="h-16 border-b border-border bg-background flex items-center justify-between px-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" className="bg-red-50 text-red-600 border-red-200">
+        {/* <Button variant="outline" size="sm" className="bg-red-50 text-red-600 border-red-200">
           📊 NEWS ROOM •
         </Button>
         <div className="flex items-center gap-3">
@@ -31,7 +31,7 @@ export function Header() {
             <span className="text-xs">🏢</span>
           </div>
           <span className="font-semibold text-sm">ALHAZ ALSAATIE GOLD AND JEWELRY TRADING LLC</span>
-        </div>
+        </div> */}
       </div>
 
       <div className="flex items-center gap-3">

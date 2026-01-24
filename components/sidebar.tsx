@@ -167,13 +167,13 @@ export function Sidebar() {
   //       })
   //       const data = await res.json()
   //       console.log("[Sidebar] Profile API response:", data)
-        
+
   //       if (data?.status === "success" || data?.status === true) {
   //         // Handle both response formats
   //         const profile = (data.data as any)?.[0] || (data.data as any)?.["0"] || data.data
   //         console.log("[Sidebar] Extracted profile:", profile)
   //         console.log("[Sidebar] User role:", profile?.role)
-          
+
   //         setUserRole(profile?.role || "company admin")
   //       } else {
   //         console.log("[Sidebar] API failed, defaulting to company admin")
@@ -205,7 +205,7 @@ export function Sidebar() {
               <span className="text-white font-bold text-sm">W</span>
             </div>
             <div>
-              <div className="font-semibold text-sm">AML Management Solutions</div>
+              <div className="font-semibold text-sm">AML Meter</div>
               <div className="text-xs text-muted-foreground">Loading...</div>
             </div>
           </div>
@@ -226,11 +226,10 @@ export function Sidebar() {
         {!isCollapsed ? (
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-sm">W</span>
+              <span className="text-white font-bold text-sm py-2">AML</span>
             </div>
             <div>
-              <div className="font-semibold text-sm">AML Management Solutions</div>
-              <div className="text-xs text-muted-foreground">WMS Dashboard v2.0</div>
+              <div className="font-semibold text-sm">Meter</div>
             </div>
           </div>
         ) : (
@@ -246,8 +245,7 @@ export function Sidebar() {
       <nav className="flex-1 px-3 py-4">
         {!isCollapsed && (
           <div className="text-xs font-semibold text-muted-foreground mb-3 px-3 flex items-center gap-2">
-            <div className="w-4 h-4 flex items-center justify-center">≡</div>
-            NAVIGATION
+            <div className="w-4 h-4 flex items-center justify-center"></div>
           </div>
         )}
         <ul className="space-y-1">
@@ -261,7 +259,8 @@ export function Sidebar() {
                   <button
                     onClick={() => toggleMenu(item.name)}
                     className={cn(
-                      "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors",
+                      "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors",
+                      "hover:bg-accent hover:text-white", // Added hover:text-white here
                       isActive && "text-red-500 border-l-2 border-red-500 bg-red-50",
                       isCollapsed && "justify-center",
                     )}
@@ -280,7 +279,8 @@ export function Sidebar() {
                           <Link
                             href={child.href}
                             className={cn(
-                              "flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors",
+                              "flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
+                              "hover:bg-accent hover:text-white", // Added hover:text-white here
                               pathname === child.href && "text-red-500 border-l-2 border-red-500 bg-red-50",
                             )}
                           >
@@ -299,7 +299,8 @@ export function Sidebar() {
                 <Link
                   href={item.href || "#"}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors",
+                    "flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
+                    "hover:bg-accent hover:text-white", // Added hover:text-white here
                     pathname === item.href && "text-red-500 border-l-2 border-red-500 bg-red-50",
                     isCollapsed && "justify-center",
                   )}

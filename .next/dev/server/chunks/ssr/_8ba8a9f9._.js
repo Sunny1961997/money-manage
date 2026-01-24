@@ -1089,7 +1089,7 @@ function CustomerOnboardingPage() {
                     }));
                 setCountries(countryList);
                 setCountryCodes(countryList.filter((c)=>c.phoneCode && c.phoneCode !== "+0").map((c)=>({
-                        value: `${c.phoneCode}|${c.code}`,
+                        value: `${c.phoneCode}`,
                         label: `${c.phoneCode} (${c.label})`
                     })));
                 setProducts((json.data.products || []).map((p)=>({

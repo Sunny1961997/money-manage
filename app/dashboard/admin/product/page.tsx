@@ -43,7 +43,8 @@ export default function ProductsPage() {
         method: "GET",
         credentials: "include",
       })
-      const data = await res.json()
+      const data = await res.json();
+      console.log("Data: ", data)
       
       if (data.status === "success" || data.status) {
         // API should return products array and total count for pagination
@@ -58,6 +59,32 @@ export default function ProductsPage() {
       setLoading(false)
     }
   }, [currentPage, searchTerm, toast])
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+
+    try {
+      const res = await fetch(`/api/admin/product/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (data.status === true || data.status === "success") {
+        toast({ title: "Deleted", description: "Product removed successfully" });
+        // Refresh the list without a full page reload
+        fetchProducts(); 
+      } else {
+        toast({ 
+          variant: "destructive", 
+          title: "Error", 
+          description: data.message || "Could not delete product" 
+        });
+      }
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "Connection error" });
+    }
+  };
 
   // Fetch data when page or search changes
   useEffect(() => {
@@ -74,7 +101,7 @@ export default function ProductsPage() {
           <Building2 className="w-6 h-6 text-blue-600" />
           <h1 className="text-2xl font-semibold">Products</h1>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => router.push('/dashboard/admin/companies/add')}>
+        <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => router.push('/dashboard/admin/product/add')}>
           <Plus className="w-4 h-4 mr-2" />
           Add Product
         </Button>
@@ -131,8 +158,22 @@ export default function ProductsPage() {
                       <td className="p-4">
                         <div className="flex gap-2">
                           <Button variant="ghost" size="sm"><Eye className="w-4 h-4" /></Button>
-                          <Button variant="ghost" size="sm"><Edit className="w-4 h-4" /></Button>
-                          <Button variant="ghost" size="sm"><Trash2 className="w-4 h-4 text-red-600" /></Button>
+                          {/* <Button variant="ghost" size="sm"><Edit className="w-4 h-4" /></Button> */}
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => router.push(`/dashboard/admin/product/${product.id}`)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          {/* <Button variant="ghost" size="sm"><Trash2 className="w-4 h-4 text-red-600" /></Button> */}
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDelete(product.id)} // Attached here
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </Button>
                         </div>
                       </td>
                     </tr>

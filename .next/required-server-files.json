@@ -99,7 +99,7 @@
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "/home/sunny/Downloads/santion-apiless",
+    "outputFileTracingRoot": "/home/sunny/Documents/sanction",
     "cacheComponents": false,
     "cacheLife": {
       "default": {
@@ -289,11 +289,11 @@
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.mjs",
     "turbopack": {
-      "root": "/home/sunny/Downloads/santion-apiless"
+      "root": "/home/sunny/Documents/sanction"
     },
     "distDirRoot": ".next"
   },
-  "appDir": "/home/sunny/Downloads/santion-apiless",
+  "appDir": "/home/sunny/Documents/sanction",
   "relativeAppDir": "",
   "files": [
     ".next/routes-manifest.json",

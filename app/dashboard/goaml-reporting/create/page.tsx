@@ -20,8 +20,11 @@ interface Customer {
     id: number
     customer_id: number
     company_name: string
-    trade_license_number: string
+    trade_license_no: string
     company_address: string
+    office_country_code: string
+    office_no:string
+
   }
 }
 
@@ -247,8 +250,9 @@ export default function CreateGoamlReportPage() {
       </div>
 
       {/* Selected Customer Details */}
-      {selectedCustomer && (
+      {selectedCustomer?.corporate_detail?.customer_id && (
         <div className="mb-4 border p-3 rounded">
+              <h3 className="font-semibold mb-2">Company Information</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Company Name</label>
@@ -256,34 +260,35 @@ export default function CreateGoamlReportPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Trade License Number</label>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{selectedCustomer.corporate_detail?.trade_license_number || "-"}</div>
+              <div className="mt-1 p-2 bg-gray-50 rounded border">{selectedCustomer.corporate_detail?.trade_license_no}</div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Contact Office Number</label>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{selectedCustomer.contact_office_number || "-"}</div>
+              <div className="mt-1 p-2 bg-gray-50 rounded border">{selectedCustomer.corporate_detail?.office_country_code}{selectedCustomer.corporate_detail?.office_no}</div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Company Address</label>
               <div className="mt-1 p-2 bg-gray-50 rounded border">{selectedCustomer.corporate_detail?.company_address || selectedCustomer.company_address || "-"}</div>
             </div>
           </div>
-          
-          {selectedCustomer.individual_detail && (
-             <div className="mt-4">
-                <h3 className="font-semibold mb-2">Personal Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">First Name</label>
-                        <div className="mt-1 p-2 bg-gray-50 rounded border">{selectedCustomer.individual_detail.first_name}</div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Last Name</label>
-                        <div className="mt-1 p-2 bg-gray-50 rounded border">{selectedCustomer.individual_detail.last_name}</div>
-                    </div>
-                </div>
-             </div>
-          )}
         </div>
+      )}
+      {selectedCustomer?.individual_detail?.customer_id && (
+        <div className="mb-4 border p-3 rounded">
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2">Personal Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                  <div>
+                      <label className="block text-sm font-medium text-gray-700">First Name</label>
+                      <div className="mt-1 p-2 bg-gray-50 rounded border">{selectedCustomer.individual_detail.first_name}</div>
+                  </div>
+                  <div>
+                      <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                      <div className="mt-1 p-2 bg-gray-50 rounded border">{selectedCustomer.individual_detail.last_name}</div>
+                  </div>
+              </div>
+            </div>
+        </div>    
       )}
 
       {/* GOAML Report Details */}
@@ -318,8 +323,17 @@ export default function CreateGoamlReportPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Item Type</label>
                 <select className="border p-2 rounded w-full" value={formData.item_type} onChange={(e) => setFormData({ ...formData, item_type: e.target.value })}>
                     <option value="">Select an item type</option>
-                    <option value="new">New</option>
-                    <option value="old">Old</option>
+                    <option value="Gold">Gold</option>
+                    <option value="Silver">Silver</option>
+                    <option value="Diamond">Diamond</option>
+                    <option value="Gemstones">Gemstones</option>
+                    <option value="Jewellery">Jewellery</option>
+                    <option value="Grain / Cereals">Grain / Cereals</option>
+                    <option value="Real estate / land dealing">Real estate / land dealing</option>
+                    <option value="Platinum">Platinum</option>
+                    <option value="Property / Real estate">Property / Real estate</option>
+                    <option value="Building / Real estate construction">Building / Real estate construction</option>
+                    <option value="Watch">Watch</option>
                 </select>
             </div>
         </div>
