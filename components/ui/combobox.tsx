@@ -84,26 +84,28 @@ export function Combobox({
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={() => handleSelect(option.value)}
-                >
-                  <Check className={cn(
-                    "mr-2 h-4 w-4",
-                    isMulti
-                      ? selectedValues.includes(option.value)
-                        ? "opacity-100"
-                        : "opacity-0"
-                      : selectedValues === option.value
-                        ? "opacity-100"
-                        : "opacity-0"
-                  )} />
-                  {option.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+                {options.map((option, index) => (
+                  <CommandItem
+                    // Combining value and index ensures the key is always unique 
+                    // even if the data contains duplicate values like '+61'
+                    key={`${option.value}-${index}`} 
+                    value={option.label} // Command component uses 'value' for internal search filtering
+                    onSelect={() => handleSelect(option.value)}
+                  >
+                    <Check className={cn(
+                      "mr-2 h-4 w-4",
+                      isMulti
+                        ? (Array.isArray(selectedValues) && selectedValues.includes(option.value))
+                          ? "opacity-100"
+                          : "opacity-0"
+                        : selectedValues === option.value
+                          ? "opacity-100"
+                          : "opacity-0"
+                    )} />
+                    {option.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
           </CommandList>
         </Command>
       </PopoverContent>

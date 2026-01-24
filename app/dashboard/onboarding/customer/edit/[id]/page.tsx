@@ -31,16 +31,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 type CustomerType = "individual" | "corporate"
 
 const occupations = [
-  { value: "Employed", label: "Employed" },
-  { value: "Self-employed", label: "Self Employed" },
-  { value: "Business", label: "Business" },
-  { value: "Retired", label: "Retired" },
+  { value: "Accounting", label: "Accounting" },
+  { value: "Advocacy Organizations", label: "Self Employed" },
+  { value: "Air Couriers and Cargo Services", label: "Air Couriers and Cargo Services" },
+  { value: "Advertising, Marketing and PR", label: "Advertising, Marketing and PR" },
+  { value: "Banking/Financial Institutions", label: "Banking/Financial Institutions" },
+  { value: "Business Services Other", label: "Business Services Other" },
+  { value: "Charitable Organizations and Foundations", label: "Charitable Organizations and Foundations" },
+  { value: "Counsulting/Freelancer", label: "Counsulting/Freelancer" },
+  { value: "Data Analystics, Management and Internet", label: "Data Analystics, Management and Internet" },
+  { value: "Defense", label: "Defense" },
+  { value: "Education", label: "Education" },
+  { value: "Facilities Management and Maintenance", label: "Facilities Management and Maintenance" },
+  { value: "Government Service", label: "Government Service" },
+  { value: "HR and Recruiting Services", label: "HR and Recruiting Services" },
+  { value: "HealthCare", label: "HealthCare" },
+  { value: "IT and Network Services and Support", label: "IT and Network Services and Support" },
+  { value: "Jewellery Trading", label: "Jewellery Trading" },
+  { value: "Outside UAE", label: "Outside UAE" },
+  { value: "Sale and Services", label: "Sale and Services" },
+  { value: "Others", label: "Others" },
+  { value: "Owner/Partner/Director", label: "Owner/Partner/Director" },
 ]
 const sourceOfIncome = [
   { value: "Salary", label: "Salary" },
-  { value: "Business", label: "Business" },
-  { value: "Investment", label: "Investment" },
-  { value: "Other", label: "Other" },
+  { value: "Perosonal Savings", label: "Perosonal Savings" },
+  { value: "Bank - Cash Withdrawal Slip", label: "Bank - Cash Withdrawal Slip" },
+  { value: "Funds from Dividend Payouts", label: "Funds from Dividend Payouts" },
+  { value: "End of Services Funds", label: "End of Services Funds" },
+  { value: "Business Proceeds", label: "Business Proceeds" },
+  { value: "Other sources", label: "Other sources" },
+  { value: "Gift", label: "Gift" },
+  { value: "Loan from Friends and Family", label: "Loan from Friends and Family" },
+  { value: "Loans from Bank", label: "Loans from Bank" },
+  { value: "Loan from Financial Institutions", label: "Loan from Financial Institutions" },
+  { value: "Lottery/Raffles", label: "Lottery/Raffles" },
 ]
 
 const idTypes = [
@@ -59,15 +84,20 @@ const purposes = [
 ]
 const paymentMethods = [
   { value: "Cash", label: "Cash" },
-  { value: "Bank Transfer", label: "Bank Transfer" },
-  { value: "Debit Card", label: "Debit Card" },
-  { value: "Credit Card", label: "Credit Card" },
-  { value: "Other", label: "Other" },
+  { value: "Debit/Credit Card", label: "Debit/Credit Card" },
+  { value: "Bank Transfer - Inside UAE", label: "Bank Transfer - Inside UAE" },
+  { value: "Bank Transfer _ Outside UAE", label: "Bank Transfer _ Outside UAE" },
+  { value: "Parial Cash/Card/Online trs", label: "Parial Cash/Card/Online trs" },
+  { value: "Crypto/Prepaid Cards", label: "Crypto/Prepaid Cards" },
+  { value: "Old Gold Exchange", label: "Old Gold Exchange" },
+  { value: "Payment from HRC", label: "Payment from HRC" },
+  { value: "Others", label: "Others" },
 ]
 const modeOfApproach = [
   { value: "Walk-In Customer", label: "Walk-In Customer" },
   { value: "Non Face to Face", label: "Non Face to Face" },
-  { value: "Other", label: "Other" },
+  { value: "Online/Social Media Portal", label: "Online/Social Media Portal" },
+  { value: "Thirdparty Referal", label: "Thirdparty Referral" },
 ]
 
 const screeningFuzziness = [

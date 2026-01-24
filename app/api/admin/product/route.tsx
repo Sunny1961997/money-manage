@@ -10,7 +10,16 @@ export async function GET(req: Request) {
   const token = getTokenFromCookie(cookie)
   const decodedToken = token ? decodeURIComponent(token) : null
 
-  console.log("[API] /api/admin/product GET called")
+  // --- FIX STARTS HERE ---
+  // Get the search parameters from the incoming request URL
+  const { searchParams } = new URL(req.url)
+  const queryString = searchParams.toString() 
+  
+  // Append the query string to your backend URL
+  const backendUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/product${queryString ? `?${queryString}` : ''}`
+  
+  console.log("[API] Forwarding GET to:", backendUrl)
+  // --- FIX ENDS HERE ---
 
   if (!decodedToken) {
     return NextResponse.json(
@@ -20,13 +29,12 @@ export async function GET(req: Request) {
   }
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/product`, {
+    const res = await fetch(backendUrl, { // Use the backendUrl with params
       method: "GET",
       headers: {
         "Authorization": `Bearer ${decodedToken}`,
         "Accept": "application/json",
       },
-      credentials: "include",
     })
 
     const data = await res.json()
