@@ -226,11 +226,10 @@ export function Sidebar() {
         {!isCollapsed ? (
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-sm">W</span>
+              <span className="text-white font-bold text-sm py-2">AML</span>
             </div>
             <div>
-              <div className="font-semibold text-sm">AML Management Solutions</div>
-              <div className="text-xs text-muted-foreground">WMS Dashboard v2.0</div>
+              <div className="font-semibold text-sm">Meter</div>
             </div>
           </div>
         ) : (
@@ -246,8 +245,7 @@ export function Sidebar() {
       <nav className="flex-1 px-3 py-4">
         {!isCollapsed && (
           <div className="text-xs font-semibold text-muted-foreground mb-3 px-3 flex items-center gap-2">
-            <div className="w-4 h-4 flex items-center justify-center">≡</div>
-            NAVIGATION
+            <div className="w-4 h-4 flex items-center justify-center"></div>
           </div>
         )}
         <ul className="space-y-1">
