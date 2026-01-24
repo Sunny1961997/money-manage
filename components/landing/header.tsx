@@ -20,7 +20,7 @@ export function Header() {
           <a href="#" className="text-sm text-foreground hover:text-primary transition">Contact</a>
           <Link
             href="/login"
-            className="text-sm text-foreground hover:text-primary transition text-sm text-foreground hover:text-primary transition"
+            className="bg-primary text-primary-foreground hover:bg-primary/90border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 p-1 rounded-sm"
           >
             Sign in
           </Link>
