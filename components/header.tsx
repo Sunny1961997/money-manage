@@ -47,10 +47,10 @@ export function Header() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2">
+            <Button variant="ghost" className="flex items-center gap-2 border">
               <div className="text-right">
                 <div className="text-sm font-medium">{user?.name || "User"}</div>
-                <div className="text-xs text-muted-foreground">{user?.email}</div>
+                <div className="text-xs">{user?.email}</div>
               </div>
             </Button>
           </DropdownMenuTrigger>
