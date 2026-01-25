@@ -86,7 +86,7 @@ const paymentMethods = [
   { value: "Cash", label: "Cash" },
   { value: "Debit/Credit Card", label: "Debit/Credit Card" },
   { value: "Bank Transfer - Inside UAE", label: "Bank Transfer - Inside UAE" },
-  { value: "Bank Transfer _ Outside UAE", label: "Bank Transfer _ Outside UAE" },
+  { value: "Bank Transfer - Outside UAE", label: "Bank Transfer _ Outside UAE" },
   { value: "Parial Cash/Card/Online trs", label: "Parial Cash/Card/Online trs" },
   { value: "Crypto/Prepaid Cards", label: "Crypto/Prepaid Cards" },
   { value: "Old Gold Exchange", label: "Old Gold Exchange" },
@@ -167,9 +167,8 @@ export default function CustomerOnboardingPage() {
         <div className="grid grid-cols-2 gap-4 max-w-3xl mx-auto">
           <button
             onClick={() => setCustomerType("individual")}
-            className={`p-6 rounded-lg border-2 transition-all ${
-              customerType === "individual" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-            }`}
+            className={`p-6 rounded-lg border-2 transition-all ${customerType === "individual" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+              }`}
           >
             <User className="w-6 h-6 mb-2" />
             <div className="font-semibold">Individual</div>
@@ -178,9 +177,8 @@ export default function CustomerOnboardingPage() {
 
           <button
             onClick={() => setCustomerType("corporate")}
-            className={`p-6 rounded-lg border-2 transition-all ${
-              customerType === "corporate" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-            }`}
+            className={`p-6 rounded-lg border-2 transition-all ${customerType === "corporate" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+              }`}
           >
             <Building2 className="w-6 h-6 mb-2" />
             <div className="font-semibold">Corporate</div>
@@ -256,7 +254,7 @@ function IndividualForm({
   const [remarks, setRemarks] = useState("")
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  
+
   // Tab state
   const [activeTab, setActiveTab] = useState("personal")
 
@@ -300,7 +298,7 @@ function IndividualForm({
   // Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Validation
     const requiredFields = {
       'First Name': firstName,
@@ -703,18 +701,18 @@ function IndividualForm({
                 </div>
                 <div className="space-y-2">
                   <Label>Expected No of Transactions</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="0" 
+                  <Input
+                    type="number"
+                    placeholder="0"
                     value={expectedNoOfTransactions}
                     onChange={e => setExpectedNoOfTransactions(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Expected Volume</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="0" 
+                  <Input
+                    type="number"
+                    placeholder="0"
                     value={expectedVolume}
                     onChange={e => setExpectedVolume(e.target.value)}
                   />
@@ -874,7 +872,7 @@ function IndividualForm({
                     </span>
                   ))}
                 </div>        </div>
-      </Card>
+            </Card>
           </TabsContent>
 
           <div className="sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t mt-6">
@@ -964,6 +962,7 @@ function CorporateForm({
     { value: "DPMS- Factory, Workshop, Goldsmith", label: "DPMS- Factory, Workshop, Goldsmith" },
     { value: "Real Estate", label: "Real Estate" },
     { value: "General Trading", label: "General Trading" },
+    { value: "Law Firm", label: "Law Firm" },
     { value: "Education", label: "Education" },
     { value: "Other", label: "Other" },
   ]
@@ -1065,7 +1064,6 @@ function CorporateForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
     // Validation - check required fields
     const requiredFields = {
       'Company Name': companyName,
@@ -1095,7 +1093,9 @@ function CorporateForm({
       .filter(([_, value]) => !value)
       .map(([field, _]) => field)
 
+    alert(emptyFields.length)
     if (emptyFields.length > 0) {
+      console.log("Fine");
       toast({
         title: "Required fields missing",
         description: `Please fill in: ${emptyFields.join(', ')}`,
@@ -1118,7 +1118,7 @@ function CorporateForm({
         [`UBO ${i + 1} - Role`]: ubo.role,
         [`UBO ${i + 1} - Percentage of Share`]: ubo.ownershipPercentage,
       }
-      
+
       const uboEmptyFields = Object.entries(uboRequiredFields)
         .filter(([_, value]) => !value)
         .map(([field, _]) => field)
@@ -1132,7 +1132,7 @@ function CorporateForm({
         return
       }
     }
-    
+
     const payload: any = {
       customer_type: "corporate",
       onboarding_type: "full",
@@ -1209,17 +1209,17 @@ function CorporateForm({
         console.log("After calling onboarding api response else")
         const details = data?.errors ? (Object.values(data.errors as Record<string, string[]>).flat().join("; ")) : ""
         const errText = details || data?.message || data?.error || "Unknown error"
-        toast({ 
-          title: "Onboarding failed", 
-          description: errText, 
+        toast({
+          title: "Onboarding failed",
+          description: errText,
           // variant: "destructive" 
         })
       }
     } catch (err: any) {
       console.log("After calling onboarding api response catch")
-      toast({ 
-        title: "Onboarding failed", 
-        description: err?.message || "Network error", 
+      toast({
+        title: "Onboarding failed",
+        description: err?.message || "Network error",
         // variant: "destructive" 
       })
     }
@@ -1269,518 +1269,518 @@ function CorporateForm({
           <TabsContent value="company" className="mt-0">
             {/* Company Information */}
             <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <Building2 className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Company Information</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Company Name *</Label>
-            <Input placeholder="Enter the Company Name" value={companyName} onChange={e => setCompanyName(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Company Address *</Label>
-            <Input placeholder="Enter the Company address" value={companyAddress} onChange={e => setCompanyAddress(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>City *</Label>
-            <Input placeholder="Enter the city" value={city} onChange={e => setCity(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Country of Incorporation *</Label>
-            <Combobox
-              options={countries}
-              value={companyCountry}
-              onValueChange={handleSingleSelect(setCompanyCountry)}
-              placeholder="Select a country"
-              searchPlaceholder="Search country..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>PO Box No *</Label>
-            <Input placeholder="Enter the PO Box No" value={poBox} onChange={e => setPoBox(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Customer Type *</Label>
-            <Combobox
-              options={corporate_customer_type}
-              value={corporateCustomerType}
-              onValueChange={handleSingleSelect(setCorporateCustomerType)}
-              placeholder="Select Customer Type"
-              searchPlaceholder="Search type..."
-            />
-          </div>
-        </div>
-      </Card>
+              <div className="flex items-center gap-2 mb-4">
+                <Building2 className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Company Information</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Company Name *</Label>
+                  <Input placeholder="Enter the Company Name" value={companyName} onChange={e => setCompanyName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Company Address *</Label>
+                  <Input placeholder="Enter the Company address" value={companyAddress} onChange={e => setCompanyAddress(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>City *</Label>
+                  <Input placeholder="Enter the city" value={city} onChange={e => setCity(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Country of Incorporation *</Label>
+                  <Combobox
+                    options={countries}
+                    value={companyCountry}
+                    onValueChange={handleSingleSelect(setCompanyCountry)}
+                    placeholder="Select a country"
+                    searchPlaceholder="Search country..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>PO Box No *</Label>
+                  <Input placeholder="Enter the PO Box No" value={poBox} onChange={e => setPoBox(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Customer Type *</Label>
+                  <Combobox
+                    options={corporate_customer_type}
+                    value={corporateCustomerType}
+                    onValueChange={handleSingleSelect(setCorporateCustomerType)}
+                    placeholder="Select Customer Type"
+                    searchPlaceholder="Search type..."
+                  />
+                </div>
+              </div>
+            </Card>
           </TabsContent>
 
           <TabsContent value="contact" className="mt-0">
-      {/* Contact Information */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <Phone className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Contact Information</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-2">
-              <Label>Country Code</Label>
-              <Combobox
-                options={countryCodes}
-                value={officeCountryCode}
-                onValueChange={handleSingleSelect(setOfficeCountryCode)}
-                placeholder="Select"
-                searchPlaceholder="Search code..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Contact Office No</Label>
-              <Input placeholder="Enter the Contact Office No" value={officeNo} onChange={e => setOfficeNo(e.target.value)} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-2">
-              <Label>Country Code *</Label>
-              <Combobox
-                options={countryCodes}
-                value={mobileCountryCode}
-                onValueChange={handleSingleSelect(setMobileCountryCode)}
-                placeholder="Select"
-                searchPlaceholder="Search code..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Contact Mobile No *</Label>
-              <Input placeholder="Enter the Contact Mobile No" value={mobileNo} onChange={e => setMobileNo(e.target.value)} />
-            </div>
-          </div>
-          <div className="col-span-2 space-y-2">
-            <Label>Email *</Label>
-            <Input type="email" placeholder="Enter your email (abc@dom.com)" value={email} onChange={e => setEmail(e.target.value)} />
-          </div>
-        </div>
-      </Card>
+            {/* Contact Information */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Phone className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Contact Information</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label>Country Code</Label>
+                    <Combobox
+                      options={countryCodes}
+                      value={officeCountryCode}
+                      onValueChange={handleSingleSelect(setOfficeCountryCode)}
+                      placeholder="Select"
+                      searchPlaceholder="Search code..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Contact Office No</Label>
+                    <Input placeholder="Enter the Contact Office No" value={officeNo} onChange={e => setOfficeNo(e.target.value)} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label>Country Code *</Label>
+                    <Combobox
+                      options={countryCodes}
+                      value={mobileCountryCode}
+                      onValueChange={handleSingleSelect(setMobileCountryCode)}
+                      placeholder="Select"
+                      searchPlaceholder="Search code..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Contact Mobile No *</Label>
+                    <Input placeholder="Enter the Contact Mobile No" value={mobileNo} onChange={e => setMobileNo(e.target.value)} />
+                  </div>
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Email *</Label>
+                  <Input type="email" placeholder="Enter your email (abc@dom.com)" value={email} onChange={e => setEmail(e.target.value)} />
+                </div>
+              </div>
+            </Card>
           </TabsContent>
 
           <TabsContent value="identity" className="mt-0">
-      {/* Identity Information */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <IdCard className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Identity Information</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Trade License/CR No *</Label>
-            <Input placeholder="Enter Trade License/CR No" value={tradeLicenseNo} onChange={e => setTradeLicenseNo(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Trade License/CR Issued At *</Label>
-            <Combobox
-              options={countries}
-              value={tradeLicenseIssuedAt}
-              onValueChange={handleSingleSelect(setTradeLicenseIssuedAt)}
-              placeholder="Select a country"
-              searchPlaceholder="Search country..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Trade License/COI Issued By *</Label>
-            <Combobox
-              options={licance_issue_authorities}
-              value={tradeLicenseIssuedBy}
-              onValueChange={handleSingleSelect(setTradeLicenseIssuedBy)}
-              placeholder="Select a issuing authority"
-              searchPlaceholder="Search issuing authority..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Trade License/CR Issued Date *</Label>
-            <Input type="date" placeholder="mm/dd/yyyy" value={licenseIssueDate} onChange={e => setLicenseIssueDate(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Trade License/CR Expiry Date</Label>
-            <Input type="date" placeholder="mm/dd/yyyy" value={licenseExpiryDate} onChange={e => setLicenseExpiryDate(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>VAT Registration Number</Label>
-            <Input placeholder="Enter VAT Registration Number" value={vatRegistrationNo} onChange={e => setVatRegistrationNo(e.target.value)} />
-          </div>
-          <div className="col-span-2 space-y-2">
-            <Label>Tenancy Contract Expiry Date</Label>
-            <Input type="date" placeholder="mm/dd/yyyy" value={tenancyContractExpiryDate} onChange={e => setTenancyContractExpiryDate(e.target.value)} />
-          </div>
-        </div>
-      </Card>
+            {/* Identity Information */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <IdCard className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Identity Information</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Trade License/CR No *</Label>
+                  <Input placeholder="Enter Trade License/CR No" value={tradeLicenseNo} onChange={e => setTradeLicenseNo(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Trade License/CR Issued At *</Label>
+                  <Combobox
+                    options={countries}
+                    value={tradeLicenseIssuedAt}
+                    onValueChange={handleSingleSelect(setTradeLicenseIssuedAt)}
+                    placeholder="Select a country"
+                    searchPlaceholder="Search country..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Trade License/COI Issued By *</Label>
+                  <Combobox
+                    options={licance_issue_authorities}
+                    value={tradeLicenseIssuedBy}
+                    onValueChange={handleSingleSelect(setTradeLicenseIssuedBy)}
+                    placeholder="Select a issuing authority"
+                    searchPlaceholder="Search issuing authority..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Trade License/CR Issued Date *</Label>
+                  <Input type="date" placeholder="mm/dd/yyyy" value={licenseIssueDate} onChange={e => setLicenseIssueDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Trade License/CR Expiry Date</Label>
+                  <Input type="date" placeholder="mm/dd/yyyy" value={licenseExpiryDate} onChange={e => setLicenseExpiryDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>VAT Registration Number</Label>
+                  <Input placeholder="Enter VAT Registration Number" value={vatRegistrationNo} onChange={e => setVatRegistrationNo(e.target.value)} />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Tenancy Contract Expiry Date</Label>
+                  <Input type="date" placeholder="mm/dd/yyyy" value={tenancyContractExpiryDate} onChange={e => setTenancyContractExpiryDate(e.target.value)} />
+                </div>
+              </div>
+            </Card>
           </TabsContent>
 
           <TabsContent value="operations" className="mt-0">
-      {/* Operations Information */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <Globe className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Operations Information</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Entity Type *</Label>
-            <Combobox
-              options={entity_types}
-              value={entityType}
-              onValueChange={handleSingleSelect(setEntityType)}
-              placeholder="Select entity type"
-              searchPlaceholder="Search type..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Countries of Operation *</Label>
-            <Combobox
-              options={countries}
-              value={countriesOfOperation}
-              onValueChange={handleMultiSelect(setCountriesOfOperation)}
-              multiple
-              placeholder="Select a country"
-              searchPlaceholder="Search country..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Business Activity *</Label>
-            <Combobox
-              options={business_activities}
-              value={businessActivity}
-              onValueChange={handleSingleSelect(setBusinessActivity)}
-              placeholder="Select business activity"
-              searchPlaceholder="Search business activity..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Is entity dealing with Import/Export? *</Label>
-            <RadioGroup value={isImportExport ? "yes" : "no"} onValueChange={(v) => setIsImportExport(v === "yes")} className="flex gap-6 mt-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="import-yes" />
-                <Label htmlFor="import-yes">Yes</Label>
+            {/* Operations Information */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Globe className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Operations Information</h4>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="import-no" />
-                <Label htmlFor="import-no">No</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Entity Type *</Label>
+                  <Combobox
+                    options={entity_types}
+                    value={entityType}
+                    onValueChange={handleSingleSelect(setEntityType)}
+                    placeholder="Select entity type"
+                    searchPlaceholder="Search type..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Countries of Operation *</Label>
+                  <Combobox
+                    options={countries}
+                    value={countriesOfOperation}
+                    onValueChange={handleMultiSelect(setCountriesOfOperation)}
+                    multiple
+                    placeholder="Select a country"
+                    searchPlaceholder="Search country..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Business Activity *</Label>
+                  <Combobox
+                    options={business_activities}
+                    value={businessActivity}
+                    onValueChange={handleSingleSelect(setBusinessActivity)}
+                    placeholder="Select business activity"
+                    searchPlaceholder="Search business activity..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Is entity dealing with Import/Export? *</Label>
+                  <RadioGroup value={isImportExport ? "yes" : "no"} onValueChange={(v) => setIsImportExport(v === "yes")} className="flex gap-6 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="import-yes" />
+                      <Label htmlFor="import-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="import-no" />
+                      <Label htmlFor="import-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Any other sister concern/branch? *</Label>
+                  <RadioGroup value={hasSisterConcern ? "yes" : "no"} onValueChange={(v) => setHasSisterConcern(v === "yes")} className="flex gap-6 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="sister-yes" />
+                      <Label htmlFor="sister-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="sister-no" />
+                      <Label htmlFor="sister-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Account Holding Bank Name *</Label>
+                  <Input placeholder="Enter bank name (max 50 characters)" value={accountHoldingBankName} onChange={e => setAccountHoldingBankName(e.target.value)} />
+                </div>
               </div>
-            </RadioGroup>
-          </div>
-          <div className="col-span-2 space-y-2">
-            <Label>Any other sister concern/branch? *</Label>
-            <RadioGroup value={hasSisterConcern ? "yes" : "no"} onValueChange={(v) => setHasSisterConcern(v === "yes")} className="flex gap-6 mt-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="sister-yes" />
-                <Label htmlFor="sister-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="sister-no" />
-                <Label htmlFor="sister-no">No</Label>
-              </div>
-            </RadioGroup>
-          </div>
-          <div className="col-span-2 space-y-2">
-            <Label>Account Holding Bank Name *</Label>
-            <Input placeholder="Enter bank name (max 50 characters)" value={accountHoldingBankName} onChange={e => setAccountHoldingBankName(e.target.value)} />
-          </div>
-        </div>
-      </Card>
+            </Card>
           </TabsContent>
 
           <TabsContent value="product" className="mt-0">
-      {/* Product Details */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <FileText className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Product Details</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Product Type *</Label>
-            <Combobox
-              options={products}
-              value={productTypesCorp}
-              onValueChange={handleMultiSelect(setProductTypesCorp)}
-              multiple
-              placeholder="Select Product Type"
-              searchPlaceholder="Search type..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Product Source *</Label>
-            <Combobox
-              options={product_sources}
-              value={productSource}
-              onValueChange={handleSingleSelect(setProductSource)}
-              placeholder="Select product source"
-              searchPlaceholder="Search source..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Payment Mode *</Label>
-            <Combobox
-              options={payment_modes}
-              value={paymentMode}
-              onValueChange={handleSingleSelect(setPaymentMode)}
-              placeholder="Select payment mode"
-              searchPlaceholder="Search mode..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Delivery Channel *</Label>
-            <Combobox
-              options={delivery_channels}
-              value={deliveryChannel}
-              onValueChange={handleSingleSelect(setDeliveryChannel)}
-              placeholder="Select delivery channel"
-              searchPlaceholder="Search channel..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Expected No of Transactions</Label>
-            <Input type="number" placeholder="0" value={expectedNoOfTransactions} onChange={e => setExpectedNoOfTransactions(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Expected Volume</Label>
-            <Input type="number" placeholder="0" value={expectedVolume} onChange={e => setExpectedVolume(e.target.value)} />
-          </div>
-          <div className="col-span-2 space-y-2">
-            <Label>Deal with Goods? *</Label>
-            <RadioGroup value={dealWithGoods ? "yes" : "no"} onValueChange={(v) => setDealWithGoods(v === "yes")} className="flex gap-6 mt-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="goods-yes" />
-                <Label htmlFor="goods-yes">Yes</Label>
+            {/* Product Details */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Product Details</h4>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="goods-no" />
-                <Label htmlFor="goods-no">No</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Product Type *</Label>
+                  <Combobox
+                    options={products}
+                    value={productTypesCorp}
+                    onValueChange={handleMultiSelect(setProductTypesCorp)}
+                    multiple
+                    placeholder="Select Product Type"
+                    searchPlaceholder="Search type..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Product Source *</Label>
+                  <Combobox
+                    options={product_sources}
+                    value={productSource}
+                    onValueChange={handleSingleSelect(setProductSource)}
+                    placeholder="Select product source"
+                    searchPlaceholder="Search source..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Payment Mode *</Label>
+                  <Combobox
+                    options={payment_modes}
+                    value={paymentMode}
+                    onValueChange={handleSingleSelect(setPaymentMode)}
+                    placeholder="Select payment mode"
+                    searchPlaceholder="Search mode..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Delivery Channel *</Label>
+                  <Combobox
+                    options={delivery_channels}
+                    value={deliveryChannel}
+                    onValueChange={handleSingleSelect(setDeliveryChannel)}
+                    placeholder="Select delivery channel"
+                    searchPlaceholder="Search channel..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Expected No of Transactions</Label>
+                  <Input type="number" placeholder="0" value={expectedNoOfTransactions} onChange={e => setExpectedNoOfTransactions(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Expected Volume</Label>
+                  <Input type="number" placeholder="0" value={expectedVolume} onChange={e => setExpectedVolume(e.target.value)} />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Deal with Goods? *</Label>
+                  <RadioGroup value={dealWithGoods ? "yes" : "no"} onValueChange={(v) => setDealWithGoods(v === "yes")} className="flex gap-6 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="goods-yes" />
+                      <Label htmlFor="goods-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="goods-no" />
+                      <Label htmlFor="goods-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
               </div>
-            </RadioGroup>
-          </div>
-        </div>
-      </Card>
+            </Card>
           </TabsContent>
 
           <TabsContent value="aml" className="mt-0">
-      {/* AML Compliance Questionnaire */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <FileCheck className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">AML Compliance Questionnaire</h4>
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>KYC documents collected with form *</Label>
-            <RadioGroup value={kycCollected ? "yes" : "no"} onValueChange={(v) => setKycCollected(v === "yes")} className="flex gap-6 mt-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="kyc-yes" />
-                <Label htmlFor="kyc-yes">Yes</Label>
+            {/* AML Compliance Questionnaire */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <FileCheck className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">AML Compliance Questionnaire</h4>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="kyc-no" />
-                <Label htmlFor="kyc-no">No</Label>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>KYC documents collected with form *</Label>
+                  <RadioGroup value={kycCollected ? "yes" : "no"} onValueChange={(v) => setKycCollected(v === "yes")} className="flex gap-6 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="kyc-yes" />
+                      <Label htmlFor="kyc-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="kyc-no" />
+                      <Label htmlFor="kyc-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="space-y-2">
+                  <Label>Is entity registered in GOAML *</Label>
+                  <RadioGroup value={isRegisteredGoAML ? "yes" : "no"} onValueChange={(v) => setIsRegisteredGoAML(v === "yes")} className="flex gap-6 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="goaml-yes" />
+                      <Label htmlFor="goaml-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="goaml-no" />
+                      <Label htmlFor="goaml-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="space-y-2">
+                  <Label>Is Entity Having Material Match *</Label>
+                  <p className="text-xs text-blue-600 mb-2">We don't Check adverse news feed</p>
+                  <RadioGroup value={isAdverseNews ? "yes" : "no"} onValueChange={(v) => setIsAdverseNews(v === "yes")} className="flex gap-6 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="material-yes" />
+                      <Label htmlFor="material-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="material-no" />
+                      <Label htmlFor="material-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
               </div>
-            </RadioGroup>
-          </div>
-          <div className="space-y-2">
-            <Label>Is entity registered in GOAML *</Label>
-            <RadioGroup value={isRegisteredGoAML ? "yes" : "no"} onValueChange={(v) => setIsRegisteredGoAML(v === "yes")} className="flex gap-6 mt-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="goaml-yes" />
-                <Label htmlFor="goaml-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="goaml-no" />
-                <Label htmlFor="goaml-no">No</Label>
-              </div>
-            </RadioGroup>
-          </div>
-          <div className="space-y-2">
-            <Label>Is Entity Having Material Match *</Label>
-            <p className="text-xs text-blue-600 mb-2">We don't Check adverse news feed</p>
-            <RadioGroup value={isAdverseNews ? "yes" : "no"} onValueChange={(v) => setIsAdverseNews(v === "yes")} className="flex gap-6 mt-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="material-yes" />
-                <Label htmlFor="material-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="material-no" />
-                <Label htmlFor="material-no">No</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        </div>
-      </Card>
+            </Card>
           </TabsContent>
 
           <TabsContent value="related" className="mt-0">
-      {/* Partner/Representative/Authorized Person Details */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <UsersIcon className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Partner/Representative/Authorized Person Details</h4>
-        </div>
-        {ubos.map((ubo, index) => (
-          <div key={ubo.id} className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h5 className="font-medium flex items-center gap-2">
-                <User className="w-4 h-4" />
-                UBO {index + 1}
-              </h5>
-              {ubos.length > 1 && (
-                <Button variant="ghost" size="sm" type="button" onClick={() => removeUBO(ubo.id)}>
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </Button>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Type *</Label>
-                <Combobox
-                  options={[
-                    { value: "Individual", label: "Individual" },
-                    { value: "Entity", label: "Entity" },
-                  ]}
-                  value={ubo.type}
-                  onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "type", v)}
-                  placeholder="Select type"
-                  searchPlaceholder="Search type..."
-                />
+            {/* Partner/Representative/Authorized Person Details */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <UsersIcon className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Partner/Representative/Authorized Person Details</h4>
               </div>
-              <div className="space-y-2">
-                <Label>Name *</Label>
-                <Input placeholder="Enter Name" value={ubo.name} onChange={e => setUboField(ubo.id, "name", e.target.value)} />
-              </div>
-              <div className="col-span-2 space-y-2">
-                <Label>Previously Exposed Person (PEP)? *</Label>
-                <RadioGroup value={ubo.isPep ? "yes" : "no"} onValueChange={(v) => setUboField(ubo.id, "isPep", v === "yes")} className="flex gap-6 mt-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id={`pep-yes-${ubo.id}`} />
-                    <Label htmlFor={`pep-yes-${ubo.id}`}>Yes</Label>
+              {ubos.map((ubo, index) => (
+                <div key={ubo.id} className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h5 className="font-medium flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      UBO {index + 1}
+                    </h5>
+                    {ubos.length > 1 && (
+                      <Button variant="ghost" size="sm" type="button" onClick={() => removeUBO(ubo.id)}>
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    )}
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id={`pep-no-${ubo.id}`} />
-                    <Label htmlFor={`pep-no-${ubo.id}`}>No</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Type *</Label>
+                      <Combobox
+                        options={[
+                          { value: "Individual", label: "Individual" },
+                          { value: "Entity", label: "Entity" },
+                        ]}
+                        value={ubo.type}
+                        onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "type", v)}
+                        placeholder="Select type"
+                        searchPlaceholder="Search type..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Name *</Label>
+                      <Input placeholder="Enter Name" value={ubo.name} onChange={e => setUboField(ubo.id, "name", e.target.value)} />
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label>Politically Exposed Person (PEP)? *</Label>
+                      <RadioGroup value={ubo.isPep ? "yes" : "no"} onValueChange={(v) => setUboField(ubo.id, "isPep", v === "yes")} className="flex gap-6 mt-2">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id={`pep-yes-${ubo.id}`} />
+                          <Label htmlFor={`pep-yes-${ubo.id}`}>Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id={`pep-no-${ubo.id}`} />
+                          <Label htmlFor={`pep-no-${ubo.id}`}>No</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Nationality</Label>
+                      <Combobox
+                        options={countries}
+                        value={ubo.nationality}
+                        onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "nationality", v)}
+                        placeholder="Select nationality"
+                        searchPlaceholder="Search nationality..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>ID Type *</Label>
+                      <Combobox
+                        options={idTypes}
+                        value={ubo.idType}
+                        onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "idType", v)}
+                        placeholder="Passport"
+                        searchPlaceholder="Search type..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>ID No/License No  *</Label>
+                      <Input placeholder="Enter ID License No" value={ubo.idNo} onChange={e => setUboField(ubo.id, "idNo", e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>ID Issue Date *</Label>
+                      <Input type="date" placeholder="mm/dd/yyyy" value={ubo.idIssue} onChange={e => setUboField(ubo.id, "idIssue", e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>ID Expiry Date *</Label>
+                      <Input type="date" placeholder="mm/dd/yyyy" value={ubo.idExpiry} onChange={e => setUboField(ubo.id, "idExpiry", e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Date of Birth *</Label>
+                      <Input type="date" placeholder="mm/dd/yyyy" value={ubo.dob} onChange={e => setUboField(ubo.id, "dob", e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Role *</Label>
+                      <Combobox
+                        options={roles}
+                        value={ubo.role}
+                        onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "role", v)}
+                        placeholder="UBO"
+                        searchPlaceholder="Search role..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Percentage of Share *</Label>
+                      <Input placeholder="Enter Percentage (0-100)" value={ubo.ownershipPercentage as string} onChange={e => setUboField(ubo.id, "ownershipPercentage", e.target.value)} />
+                    </div>
                   </div>
-                </RadioGroup>
-              </div>
-              <div className="space-y-2">
-                <Label>Nationality</Label>
-                <Combobox
-                  options={countries}
-                  value={ubo.nationality}
-                  onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "nationality", v)}
-                  placeholder="Select nationality"
-                  searchPlaceholder="Search nationality..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>ID Type *</Label>
-                <Combobox
-                  options={idTypes}
-                  value={ubo.idType}
-                  onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "idType", v)}
-                  placeholder="Passport"
-                  searchPlaceholder="Search type..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>ID No/License No  *</Label>
-                <Input placeholder="Enter ID License No" value={ubo.idNo} onChange={e => setUboField(ubo.id, "idNo", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>ID Issue Date *</Label>
-                <Input type="date" placeholder="mm/dd/yyyy" value={ubo.idIssue} onChange={e => setUboField(ubo.id, "idIssue", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>ID Expiry Date *</Label>
-                <Input type="date" placeholder="mm/dd/yyyy" value={ubo.idExpiry} onChange={e => setUboField(ubo.id, "idExpiry", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Date of Birth *</Label>
-                <Input type="date" placeholder="mm/dd/yyyy" value={ubo.dob} onChange={e => setUboField(ubo.id, "dob", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Role *</Label>
-                <Combobox
-                  options={roles}
-                  value={ubo.role}
-                  onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "role", v)}
-                  placeholder="UBO"
-                  searchPlaceholder="Search role..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Percentage of Share *</Label>
-                <Input placeholder="Enter Percentage (0-100)" value={ubo.ownershipPercentage as string} onChange={e => setUboField(ubo.id, "ownershipPercentage", e.target.value)} />
-              </div>
-            </div>
-          </div>
-        ))}
-        <Button variant="outline" type="button" onClick={addUBO} className="w-full bg-transparent">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Another Representative
-        </Button>
-      </Card>
+                </div>
+              ))}
+              <Button variant="outline" type="button" onClick={addUBO} className="w-full bg-transparent">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Another Representative
+              </Button>
+            </Card>
           </TabsContent>
 
           <TabsContent value="documents" className="mt-0">
-      {/* Upload Documents */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <Upload className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Upload Documents</h4>
-        </div>
-        <div
-          className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
-          onClick={openCorpFilePicker}
-        >
-          <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-          <p className="text-sm text-blue-600 mb-1">Add Documents</p>
-          <p className="text-xs text-muted-foreground">Max 5 files, each up to 5MB (Images, PDFs, Docs)</p>
-          <input
-            ref={corpFileInputRef}
-            type="file"
-            multiple
-            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,.txt,.gif,.bmp,.tiff,.svg,.webp,.heic"
-            onChange={handleCorpFileChange}
-            className="mt-2 hidden"
-          />
-          <div className="mt-2 flex flex-col items-center gap-1">
-            {corpFiles.map((file, idx) => (
-              <span key={idx} className="text-xs text-gray-700">
-                {file.name} ({(file.size / 1024).toFixed(1)} KB)
-              </span>
-            ))}
-          </div>
-        </div>
-      </Card>
+            {/* Upload Documents */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Upload className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Upload Documents</h4>
+              </div>
+              <div
+                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
+                onClick={openCorpFilePicker}
+              >
+                <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                <p className="text-sm text-blue-600 mb-1">Add Documents</p>
+                <p className="text-xs text-muted-foreground">Max 5 files, each up to 5MB (Images, PDFs, Docs)</p>
+                <input
+                  ref={corpFileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,.txt,.gif,.bmp,.tiff,.svg,.webp,.heic"
+                  onChange={handleCorpFileChange}
+                  className="mt-2 hidden"
+                />
+                <div className="mt-2 flex flex-col items-center gap-1">
+                  {corpFiles.map((file, idx) => (
+                    <span key={idx} className="text-xs text-gray-700">
+                      {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </Card>
           </TabsContent>
 
           <TabsContent value="additional" className="mt-0">
-      {/* Additional Information */}
-      <Card className="p-6 bg-blue-50/30">
-        <div className="flex items-center gap-2 mb-4">
-          <FileText className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold">Additional Information</h4>
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Screening Fuzziness *</Label>
-            <Combobox
-              options={screeningFuzziness}
-              value={corpFuzziness}
-              onValueChange={handleSingleSelect(setCorpFuzziness)}
-              placeholder="OFF"
-              searchPlaceholder="Search fuzziness..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Remarks</Label>
-            <Textarea placeholder="Enter any remarks" rows={3} value={corpRemarks} onChange={e => setCorpRemarks(e.target.value)} />
-          </div>
-        </div>
-      </Card>
+            {/* Additional Information */}
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Additional Information</h4>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Screening Fuzziness *</Label>
+                  <Combobox
+                    options={screeningFuzziness}
+                    value={corpFuzziness}
+                    onValueChange={handleSingleSelect(setCorpFuzziness)}
+                    placeholder="OFF"
+                    searchPlaceholder="Search fuzziness..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Remarks</Label>
+                  <Textarea placeholder="Enter any remarks" rows={3} value={corpRemarks} onChange={e => setCorpRemarks(e.target.value)} />
+                </div>
+              </div>
+            </Card>
           </TabsContent>
 
           <div className="sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t mt-6">

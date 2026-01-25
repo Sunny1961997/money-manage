@@ -38,9 +38,9 @@ export function Contact() {
               <div>
                 <h3 className="font-semibold text-foreground mb-2">Headquarters</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  123 <br />
+                  B.C. 1300531 Ajman Free Zone C1 Building Ajman Free Zone<br />
                   <br />
-                  UAE
+                  United Arab Emirates
                 </p>
               </div>
             </div>
@@ -48,8 +48,10 @@ export function Contact() {
               <Phone className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-foreground mb-2">Phone Support</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  +1 (555) 123-4567<br />
+                <p className="text-muted-foreground text-sm leading-relaxed">  
+                +971 509627076  <br />
+                +971 562953927  <br />
+                +971 588961136  <br />
                 </p>
               </div>
             </div>
@@ -58,7 +60,7 @@ export function Contact() {
               <div>
                 <h3 className="font-semibold text-foreground mb-2">Email</h3>
                 <p className="text-muted-foreground text-sm">
-                  support@amlmeter.com<br />
+                  info@amlmeter.com<br />
                   We'll respond within 24 hours
                 </p>
               </div>
