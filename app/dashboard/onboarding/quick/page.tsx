@@ -56,7 +56,7 @@ export default function QuickOnboardingPage() {
   const [idNo, setIdNo] = useState("")
   const [idIssueDate, setIdIssueDate] = useState("")
   const [idExpiryDate, setIdExpiryDate] = useState("")
-  const [fuzziness, setFuzziness] = useState("OFF")
+  // const [fuzziness, setFuzziness] = useState("OFF")
   
   const [submitting, setSubmitting] = useState(false)
 
@@ -155,7 +155,7 @@ export default function QuickOnboardingPage() {
     const payload = {
       customer_type: "individual",
       onboarding_type: "quick_single",
-      screening_fuzziness: fuzziness,
+      screening_fuzziness: "OFF",
       individual_details: {
         first_name: firstName,
         last_name: lastName,
@@ -634,7 +634,7 @@ export default function QuickOnboardingPage() {
                 <h4 className="font-semibold text-sm">Screening Settings</h4>
               </div>
 
-              <div>
+              {/* <div>
                 <Label htmlFor="fuzziness" className="flex items-center gap-2">
                   Screening Fuzziness<span className="text-red-500">*</span>
                   <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -653,7 +653,7 @@ export default function QuickOnboardingPage() {
                   placeholder="Select fuzziness level"
                   searchPlaceholder="Search fuzziness..."
                 />
-              </div>
+              </div> */}
             </div>
 
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={submitting}>

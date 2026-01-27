@@ -19,7 +19,7 @@ import {
   Building2,
   Shield,
 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, Dispatch, SetStateAction } from "react"
 import { Button } from "@/components/ui/button"
 
 type NavItem = {
@@ -31,14 +31,13 @@ type NavItem = {
 
 const companyAdminNavigation: NavItem[] = [
   { name: "Profile", href: "/dashboard/profile", icon: User },
-  { name: "Account Stats", href: "/dashboard/account-stats", icon: FileText },
+  { name: "Account Info", href: "/dashboard/account-stats", icon: FileText },
   { name: "Customers", href: "/dashboard/customers", icon: Users },
   {
     name: "Screening",
     icon: Search,
     children: [
       { name: "Quick Screening", href: "/dashboard/screening/quick" },
-      // { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   {
@@ -59,8 +58,6 @@ const adminNavigation: NavItem[] = [
   { name: "Companies", href: "/dashboard/admin/companies", icon: Building2 },
   { name: "Company Users", href: "/dashboard/admin/company-users", icon: Building2 },
   { name: "System Users", href: "/dashboard/admin/users", icon: Users },
-  // { name: "System Settings", href: "/dashboard/admin/settings", icon: Shield },
-  // { name: "Audit Logs", href: "/dashboard/admin/audit-logs", icon: FileCheck },
   { name: "Products", href: "/dashboard/admin/product", icon: FileCheck },
 ]
 
@@ -72,7 +69,6 @@ const authorNavigation: NavItem[] = [
     icon: Search,
     children: [
       { name: "Quick Screening", href: "/dashboard/screening/quick" },
-      // { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   { name: "Screening Logs", href: "/dashboard/screening-logs", icon: FileCheck },
@@ -80,14 +76,13 @@ const authorNavigation: NavItem[] = [
 
 const mlroNavigation: NavItem[] = [
   { name: "Profile", href: "/dashboard/profile", icon: User },
-  { name: "Account Stats", href: "/dashboard/account-stats", icon: FileText },
+  { name: "Account Info", href: "/dashboard/account-stats", icon: FileText },
   { name: "Customers", href: "/dashboard/customers", icon: Users },
   {
     name: "Screening",
     icon: Search,
     children: [
       { name: "Quick Screening", href: "/dashboard/screening/quick" },
-      // { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   {
@@ -111,7 +106,6 @@ const flaNavigation: NavItem[] = [
     icon: Search,
     children: [
       { name: "Quick Screening", href: "/dashboard/screening/quick" },
-      // { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   {
@@ -147,63 +141,26 @@ function getNavigationByRole(): NavItem[] {
     case "analyst":
       return flaNavigation
     default:
-      // console.warn(`[Sidebar] Unknown role: ${role}, defaulting to company admin navigation`)
       return companyAdminNavigation
   }
 }
 
-export function Sidebar() {
+type SidebarProps = {
+  isCollapsed: boolean
+  setIsCollapsed: Dispatch<SetStateAction<boolean>>
+}
+
+export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
   const pathname = usePathname()
   const [openMenus, setOpenMenus] = useState<string[]>(["Screening", "Onboarding"])
-  const [isCollapsed, setIsCollapsed] = useState(false)
   const [loading, setLoading] = useState(false)
-
-  // useEffect(() => {
-  //   async function fetchUserRole() {
-  //     try {
-  //       const res = await fetch("/api/profile", {
-  //         method: "GET",
-  //         credentials: "include",
-  //       })
-  //       const data = await res.json()
-  //       console.log("[Sidebar] Profile API response:", data)
-
-  //       if (data?.status === "success" || data?.status === true) {
-  //         // Handle both response formats
-  //         const profile = (data.data as any)?.[0] || (data.data as any)?.["0"] || data.data
-  //         console.log("[Sidebar] Extracted profile:", profile)
-  //         console.log("[Sidebar] User role:", profile?.role)
-
-  //         setUserRole(profile?.role || "company admin")
-  //       } else {
-  //         console.log("[Sidebar] API failed, defaulting to company admin")
-  //         setUserRole("company admin") // default fallback
-  //       }
-  //     } catch (err) {
-  //       console.error("[Sidebar] Failed to fetch user role:", err)
-  //       setUserRole("company admin") // default fallback
-  //     } finally {
-  //       setLoading(false)
-  //     }
-  //   }
-  //   fetchUserRole()
-  // }, [])
-
-  // Select navigation based on role using helper function
-  const navigation = getNavigationByRole()
-
-  const toggleMenu = (name: string) => {
-    setOpenMenus((prev) => (prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]))
-  }
 
   if (loading) {
     return (
-      <aside className="border-r border-border bg-sidebar min-h-screen flex flex-col w-52">
+      <aside className="fixed top-0 left-0 h-screen w-52 border-r border-border bg-sidebar flex flex-col">
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-sm">W</span>
-            </div>
+            <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center"></div>
             <div>
               <div className="font-semibold text-sm">AML Meter</div>
               <div className="text-xs text-muted-foreground">Loading...</div>
@@ -217,16 +174,17 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "border-r border-border bg-sidebar min-h-screen flex flex-col transition-all duration-300",
-        isCollapsed ? "w-16" : "w-52",
+        "fixed top-0 left-0 h-screen z-40 border-r border-border bg-sidebar flex flex-col transition-all duration-300",
+        isCollapsed ? "w-16" : "w-52"
       )}
+      style={{ minHeight: '100vh' }}
     >
-      {/* Logo */}
-      <div className="p-4 border-b border-border">
+      {/* Top section with logo and collapse button */}
+      <div className="flex items-center justify-between p-4 border-b border-border">
         {!isCollapsed ? (
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-sm py-2">AML</span>
+            <div className="w-10 h-8 bg-red-500 rounded flex items-center justify-center">
+              <span className="w-10 h-8 bg-primary text-white rounded flex items-center justify-center font-bold text-sm">AML</span>
             </div>
             <div>
               <div className="font-semibold text-sm">Meter</div>
@@ -234,22 +192,30 @@ export function Sidebar() {
           </div>
         ) : (
           <div className="flex justify-center">
-            <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-sm">W</span>
+            <div className="w-8 h-8 bg-primary text-white rounded flex items-center justify-center font-bold text-sm">
+              <span className="text-white font-bold text-sm">AM</span>
             </div>
           </div>
         )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="ml-2"
+        >
+          <ChevronLeft className={cn("w-4 h-4 transition-transform", isCollapsed && "rotate-180")} />
+        </Button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4">
+      {/* Navigation - scrollable */}
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
         {!isCollapsed && (
           <div className="text-xs font-semibold text-muted-foreground mb-3 px-3 flex items-center gap-2">
             <div className="w-4 h-4 flex items-center justify-center"></div>
           </div>
         )}
         <ul className="space-y-1">
-          {navigation.map((item) => {
+          {getNavigationByRole().map((item) => {
             if (item.children) {
               const isOpen = openMenus.includes(item.name)
               const isActive = item.children.some((child) => pathname === child.href)
@@ -257,10 +223,10 @@ export function Sidebar() {
               return (
                 <li key={item.name}>
                   <button
-                    onClick={() => toggleMenu(item.name)}
+                    onClick={() => setOpenMenus((prev) => (prev.includes(item.name) ? prev.filter((i) => i !== item.name) : [...prev, item.name]))}
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors",
-                      "hover:bg-accent hover:text-white", // Added hover:text-white here
+                      "hover:bg-accent hover:text-white",
                       isActive && "text-red-500 border-l-2 border-red-500 bg-red-50",
                       isCollapsed && "justify-center",
                     )}
@@ -280,7 +246,7 @@ export function Sidebar() {
                             href={child.href}
                             className={cn(
                               "flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
-                              "hover:bg-accent hover:text-white", // Added hover:text-white here
+                              "hover:bg-accent hover:text-white",
                               pathname === child.href && "text-red-500 border-l-2 border-red-500 bg-red-50",
                             )}
                           >
@@ -300,7 +266,7 @@ export function Sidebar() {
                   href={item.href || "#"}
                   className={cn(
                     "flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
-                    "hover:bg-accent hover:text-white", // Added hover:text-white here
+                    "hover:bg-accent hover:text-white",
                     pathname === item.href && "text-red-500 border-l-2 border-red-500 bg-red-50",
                     isCollapsed && "justify-center",
                   )}
@@ -316,19 +282,11 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="p-4 border-t border-border">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="w-full mb-2 justify-center"
-        >
-          <ChevronLeft className={cn("w-4 h-4 transition-transform", isCollapsed && "rotate-180")} />
-        </Button>
         {!isCollapsed && (
           <div className="text-xs text-muted-foreground">
             <div className="flex justify-between">
-              <span>AML MS v2.0</span>
-              <span>© 2025</span>
+              <span>AML Meter</span>
+              <span>© 2026</span>
             </div>
           </div>
         )}

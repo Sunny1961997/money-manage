@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Download } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { generateScreeningPDF } from "@/lib/screening-pdf-generator"
+import { generateScreeningSessionPDF } from "@/lib/screening-session-pdf"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 type Candidate = {
     id: number
@@ -34,6 +36,7 @@ type ScreeningResponse = {
         searched_for?: string
         total_candidates?: number
         best_by_source?: BestBySourceItem[]
+        total_search?: number
     }
 }
 
@@ -72,11 +75,12 @@ function hasNoSpForSource(candidates: Candidate[]) {
 }
 
 const ANNOTATION_OPTIONS = [
-    { value: "false_positive", label: "False positive" },
-    { value: "name_match_only", label: "Name match only" },
-    { value: "insufficient_data", label: "Insufficient data" },
-    { value: "needs_review", label: "Needs review" },
-    { value: "other", label: "Other (type below)" },
+    { value: "False Positive", label: "False Positive" },
+    { value: "Name Match Only", label: "Name Match Only" },
+    { value: "Insufficient Data", label: "Insufficient Data" },
+    { value: "Needs Review", label: "Needs Review" },
+    { value: "No Comment", label: "No Comment" },
+    { value: "Other", label: "Other (type below)" },
 ] as const
 
 type EntityDetailsResponse = {
@@ -85,6 +89,7 @@ type EntityDetailsResponse = {
 
 export default function QuickScreeningResultsPage() {
     const [payload, setPayload] = React.useState<ScreeningResponse | null>(null)
+    const [detailsById, setDetailsById] = React.useState<Record<string, any>>({})
 
     React.useEffect(() => {
         const raw = sessionStorage.getItem("screening_results")
@@ -97,7 +102,8 @@ export default function QuickScreeningResultsPage() {
     }, [])
 
     const searchedFor = payload?.data?.searched_for || "-"
-    const bestBySource = payload?.data?.best_by_source || []
+    const bestBySource = payload?.data?.best_by_source || [];
+    const totalSearch = payload?.data?.total_search || 0;
 
     const [sourceDecision, setSourceDecision] = React.useState<Record<string, SourceDecision>>({})
     const [sourceAnnotationChoice, setSourceAnnotationChoice] = React.useState<Record<string, string>>({})
@@ -111,7 +117,7 @@ export default function QuickScreeningResultsPage() {
 
         for (const src of bestBySource) {
             nextDecision[src.source] = null // Don't pre-select
-            nextAnnoChoice[src.source] = "needs_review"
+            nextAnnoChoice[src.source] = "No Comment"
             nextAnnoText[src.source] = ""
         }
 
@@ -119,6 +125,24 @@ export default function QuickScreeningResultsPage() {
         setSourceAnnotationChoice(nextAnnoChoice)
         setSourceAnnotationText(nextAnnoText)
         // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [payload])
+
+    React.useEffect(() => {
+        (async () => {
+            const allDetails: Record<string, any> = {}
+            for (const src of bestBySource) {
+                for (const c of (src.data || []).filter(Boolean) as Candidate[]) {
+                    try {
+                        const res = await fetch(`/api/sanction-entities/${c.id}`, { method: "GET", credentials: "include" })
+                        const detailsPayload: EntityDetailsResponse = await res.json().catch(async () => ({}))
+                        allDetails[`${c.id}`] = (detailsPayload as any)?.data || (detailsPayload as any)?.data?.data || (detailsPayload as any)?.data || {}
+                    } catch {
+                        allDetails[`${c.id}`] = {}
+                    }
+                }
+            }
+            setDetailsById(allDetails)
+        })()
     }, [payload])
 
     const downloadPdfForCandidate = async (c: Candidate) => {
@@ -135,7 +159,7 @@ export default function QuickScreeningResultsPage() {
 
             // Get decision and annotation for this source
             const decision = sourceDecision[c.source] || null
-            const annotationChoice = sourceAnnotationChoice[c.source] || "needs_review"
+            const annotationChoice = sourceAnnotationChoice[c.source] || "No Comment"
             const annotationText = sourceAnnotationText[c.source] || ""
 
             // Generate PDF with decision and annotation
@@ -146,6 +170,18 @@ export default function QuickScreeningResultsPage() {
         } finally {
             setDownloadingKey(null)
         }
+    }
+
+    const handleDownloadSessionPDF = async () => {
+        await generateScreeningSessionPDF({
+            searchedFor,
+            bestBySource,
+            sourceDecision,
+            sourceAnnotationChoice,
+            sourceAnnotationText,
+            detailsById,
+            total_search: totalSearch,
+        })
     }
 
     if (!payload) {
@@ -163,159 +199,98 @@ export default function QuickScreeningResultsPage() {
 
     return (
         <div className="max-w-6xl mx-auto space-y-6 p-6">
-            <div className="flex items-end justify-between gap-4">
+            <div className="flex items-center justify-between gap-4">
                 <div>
                     <div className="text-sm text-muted-foreground">Searched for</div>
                     <div className="text-2xl font-semibold">{searchedFor}</div>
+                    {/* <div className="text-sm text-muted-foreground mt-1">
+                        Found results in {bestBySource.filter(src => (src.data || []).filter(Boolean).length > 0).length} out of {bestBySource.length} sources
+                    </div> */}
                 </div>
-                <Button variant="outline" onClick={() => (window.location.href = "/dashboard/screening/quick")}>
-                    New Search
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleDownloadSessionPDF}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Full Report
+                    </Button>
+                    <Button variant="outline" onClick={() => (window.location.href = "/dashboard/screening/quick")}>New Search</Button>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
-                {bestBySource.map((src) => {
-                    const candidates = (src.data || []).filter(Boolean) as Candidate[]
-                    const hasData = candidates.length > 0
-
-                    const showRelevant = hasRelevantForSource(candidates)
-                    const showIrrelevant = hasIrrelevantForSource(candidates)
-                    const showNoSp = hasNoSpForSource(candidates)
-
-                    const dec = sourceDecision[src.source] ?? null
-
-                    const anno = sourceAnnotationChoice[src.source] ?? "needs_review"
-                    const showAnnoText = anno === "other"
-
-                    // if (!hasData) return null
-
-                    return (
-                        <Card key={src.source} className="h-full">
-                            <CardHeader className="space-y-3">
-                                <div className="font-bold">Source: {src.source}</div>
-                                <div className="space-y-2">
-                                    {candidates.map((c) => {
-                                        const conf = confidenceNum(c.confidence)
-                                        const b = band(conf)
-                                        const key = `${c.source}:${c.id}`
-                                        const isDownloading = downloadingKey === key
-
-                                        return (
-                                            <div
-                                                key={`${src.source}:${c.id}`}
-                                                className="w-full rounded-md border px-3 py-2 flex items-start justify-between gap-3"
-                                            >
-                                                {/* LEFT: name + subject */}
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="flex items-start justify-between gap-2">
-                                                        <div className="min-w-0">
-                                                            <div className="text-sm font-semibold break-words leading-snug">{c.name || "-"}</div>
-                                                        </div>
-
-                                                        {/* Download icon button (right side of name) */}
-                                                        <Button
-                                                            type="button"
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            onClick={() => downloadPdfForCandidate(c)}
-                                                            disabled={isDownloading}
-                                                            className="h-8 w-8 shrink-0 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"
-                                                            title={isDownloading ? "Preparing..." : "Download PDF"}
-                                                            aria-label={isDownloading ? "Preparing PDF" : "Download PDF"}
-                                                        >
-                                                            <Download className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-
-                                                    <div className="text-xs text-muted-foreground break-words">{c.subject_type || "-"}</div>
-                                                </div>
-
-                                                {/* RIGHT: confidence badge + percent */}
-                                                <div className="flex flex-col items-end gap-1 shrink-0">
-                                                    <div className={`px-2 py-0.5 rounded-md border text-xs font-medium ${b.cls}`}>{b.label}</div>
-                                                    <div className="text-xs text-muted-foreground tabular-nums">{conf.toFixed(2)}%</div>
-                                                </div>
+            {/* List view for results */}
+            <div className="bg-white rounded shadow p-4">
+                {/* <p className="text-sm text-muted-foreground">Found {bestBySource.length} results</p> */}
+                {totalSearch === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-lg">No results found.</div>
+                ) : (
+                    <ul className="space-y-4">
+                        {bestBySource.map((src) => (
+                            (src.data || []).map((c) => {
+                                if (!c) return null;
+                                return (
+                                    <li key={`${src.source}:${c.id}`} className="border rounded p-4 flex flex-col gap-2 shadow-lg">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="font-semibold text-base">{c.name || '-'}</div>
+                                                {/* <div className="text-xs text-muted-foreground">Source: {src.source}</div> */}
                                             </div>
-                                        )
-                                    })}
-                                </div>
-
-                                {/* Annotation (for this source) -> ONLY if there is data */}
-                                {hasData ? (
-                                    <>
-                                        <div className="space-y-2">
-                                            <Label className="text-xs text-muted-foreground">Annotation (for this source)</Label>
-                                            <Select
-                                                value={anno}
-                                                onValueChange={(v) => setSourceAnnotationChoice((p) => ({ ...p, [src.source]: v }))}
-                                            >
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="Select annotation" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {ANNOTATION_OPTIONS.map((o) => (
-                                                        <SelectItem key={o.value} value={o.value}>
-                                                            {o.label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-
-                                            {showAnnoText ? (
-                                                <Input
-                                                    value={sourceAnnotationText[src.source] ?? ""}
-                                                    onChange={(e) => setSourceAnnotationText((p) => ({ ...p, [src.source]: e.target.value }))}
-                                                    placeholder="Type your annotation..."
-                                                    className="w-full"
-                                                />
-                                            ) : null}
+                                            {/* <div className="flex flex-col items-end">
+                                                <span className="text-xs font-medium px-2 py-1 rounded bg-blue-100 text-blue-800">{c.subject_type}</span>
+                                                <span className="text-xs text-muted-foreground">Confidence: {c.confidence}%</span>
+                                            </div> */}
                                         </div>
-
-                                        
-                                        <div className="flex flex-col gap-2">
-                                            <div className="text-xs text-muted-foreground">Decision (for this source)</div>
-
-                                            <div className="flex flex-wrap items-center gap-4">
-                                                <label className="flex items-center gap-2 text-sm">
-                                                    <input
-                                                        type="radio"
-                                                        name={`src-decision-${src.source}`}
-                                                        checked={dec === "relevant"}
-                                                        onChange={() => setSourceDecision((p) => ({ ...p, [src.source]: "relevant" }))}
+                                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                            {c.nationality && <span>🌍 {c.nationality}</span>}
+                                            {c.dob && <span>📅 {c.dob}</span>}
+                                            {c.gender && <span>👤 {c.gender}</span>}
+                                        </div>
+                                        {/* Interactive annotation and decision system */}
+                                        <div className="mt-2 text-xs space-y-2">
+                                            <div>
+                                                <Label>Decision:</Label>
+                                                <RadioGroup
+                                                    className="flex gap-4 mt-1"
+                                                    value={sourceDecision[src.source] || ''}
+                                                    onValueChange={(val) => setSourceDecision((prev) => ({ ...prev, [src.source]: val as SourceDecision }))}
+                                                >
+                                                    <RadioGroupItem value="relevant" id={`decision-relevant-${src.source}`} />
+                                                    <Label htmlFor={`decision-relevant-${src.source}`}>Relevant</Label>
+                                                    <RadioGroupItem value="irrelevant" id={`decision-irrelevant-${src.source}`} />
+                                                    <Label htmlFor={`decision-irrelevant-${src.source}`}>Irrelevant</Label>
+                                                    {/* <RadioGroupItem value="no_sp" id={`decision-nosp-${src.source}`} />
+                                                    <Label htmlFor={`decision-nosp-${src.source}`}>No SP</Label> */}
+                                                </RadioGroup>
+                                            </div>
+                                            <div>
+                                                <Label className="mb-2">Annotation:</Label>
+                                                <Select
+                                                    value={sourceAnnotationChoice[src.source] || ''}
+                                                    onValueChange={(val) => setSourceAnnotationChoice((prev) => ({ ...prev, [src.source]: val }))}
+                                                >
+                                                    <SelectTrigger className="w-40">
+                                                        <SelectValue placeholder="Select annotation" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {ANNOTATION_OPTIONS.map(opt => (
+                                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                {sourceAnnotationChoice[src.source] === 'Other' && (
+                                                    <Input
+                                                        className="mt-2 w-60"
+                                                        value={sourceAnnotationText[src.source] || ''}
+                                                        onChange={e => setSourceAnnotationText((prev) => ({ ...prev, [src.source]: e.target.value }))}
+                                                        placeholder="Type your annotation..."
                                                     />
-                                                    Relevant
-                                                </label>
-
-                                                <label className="flex items-center gap-2 text-sm">
-                                                    <input
-                                                        type="radio"
-                                                        name={`src-decision-${src.source}`}
-                                                        checked={dec === "irrelevant"}
-                                                        onChange={() => setSourceDecision((p) => ({ ...p, [src.source]: "irrelevant" }))}
-                                                    />
-                                                    Irrelevant
-                                                </label>
-
-                                                <label className="flex items-center gap-2 text-sm">
-                                                    <input
-                                                        type="radio"
-                                                        name={`src-decision-${src.source}`}
-                                                        checked={dec === "no_sp"}
-                                                        onChange={() => setSourceDecision((p) => ({ ...p, [src.source]: "no_sp" }))}
-                                                    />
-                                                    Not any S.P.
-                                                </label>
+                                                )}
                                             </div>
                                         </div>
-                                    </>
-                                    ) : (
-                                        <div className="text-xs text-muted-foreground">No screening result found</div>
-                                    )
-                                }
-                            </CardHeader>
-                        </Card>
-                    )
-                })}
+                                    </li>
+                                );
+                            })
+                        ))}
+                    </ul>
+                )}
             </div>
         </div>
     )

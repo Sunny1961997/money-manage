@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 46, "column": 0}, "map": {"version":3,"sources":["file:///home/sunny/Documents/sanction/app/api/auth/me/route.ts"],"sourcesContent":["import { NextResponse } from \"next/server\"\n\nexport async function GET(req: Request) {\n  const cookie = req.headers.get(\"cookie\") || \"\"\n\n  const res = await fetch(\"http://127.0.0.1:8000/api/me\", {\n    headers: {\n      cookie,\n      \"Content-Type\": \"application/json\",\n    },\n    credentials: \"include\",\n  })\n\n  if (!res.ok) {\n    return NextResponse.json({ status: false }, { status: 401 })\n  }\n\n  const data = await res.json()\n  return NextResponse.json(data)\n}\n"],"names":[],"mappings":";;;;AAAA;;AAEO,eAAe,IAAI,GAAY;IACpC,MAAM,SAAS,IAAI,OAAO,CAAC,GAAG,CAAC,aAAa;IAE5C,MAAM,MAAM,MAAM,MAAM,gCAAgC;QACtD,SAAS;YACP;YACA,gBAAgB;QAClB;QACA,aAAa;IACf;IAEA,IAAI,CAAC,IAAI,EAAE,EAAE;QACX,OAAO,gRAAY,CAAC,IAAI,CAAC;YAAE,QAAQ;QAAM,GAAG;YAAE,QAAQ;QAAI;IAC5D;IAEA,MAAM,OAAO,MAAM,IAAI,IAAI;IAC3B,OAAO,gRAAY,CAAC,IAAI,CAAC;AAC3B"}}]
-}

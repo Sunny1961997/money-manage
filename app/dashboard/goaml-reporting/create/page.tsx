@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
+import { Combobox } from "@/components/ui/combobox"
 
 interface Customer {
   id: number
@@ -144,6 +145,11 @@ export default function CreateGoamlReportPage() {
       })
     }
   }
+
+  const currencyOptions = countries
+    .filter((c) => c.currency)
+    .map((c) => ({ value: c.currency, label: c.currency }))
+    .filter((v, i, arr) => arr.findIndex(x => x.value === v.value) === i) // unique
 
   return (
     <div className="p-6">
@@ -361,14 +367,13 @@ export default function CreateGoamlReportPage() {
             </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Currency Code</label>
-                <select className="border p-2 rounded w-full" value={formData.currency_code} onChange={(e) => setFormData({ ...formData, currency_code: e.target.value })}>
-                    <option value="">Select currency code...</option>
-                    {countries.map((country) => (
-                    <option key={country.id} value={country.currency}>
-                        {country.currency}
-                    </option>
-                    ))}
-                </select>
+                <Combobox
+                  options={currencyOptions}
+                  value={formData.currency_code}
+                  onValueChange={(v) => typeof v === "string" && setFormData({ ...formData, currency_code: v })}
+                  placeholder="Select currency code..."
+                  searchPlaceholder="Search currency..."
+                />
             </div>
         </div>
       </div>

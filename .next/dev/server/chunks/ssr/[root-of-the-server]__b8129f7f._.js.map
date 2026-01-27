@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 22, "column": 0}, "map": {"version":3,"sources":["file:///home/sunny/Documents/sanction/app/dashboard/admin/page.tsx"],"sourcesContent":["export default function AdminDashboardPage() {\n    return <div>Admin Dashboard</div>\n}"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACpB,qBAAO,8WAAC;kBAAI;;;;;;AAChB"}}]
-}

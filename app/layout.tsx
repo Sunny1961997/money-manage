@@ -1,16 +1,12 @@
-import React from "react"
+import { Providers } from './providers'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: 'AML Meter - The Most Popular Framework',
-  description: 'The most popular HTML, CSS, and JS framework in the world. Build beautiful websites with AML Meter.',
-  generator: 'v0.app',
+  title: 'AML Meter Screening Tool',
+  description: 'AML Meter Screening Tool',
   icons: {
     icon: [
       {
@@ -32,14 +28,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+}: { 
+  children: React.ReactNode 
+}) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body className={`font-sans antialiased`}>
-        {children}
-        <Analytics />
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   )

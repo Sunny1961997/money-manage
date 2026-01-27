@@ -232,10 +232,10 @@ export default function CustomerDetailPage() {
                 <div className="text-sm text-muted-foreground">Risk Level</div>
                 <div className="mt-1 p-2 border rounded">{data.risk_level ?? "-"}</div>
               </div>
-              <div>
+              {/* <div>
                 <div className="text-sm text-muted-foreground">Screening Fuzziness</div>
                 <div className="mt-1 p-2 border rounded">{data.screening_fuzziness || "-"}</div>
-              </div>
+              </div> */}
             </div>
           </Card>
         </TabsContent>

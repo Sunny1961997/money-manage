@@ -35,7 +35,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon">
+        {/* <Button variant="ghost" size="icon">
           <Bell className="w-5 h-5" />
         </Button>
         <Button variant="ghost" size="icon">
@@ -43,11 +43,11 @@ export function Header() {
         </Button>
         <Button variant="ghost" size="icon">
           <LinkIcon className="w-5 h-5" />
-        </Button>
+        </Button> */}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 border">
+            <Button variant="ghost" className="h-15 flex items-center gap-2 border">
               <div className="text-right">
                 <div className="text-sm font-medium">{user?.name || "User"}</div>
                 <div className="text-xs">{user?.email}</div>
@@ -55,10 +55,10 @@ export function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+            {/* <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
               <Settings className="w-4 h-4 mr-2" />
               Settings
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuItem onClick={() => router.push('/dashboard/change-password')}>
               <KeyRound className="w-4 h-4 mr-2" />
               Change Password

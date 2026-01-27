@@ -149,7 +149,7 @@ export default function QuickScreeningPage() {
     <Combobox
       options={countryOptions}
       value={value}
-      onValueChange={(v) => typeof v === "string" && onChange(v)} // <-- Combobox uses onValueChange
+      onValueChange={(v) => typeof v === "string" && onChange(v)} 
       placeholder={countriesLoading ? "Loading..." : placeholder}
       searchPlaceholder="Search country..."
       // disabled={countriesLoading}

@@ -16,7 +16,7 @@ const features = [
 
 export function SoftwareFeatures() {
   return (
-    <section className="py-16 sm:py-24 bg-white">
+    <section id="features" className="py-16 sm:py-24 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 rounded-lg h-80 flex items-center justify-center border-2xl">
