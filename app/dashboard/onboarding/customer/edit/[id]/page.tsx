@@ -290,7 +290,7 @@ function IndividualEditForm({
   const [approach, setApproach] = useState(ind.mode_of_approach || "")
   const [expectedNoOfTransactions, setExpectedNoOfTransactions] = useState(ind.expected_no_of_transactions?.toString() || "")
   const [expectedVolume, setExpectedVolume] = useState(ind.expected_volume?.toString() || "")
-  const [fuzziness, setFuzziness] = useState(customerData.screening_fuzziness || "")
+  // const [fuzziness, setFuzziness] = useState(customerData.screening_fuzziness || "")
   const [remarks, setRemarks] = useState(customerData.remarks || "")
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -328,7 +328,7 @@ function IndividualEditForm({
     const payload = {
       customer_type: "individual",
       onboarding_type: "full",
-      screening_fuzziness: fuzziness,
+      screening_fuzziness: "OFF",
       remarks,
       individual_details: {
         first_name: firstName,
@@ -802,7 +802,7 @@ function IndividualEditForm({
                     </div>
                   </RadioGroup>
                 </div>
-                <div className="col-span-2 space-y-2">
+                {/* <div className="col-span-2 space-y-2">
                   <Label>Screening Fuzziness *</Label>
                   <Combobox
                     options={screeningFuzziness}
@@ -811,7 +811,7 @@ function IndividualEditForm({
                     placeholder="Select fuzziness level"
                     searchPlaceholder="Search fuzziness..."
                   />
-                </div>
+                </div> */}
                 <div className="col-span-2 space-y-2">
                   <Label>Remarks</Label>
                   <Textarea placeholder="Enter any remarks" rows={3} value={remarks} onChange={e => setRemarks(e.target.value)} />
@@ -853,7 +853,7 @@ function IndividualEditForm({
           </TabsContent>
 
           <div className="sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t mt-6">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">Update Customer</Button>
+            <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">Update Information</Button>
           </div>
         </form>
       </Tabs>
@@ -982,7 +982,7 @@ function CorporateEditForm({
   const [operationCountries, setOperationCountries] = useState<string[]>(
     (customerData.country_operations || []).map((c: any) => c.country)
   )
-  const [fuzziness, setFuzziness] = useState(customerData.screening_fuzziness || "")
+  // const [fuzziness, setFuzziness] = useState(customerData.screening_fuzziness || "")
   const [remarks, setRemarks] = useState(customerData.remarks || "")
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -1061,7 +1061,7 @@ function CorporateEditForm({
     const payload = {
       customer_type: "corporate",
       onboarding_type: "full",
-      screening_fuzziness: fuzziness,
+      screening_fuzziness: "OFF",
       remarks,
       corporate_details: {
         company_name: companyName,
@@ -1744,7 +1744,7 @@ function CorporateEditForm({
           <TabsContent value="additional" className="space-y-4">
             <Card className="p-6">
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                {/* <div>
                   <Label htmlFor="fuzziness">Screening Fuzziness</Label>
                   <Combobox
                     options={screeningFuzziness}
@@ -1753,7 +1753,7 @@ function CorporateEditForm({
                     placeholder="Select fuzziness"
                     searchPlaceholder="Search fuzziness..."
                   />
-                </div>
+                </div> */}
                 <div className="col-span-2">
                   <Label htmlFor="remarks">Remarks</Label>
                   <Textarea
@@ -1810,7 +1810,7 @@ function CorporateEditForm({
                 Cancel
               </Button>
               <Button className="flex-1 bg-blue-600 hover:bg-blue-700" type="submit">
-                Update Customer
+                Update Information
               </Button>
             </div>
           </div>

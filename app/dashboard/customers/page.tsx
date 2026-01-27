@@ -19,7 +19,15 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [detailsById, setDetailsById] = useState<Record<number, any>>({})
-  const { user } = useAuthStore()
+  const { user } = useAuthStore();
+  const getRisk = (val:any) => {
+    const s = Number(val);
+    if (!val || isNaN(s)) return { label: "-", color: "bg-gray-100 text-gray-600" };
+    
+    if (s <= 2.0) return { label: "Low", color: "bg-green-100 text-green-700 border-green-200" };
+    if (s <= 3.5) return { label: "Medium", color: "bg-amber-100 text-amber-700 border-amber-200" };
+    return { label: "High", color: "bg-red-100 text-red-700 border-red-200" };
+  };
 
   const toggleExpand = async (id: number) => {
     if (expandedId === id) {
@@ -32,7 +40,8 @@ export default function CustomersPage() {
         const res = await fetch(`/api/onboarding/customers/${id}`, { credentials: "include" })
         const json = await res.json()
         if (json.status) {
-          setDetailsById(prev => ({ ...prev, [id]: json.data }))
+          setDetailsById(prev => ({ ...prev, [id]: json.data }));
+          console.log("[CustomersPage] Fetched details for customer:", json.data);
         }
       } catch {}
     }
@@ -139,9 +148,14 @@ export default function CustomersPage() {
                           </td>
                           <td className="p-4">{new Date(customer.created_at).toLocaleDateString()}</td>
                           <td className="p-4">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                            {/* <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                               {customer.risk_level ? `${customer.risk_level} - Medium Risk` : "-"}
-                            </span>
+                            </span> */}
+                            {customer.risk_level && (
+                              <span className={`px-2 py-1 rounded border text-xs font-bold ${getRisk(customer.risk_level).color}`}>
+                                {Number(customer.risk_level).toFixed(1)} - {getRisk(customer.risk_level).label} Risk
+                              </span>
+                            )}
                           </td>
                         </tr>
                         {expandedId === customer.id && (
@@ -178,7 +192,7 @@ export default function CustomersPage() {
                                           size="sm"
                                           onClick={() => generateCustomerPDF(data)}
                                         >
-                                          Download Details
+                                          Download
                                         </Button>
                                         <Button variant="outline" size="sm" onClick={() => setExpandedId(null)}>Close</Button>
                                       </div>
@@ -389,10 +403,10 @@ export default function CustomersPage() {
                                               <div className="text-sm text-muted-foreground">Risk Level</div>
                                               <div className="mt-1 p-2 border rounded">{data.risk_level ?? "-"}</div>
                                             </div>
-                                            <div>
+                                            {/* <div>
                                               <div className="text-sm text-muted-foreground">Screening Fuzziness</div>
                                               <div className="mt-1 p-2 border rounded">{data.screening_fuzziness || "-"}</div>
-                                            </div>
+                                            </div> */}
                                           </div>
                                         </TabsContent>
                                         <TabsContent value="sanction-details">

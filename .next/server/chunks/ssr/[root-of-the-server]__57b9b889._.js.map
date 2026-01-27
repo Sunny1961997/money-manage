@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../../../app/dashboard/admin/users/page.tsx"],"sourcesContent":["export default function AdminDashboardPage() {\n    return (\n        <div>\n            <h1>Admin user</h1>\n        </div>\n    );\n}"],"names":[],"mappings":"2YAAe,SAAS,IACpB,MACI,CAAA,EAAA,EAAA,GAAA,EAAC,MAAA,UACG,CAAA,EAAA,EAAA,GAAA,EAAC,KAAA,UAAG,gBAGhB"}

@@ -30,7 +30,7 @@ export async function GET(req: Request) {
     })
 
     const data = await res.json()
-    console.log("[API] Account stats response:", data)
+    console.log("[API] Account info response:", data)
 
     if (!res.ok) {
       return NextResponse.json(data, { status: res.status })
@@ -38,9 +38,9 @@ export async function GET(req: Request) {
 
     return NextResponse.json(data, { status: 200 })
   } catch (err: any) {
-    console.error("[API] Account stats error:", err)
+    console.error("[API] Account info error:", err)
     return NextResponse.json(
-      { status: false, message: err.message || "Failed to fetch account stats" },
+      { status: false, message: err.message || "Failed to fetch account info" },
       { status: 500 }
     )
   }

@@ -27,7 +27,7 @@ const features = [
 
 export function Features() {
   return (
-    <section className="py-16 sm:py-24 bg-white">
+    <section id="about" className="py-16 sm:py-24 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl sm:text-4xl font-bold text-center text-foreground mb-4 text-balance">
           About AML Meter Management

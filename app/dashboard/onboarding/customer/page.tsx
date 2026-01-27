@@ -250,7 +250,7 @@ function IndividualForm({
   const [expectedNoOfTransactions, setExpectedNoOfTransactions] = useState("")
   const [expectedVolume, setExpectedVolume] = useState("")
   // Screening & remarks
-  const [fuzziness, setFuzziness] = useState("")
+  // const [fuzziness, setFuzziness] = useState("")
   const [remarks, setRemarks] = useState("")
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -326,7 +326,7 @@ function IndividualForm({
       'ID Expiry Date': idExpiryDate,
       'Place of Birth': placeOfBirth,
       'Country of Residence': countryOfResidence,
-      'Screening Fuzziness': fuzziness,
+      // 'Screening Fuzziness': fuzziness,
     }
 
     const emptyFields = Object.entries(requiredFields)
@@ -345,7 +345,7 @@ function IndividualForm({
     const payload = {
       customer_type: "individual",
       onboarding_type: "full",
-      screening_fuzziness: fuzziness,
+      screening_fuzziness: "OFF",
       remarks,
       individual_details: {
         first_name: firstName,
@@ -824,7 +824,7 @@ function IndividualForm({
                     </div>
                   </RadioGroup>
                 </div>
-                <div className="col-span-2 space-y-2">
+                {/* <div className="col-span-2 space-y-2">
                   <Label>Screening Fuzziness *</Label>
                   <Combobox
                     options={screeningFuzziness}
@@ -833,7 +833,7 @@ function IndividualForm({
                     placeholder="Select fuzziness level"
                     searchPlaceholder="Search fuzziness..."
                   />
-                </div>
+                </div> */}
                 <div className="col-span-2 space-y-2">
                   <Label>Remarks</Label>
                   <Textarea placeholder="Enter any remarks" rows={3} value={remarks} onChange={e => setRemarks(e.target.value)} />
@@ -1034,7 +1034,7 @@ function CorporateForm({
   const [productSource, setProductSource] = useState("")
   const [paymentMode, setPaymentMode] = useState("")
   const [deliveryChannel, setDeliveryChannel] = useState("")
-  const [corpFuzziness, setCorpFuzziness] = useState("")
+  // const [corpFuzziness, setCorpFuzziness] = useState("")
   const [corpRemarks, setCorpRemarks] = useState("")
   const [hasSisterConcern, setHasSisterConcern] = useState(false)
   const [productTypesCorp, setProductTypesCorp] = useState<string[]>([])
@@ -1093,9 +1093,8 @@ function CorporateForm({
       .filter(([_, value]) => !value)
       .map(([field, _]) => field)
 
-    alert(emptyFields.length)
+    
     if (emptyFields.length > 0) {
-      console.log("Fine");
       toast({
         title: "Required fields missing",
         description: `Please fill in: ${emptyFields.join(', ')}`,
@@ -1136,7 +1135,7 @@ function CorporateForm({
     const payload: any = {
       customer_type: "corporate",
       onboarding_type: "full",
-      screening_fuzziness: corpFuzziness,
+      screening_fuzziness: "OFF",
       remarks: corpRemarks,
       corporate_details: {
         company_name: companyName,
@@ -1765,7 +1764,7 @@ function CorporateForm({
                 <h4 className="font-semibold">Additional Information</h4>
               </div>
               <div className="space-y-4">
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label>Screening Fuzziness *</Label>
                   <Combobox
                     options={screeningFuzziness}
@@ -1774,7 +1773,7 @@ function CorporateForm({
                     placeholder="OFF"
                     searchPlaceholder="Search fuzziness..."
                   />
-                </div>
+                </div> */}
                 <div className="space-y-2">
                   <Label>Remarks</Label>
                   <Textarea placeholder="Enter any remarks" rows={3} value={corpRemarks} onChange={e => setCorpRemarks(e.target.value)} />

@@ -19,6 +19,7 @@ export default function AddCompanyPage() {
   // User fields
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
+  const [companyEmail, setCompanyEmail] = useState("")
   const [password, setPassword] = useState("")
   const [passwordConfirmation, setPasswordConfirmation] = useState("")
   const [phone, setPhone] = useState("")
@@ -34,6 +35,7 @@ export default function AddCompanyPage() {
   const [nationality, setNationality] = useState("")
   const [contactType, setContactType] = useState("")
   const [communicationType, setCommunicationType] = useState("")
+  const [role, setRole] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("")
   const [address, setAddress] = useState("")
   const [city, setCity] = useState("")
@@ -64,6 +66,7 @@ export default function AddCompanyPage() {
     const payload = {
       name,
       email,
+      company_email: companyEmail,
       password,
       password_confirmation: passwordConfirmation,
       phone,
@@ -82,6 +85,7 @@ export default function AddCompanyPage() {
       city,
       state,
       country,
+      role,
     }
 
     try {
@@ -136,6 +140,11 @@ export default function AddCompanyPage() {
     { value: "M", label: "Mail" },
     { value: "E", label: "Email" },
     { value: "P", label: "Phone" },
+  ]
+  const roles = [
+    { value: "Company Admin", label: "Company Admin"},
+    { value: "MLRO", label: "MLRO"},
+    { value: "Analyst", label: "Analyst"}
   ]
 
   return (
@@ -204,6 +213,16 @@ export default function AddCompanyPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Enter phone number"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Role *</Label>
+                <Combobox
+                  options={roles}
+                  value={role}
+                  onValueChange={(v) => typeof v === "string" && setRole(v)}
+                  placeholder="Select role"
+                  searchPlaceholder="Search role..."
                 />
               </div>
             </div>
@@ -341,6 +360,16 @@ export default function AddCompanyPage() {
                   onValueChange={(v) => typeof v === "string" && setCommunicationType(v)}
                   placeholder="Select communication type"
                   searchPlaceholder="Search communication type..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Comapny Email *</Label>
+                <Input
+                  type="email"
+                  value={companyEmail}
+                  onChange={(e) => setCompanyEmail(e.target.value)}
+                  placeholder="Enter email"
+                  required
                 />
               </div>
             </div>
