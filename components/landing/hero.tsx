@@ -12,13 +12,20 @@ export function Hero() {
         </h1>
         <p className="text-lg text-white/90 mb-8 max-w-2xl">
           Streamline your anti-money laundering processes with our cutting-edge solutions. Stay compliant, reduce
-                risks, and protect your business.
+          risks, and protect your business.
         </p>
-        <Link href="/login">
-        <button className="bg-white text-primary px-8 py-3 rounded font-semibold hover:bg-gray-100 transition-all duration-200 shadow-lg">
-          Get Started
-        </button>
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <Link href="/contact-us">
+            <button className="bg-blue-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-gray-100 hover:text-black transition-all duration-200 shadow-lg">
+              Request a Demo
+            </button>
+          </Link>
+          <Link href="/products">
+            <button className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-primary transition-all duration-200">
+              Our Products
+            </button>
+          </Link>
+        </div>
         {/* <p className="text-sm text-white/70 mt-6">Currently on 3.2.1 patch 4</p> */}
       </div>
     </section>

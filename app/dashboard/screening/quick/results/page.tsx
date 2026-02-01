@@ -34,6 +34,7 @@ type ScreeningResponse = {
     message: string
     data?: {
         searched_for?: string
+        customer_type?: string
         total_candidates?: number
         best_by_source?: BestBySourceItem[]
         total_search?: number
@@ -102,6 +103,7 @@ export default function QuickScreeningResultsPage() {
     }, [])
 
     const searchedFor = payload?.data?.searched_for || "-"
+    const customerType = payload?.data?.customer_type || "individual"
     const bestBySource = payload?.data?.best_by_source || [];
     const totalSearch = payload?.data?.total_search || 0;
 
@@ -175,6 +177,7 @@ export default function QuickScreeningResultsPage() {
     const handleDownloadSessionPDF = async () => {
         await generateScreeningSessionPDF({
             searchedFor,
+            customerType,
             bestBySource,
             sourceDecision,
             sourceAnnotationChoice,
@@ -183,6 +186,11 @@ export default function QuickScreeningResultsPage() {
             total_search: totalSearch,
         })
     }
+    const getConfidenceColor = (percentage: number) => {
+        if (percentage >= 80) return 'bg-green-100 text-green-800 border-green-200';
+        if (percentage >= 50) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-red-100 text-red-800 border-red-200';
+    };
 
     if (!payload) {
         return (
@@ -233,13 +241,16 @@ export default function QuickScreeningResultsPage() {
                                                 <div className="font-semibold text-base">{c.name || '-'}</div>
                                                 {/* <div className="text-xs text-muted-foreground">Source: {src.source}</div> */}
                                             </div>
-                                            {/* <div className="flex flex-col items-end">
-                                                <span className="text-xs font-medium px-2 py-1 rounded bg-blue-100 text-blue-800">{c.subject_type}</span>
-                                                <span className="text-xs text-muted-foreground">Confidence: {c.confidence}%</span>
-                                            </div> */}
+                                            <div className="flex flex-col items-end">
+                                                {/* <span className="text-xs font-medium px-2 py-1 rounded bg-blue-100 text-blue-800">{c.subject_type}</span> */}
+                                                <span className={`text-[15px] font-bold px-2 py-0.5 rounded-full border ${getConfidenceColor(c.confidence)}`}>
+                                                    Confidence Level: {c.confidence}%
+                                                </span>
+                                            </div>
                                         </div>
                                         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                                             {c.nationality && <span>🌍 {c.nationality}</span>}
+                                            {c.address && <span>📍 {c.address}</span>}
                                             {c.dob && <span>📅 {c.dob}</span>}
                                             {c.gender && <span>👤 {c.gender}</span>}
                                         </div>

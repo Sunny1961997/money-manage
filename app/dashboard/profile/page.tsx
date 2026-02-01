@@ -110,6 +110,7 @@ export default function ProfilePage() {
   }, [])
 
   const company = profile?.company_users?.[0]?.company_information
+  console.log("Company info: ", company)
 
   if (loading) {
     return (
@@ -136,13 +137,18 @@ export default function ProfilePage() {
 
       {/* Company Name Banner */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 flex items-center gap-3 justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-blue-50 rounded flex items-center justify-center">
               <FileText className="w-6 h-6 text-blue-600" />
             </div>
             <h2 className="text-xl font-semibold">{company?.name || "Not Available"}</h2>
           </div>
+          {company?.id && (
+            <a href={`/dashboard/profile/${company.id}`}>
+              <button className="px-4 py-2 bg-blue-100 text-black rounded hover:bg-blue-700 hover:text-white transition">Edit</button>
+            </a>
+          )}
         </CardContent>
       </Card>
 

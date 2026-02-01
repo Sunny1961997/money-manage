@@ -137,9 +137,9 @@ export default function AddCompanyPage() {
   ]
 
   const communicationTypes = [
-    { value: "M", label: "Mail" },
-    { value: "E", label: "Email" },
-    { value: "P", label: "Phone" },
+    { value: "Mail", label: "Mail" },
+    { value: "Email", label: "Email" },
+    { value: "Phone", label: "Phone" },
   ]
   const roles = [
     { value: "Company Admin", label: "Company Admin"},
