@@ -38,8 +38,8 @@ const occupations = [
   { value: "Banking/Financial Institutions", label: "Banking/Financial Institutions" },
   { value: "Business Services Other", label: "Business Services Other" },
   { value: "Charitable Organizations and Foundations", label: "Charitable Organizations and Foundations" },
-  { value: "Counsulting/Freelancer", label: "Counsulting/Freelancer" },
-  { value: "Data Analystics, Management and Internet", label: "Data Analystics, Management and Internet" },
+  { value: "Consulting/Freelancer", label: "Consulting/Freelancer" },
+  { value: "Data Analytics, Management and Internet", label: "Data Analytics, Management and Internet" },
   { value: "Defense", label: "Defense" },
   { value: "Education", label: "Education" },
   { value: "Facilities Management and Maintenance", label: "Facilities Management and Maintenance" },
@@ -97,7 +97,7 @@ const modeOfApproach = [
   { value: "Walk-In Customer", label: "Walk-In Customer" },
   { value: "Non Face to Face", label: "Non Face to Face" },
   { value: "Online/Social Media Portal", label: "Online/Social Media Portal" },
-  { value: "Thirdparty Referal", label: "Thirdparty Referral" },
+  { value: "Thirdparty Referral", label: "Thirdparty Referral" },
 ]
 
 const screeningFuzziness = [
