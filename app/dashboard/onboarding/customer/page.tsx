@@ -38,8 +38,8 @@ const occupations = [
   { value: "Banking/Financial Institutions", label: "Banking/Financial Institutions" },
   { value: "Business Services Other", label: "Business Services Other" },
   { value: "Charitable Organizations and Foundations", label: "Charitable Organizations and Foundations" },
-  { value: "Counsulting/Freelancer", label: "Counsulting/Freelancer" },
-  { value: "Data Analystics, Management and Internet", label: "Data Analystics, Management and Internet" },
+  { value: "Consulting/Freelancer", label: "Consulting/Freelancer" },
+  { value: "Data Analytics, Management and Internet", label: "Data Analytics, Management and Internet" },
   { value: "Defense", label: "Defense" },
   { value: "Education", label: "Education" },
   { value: "Facilities Management and Maintenance", label: "Facilities Management and Maintenance" },
@@ -97,7 +97,7 @@ const modeOfApproach = [
   { value: "Walk-In Customer", label: "Walk-In Customer" },
   { value: "Non Face to Face", label: "Non Face to Face" },
   { value: "Online/Social Media Portal", label: "Online/Social Media Portal" },
-  { value: "Thirdparty Referal", label: "Thirdparty Referral" },
+  { value: "Thirdparty Referral", label: "Thirdparty Referral" },
 ]
 
 const screeningFuzziness = [
@@ -111,6 +111,7 @@ export default function CustomerOnboardingPage() {
   const [countries, setCountries] = useState<Array<{ value: string; label: string }>>([])
   const [countryCodes, setCountryCodes] = useState<Array<{ value: string; label: string }>>([])
   const [products, setProducts] = useState<Array<{ value: string; label: string }>>([])
+  const [questionnaires, setQuestionnaires] = useState<Array<{ id: number; question: string; category?: string }>>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -118,7 +119,8 @@ export default function CustomerOnboardingPage() {
       try {
         const res = await fetch("/api/onboarding/meta", { credentials: "include" })
         const json = await res.json()
-        console.log("Onboarding meta data:", json);
+        console.log("Onboarding meta data:", json)
+
         const countryList = json.data.countries.countries.map((c: any) => ({
           value: c.name,
           label: c.name,
@@ -131,12 +133,12 @@ export default function CustomerOnboardingPage() {
             .filter((c: any) => c.phoneCode && c.phoneCode !== "+0")
             .map((c: any) => ({
               value: `${c.phoneCode}`,
-              label: `${c.phoneCode} (${c.label})`
+              label: `${c.phoneCode} (${c.label})`,
             }))
         )
-        setProducts(
-          (json.data.products || []).map((p: any) => ({ value: p.id.toString(), label: p.name }))
-        )
+        setProducts((json.data.products || []).map((p: any) => ({ value: p.id.toString(), label: p.name })))
+
+        setQuestionnaires(Array.isArray(json?.data?.questionnaires) ? json.data.questionnaires : [])
       } catch (e) {
         // handle error
       } finally {
@@ -182,7 +184,7 @@ export default function CustomerOnboardingPage() {
           >
             <Building2 className="w-6 h-6 mb-2" />
             <div className="font-semibold">Corporate</div>
-            <div className="text-sm text-muted-foreground">For businesses, organizations, or entities.</div>
+            <div className="text-sm text-muted-foreground">For Gold, Jewellery, Real Estate, Agent, Broker, CSP, DNFBP.</div>
           </button>
         </div>
       </div>
@@ -191,7 +193,7 @@ export default function CustomerOnboardingPage() {
       {customerType === "individual" ? (
         <IndividualForm countries={countries} countryCodes={countryCodes} occupations={occupations} idTypes={idTypes} products={products} sourceOfIncome={sourceOfIncome} />
       ) : (
-        <CorporateForm countries={countries} countryCodes={countryCodes} occupations={occupations} idTypes={idTypes} products={products} />
+        <CorporateForm countries={countries} countryCodes={countryCodes} occupations={occupations} idTypes={idTypes} products={products} questionnaires={questionnaires} />
       )}
     </div>
   )
@@ -890,12 +892,14 @@ function CorporateForm({
   products,
   occupations,
   idTypes,
+  questionnaires,
 }: {
   countries: Array<{ value: string; label: string }>
   countryCodes: Array<{ value: string; label: string }>
   products: Array<{ value: string; label: string }>
   occupations: Array<{ value: string; label: string }>
   idTypes: Array<{ value: string; label: string }>
+  questionnaires: Array<{ id: number; question: string; category?: string }>
 }) {
   const [ubos, setUbos] = useState([
     { id: 1, idType: "", role: "", type: "", name: "", isPep: false, nationality: "", idNo: "", idIssue: "", idExpiry: "", dob: "", ownershipPercentage: "" }
@@ -944,14 +948,14 @@ function CorporateForm({
     { value: "Ajman Free Zone", label: "Ajman Free Zone" },
   ]
   const entity_types = [
-    { value: "LLC", label: "LLC" },
-    { value: "Sole Proprietorship", label: "Sole Proprietorship" },
-    { value: "Partnership", label: "Partnership" },
-    { value: "Govt. Entity", label: "Govt. Entity" },
-    { value: "FZE", label: "FZE" },
-    { value: "FZCO", label: "FZCO" },
-    { value: "Private Limited", label: "Private Limited" },
-    { value: "Public Limited", label: "Public Limited" },
+    { value: "IFZA", label: "IFZA" },
+    { value: "Meydan", label: "Meydan" },
+    { value: "Shams", label: "Shams" },
+    { value: "DMCC", label: "DMCC" },
+    { value: "MOEDED", label: "MOEDED" },
+    // { value: "FZCO", label: "FZCO" },
+    // { value: "Private Limited", label: "Private Limited" },
+    // { value: "Public Limited", label: "Public Limited" },
   ]
   const business_activities = [
     { value: "Accounting/Auditing Firm", label: "Accounting/Auditing Firm" },
@@ -996,11 +1000,14 @@ function CorporateForm({
     { value: "MANAGER", label: "MANAGER" },
     { value: "REPRESENTATIVE", label: "REPRESENTATIVE" },
   ]
-  const screeningFuzziness = [
-    { value: "OFF", label: "OFF" },
-    { value: "Level 1", label: "Level 1" },
-    { value: "Level 2", label: "Level 2" },
-  ]
+
+  // AML questionnaires (answer per question)
+  // Stored as: { [question_id]: 1 | 0 }
+  const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<number, 1 | 0 | null>>({})
+
+  const setQuestionnaireAnswer = (questionId: number, value: 1 | 0) => {
+    setQuestionnaireAnswers(prev => ({ ...prev, [questionId]: value }))
+  }
 
   const [companyName, setCompanyName] = useState("")
   const [companyAddress, setCompanyAddress] = useState("")
@@ -1093,7 +1100,6 @@ function CorporateForm({
       .filter(([_, value]) => !value)
       .map(([field, _]) => field)
 
-    
     if (emptyFields.length > 0) {
       toast({
         title: "Required fields missing",
@@ -1127,6 +1133,18 @@ function CorporateForm({
           title: "Required fields missing",
           description: `Please fill in: ${uboEmptyFields.join(', ')}`,
           // variant: "destructive"
+        })
+        return
+      }
+    }
+
+    // Validate AML questionnaires (require yes/no for each question if questionnaires exist)
+    if (Array.isArray(questionnaires) && questionnaires.length > 0) {
+      const missing = questionnaires.filter(q => questionnaireAnswers[q.id] === undefined || questionnaireAnswers[q.id] === null)
+      if (missing.length > 0) {
+        toast({
+          title: "Required fields missing",
+          description: `Please answer AML Questionnaires (${missing.length} unanswered).`,
         })
         return
       }
@@ -1185,6 +1203,13 @@ function CorporateForm({
         dob: u.dob || null,
         role: u.role,
         ownership_percentage: u.ownershipPercentage ? Number(u.ownershipPercentage) : null,
+      })),
+
+      // IMPORTANT: AML Questionnaires answers
+      // Array of { question_id, answer } where answer is 1 (yes) or 0 (no)
+      aml_questionnaires: (questionnaires || []).map(q => ({
+        question_id: q.id,
+        answer: questionnaireAnswers[q.id] ?? 0,
       })),
     }
 
@@ -1257,6 +1282,9 @@ function CorporateForm({
             </TabsTrigger>
             <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Upload Documents
+            </TabsTrigger>
+            <TabsTrigger value="aml-questionnaires" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              AML Questionnaires
             </TabsTrigger>
             <TabsTrigger value="additional" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Additional Information
@@ -1753,6 +1781,46 @@ function CorporateForm({
                   ))}
                 </div>
               </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="aml-questionnaires" className="mt-0">
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <FileCheck className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">AML Questionnaires</h4>
+              </div>
+
+              {Array.isArray(questionnaires) && questionnaires.length > 0 ? (
+                <div className="space-y-4">
+                  {questionnaires.map((q) => (
+                    <div key={q.id} className="rounded-md border bg-white p-4">
+                      <div className="text-sm font-medium">{q.category ? `${q.category}: ` : ""}{q.question}</div>
+                      <div className="mt-3">
+                        <RadioGroup
+                          value={questionnaireAnswers[q.id] === 1 ? "yes" : questionnaireAnswers[q.id] === 0 ? "no" : ""}
+                          onValueChange={(v) => {
+                            if (v === "yes") setQuestionnaireAnswer(q.id, 1)
+                            if (v === "no") setQuestionnaireAnswer(q.id, 0)
+                          }}
+                          className="flex gap-6"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id={`q-${q.id}-yes`} />
+                            <Label htmlFor={`q-${q.id}-yes`}>Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id={`q-${q.id}-no`} />
+                            <Label htmlFor={`q-${q.id}-no`}>No</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">No questionnaires configured.</div>
+              )}
             </Card>
           </TabsContent>
 

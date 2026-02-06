@@ -1,240 +1,376 @@
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+import { YanoneKaffeesatzRegular, YanoneKaffeesatzBold } from "./fonts/yanone-kaffeesatz"
+import {MarmeladRegular} from "./fonts/Marmelad-Regular"
 
-export type Candidate = {
-  id: number
-  source: string
-  subject_type: string
-  name: string
-  original_name?: string | null
-  confidence: number
-  nationality?: string | null
-  country?: string | null
-  address?: string | null
-  sanctions?: string | null
-  other_information?: string | null
-  dob?: string | null
-  gender?: string | null
+// Helper to determine Risk Level based on confidence
+// const getRiskLevel = (score: number) => {
+//   if (score >= 90) return { label: "High", color: [239, 68, 68] as [number, number, number] } // Red
+//   if (score >= 50) return { label: "Medium", color: [245, 158, 11] as [number, number, number] } // Orange
+//   return { label: "Low", color: [34, 197, 94] as [number, number, number] } // Green
+// }
+// const addCustomFonts = (doc: jsPDF) => {
+//   doc.addFileToVFS("YanoneKaffeesatz-Regular.ttf", YanoneKaffeesatzRegular)
+//   doc.addFileToVFS("YanoneKaffeesatz-Bold.ttf", YanoneKaffeesatzBold)
+//   doc.addFileToVFS("Marmelad-Regular.ttf", MarmeladRegular)
+
+//   doc.addFont("YanoneKaffeesatz-Regular.ttf", "YanoneKaffeesatz", "normal")
+//   doc.addFont("YanoneKaffeesatz-Bold.ttf", "YanoneKaffeesatz", "bold")
+//   doc.addFont("Marmelad-Regular.ttf", "Marmelad", "normal")
+// }
+const getRiskLevel = (score: number) => {
+  if (score >= 90) return { label: "True Match", color: [34, 197, 94] as [number, number, number] } // Green
+  if (score >= 40) return { label: "Potential Match", color: [245, 158, 11] as [number, number, number] } // Orange
+  return { label: "No Match", color: [239, 68, 68] as [number, number, number] } // Red
 }
-
-export type BestBySourceItem = {
-  source: string
-  best_confidence: boolean
-  data: Array<Candidate | null>
-  total_search?: number
-}
-
-export type SourceDecision = "relevant" | "irrelevant" | "no_sp" | null
 
 export async function generateScreeningSessionPDF({
   searchedFor,
+  customerType,
   bestBySource,
   sourceDecision,
   sourceAnnotationChoice,
   sourceAnnotationText,
   detailsById,
   total_search,
+  user_id,
 }: {
   searchedFor: string
-  bestBySource: BestBySourceItem[]
-  sourceDecision: Record<string, SourceDecision>
+  customerType: string
+  bestBySource: any[]
+  sourceDecision: Record<string, string | null>
   sourceAnnotationChoice: Record<string, string>
   sourceAnnotationText: Record<string, string>
   detailsById: Record<string, any>
   total_search?: number
+  user_id?: string
 }) {
   const doc = new jsPDF({ unit: "mm", format: "a4" })
+  // addCustomFonts(doc)
   const pageWidth = doc.internal.pageSize.getWidth()
-  const margin = 20
+  const margin = 15
+  const contentWidth = pageWidth - margin * 2
 
-  // --- COVER PAGE ---
-  doc.setFillColor(110, 70, 255) // More purple background
-  const coverHeight = 110
-  // Draw a larger header background
-  // (height increased from 80 to 110)
-  doc.rect(0, 0, pageWidth, coverHeight, "F")
+  // --- HEADER ---
+  doc.setFillColor(60, 0, 126)
+  doc.rect(0, 0, pageWidth, 40, "F") // Full width header, increased height to 40mm
+
+  const headerPadding = 15 // Padding inside the purple header
+
+  try {
+    const img = new Image()
+    img.crossOrigin = "anonymous"
+    
+    // Use absolute URL for the image
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    img.src = `${baseUrl}/aml_meter.png`
+    
+    await new Promise((resolve, reject) => {
+      img.onload = resolve
+      img.onerror = reject
+    })
+    
+    // Calculate dimensions to fit in header (max height ~18mm)
+    const logoHeight = 22
+    const logoWidth = (img.width / img.height) * logoHeight
+    doc.addImage(img, "PNG", headerPadding, 5, logoWidth, logoHeight)
+  } catch (e) {
+    console.error("Failed to load logo image:", e)
+    // Fallback if image fails
+  }
+
+  // Add "AML Meter" text in bold between logo and case ID
   doc.setTextColor(255, 255, 255)
-  doc.setFontSize(36)
-  doc.setFont("helvetica", "bold")
-  doc.text("AML Meter", pageWidth / 2, 40, { align: "center" })
   doc.setFontSize(24)
+  // doc.setFont("times", "bold")
+  doc.setFont("times", "bold")
+  doc.text("AML Meter", pageWidth / 2, 18, { align: "center" })
+
+  // Case ID on the right
+  doc.setFontSize(10)
+  doc.setFont("times", "normal")
+  doc.text(`Case ID: AML-CASE-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`, pageWidth - headerPadding, 16, { align: "right" })
+
+  // --- TITLE ---
+  let y = 50
+  doc.setTextColor(40, 40, 40)
+  doc.setFontSize(22)
+  doc.setFont("times", "bold")
+  doc.text("Screening Result Report", margin, y)
+  y += 7
+  doc.setFontSize(11)
+  doc.setFont("times", "normal")
+  doc.setTextColor(100, 100, 100)
+  doc.text(`Screening summary and supporting evidence for ${customerType}`, margin, y)
+  y += 5
+  doc.setDrawColor(220, 220, 220)
+  doc.line(margin, y, pageWidth - margin, y)
+  y += 12
+
+  // --- CASE SUMMARY & OUTCOME (Two Columns) ---
+  const colWidth = (contentWidth - 6) / 2
+  const boxHeight = 70 // Same height for both boxes
+  
+  // Left Box: Case Summary
+  doc.setDrawColor(200, 200, 200)
+  doc.roundedRect(margin, y, colWidth, boxHeight, 3, 3)
   doc.setFont("helvetica", "bold")
-  doc.text("AML Name Screening Report", pageWidth / 2, 62, { align: "center" })
-  doc.setFontSize(16)
-  doc.setFont("helvetica", "normal")
-  doc.text(`Searched For:`, pageWidth / 2, 80, { align: "center" })
-  doc.setFontSize(20)
-  doc.setFont("helvetica", "bold")
-  doc.text(searchedFor, pageWidth / 2, 92, { align: "center" })
   doc.setFontSize(12)
+  doc.setTextColor(0, 0, 0)
+  doc.text("Case Summary", margin + 5, y + 8)
+
+  const hasPep = bestBySource.some(src => (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1')));
+  
+  doc.setFontSize(9)
   doc.setFont("helvetica", "normal")
-  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, 104, { align: "center" })
+  let summaryY = y + 16
+  const summaryItems = [
+    ["Subject Name:", searchedFor],
+    ["Subject Type:", customerType == "individual" ? "Individual" : (customerType == "entity" ? "Entity" : "Vessel")],
+    ["Total Search:", total_search?.toString() || "0"],
+    ["Screening Type:", "Automated Name Search"],
+    ["PEP Identified:", hasPep ? "YES" : "No"]
+  ]
+  summaryItems.forEach(([label, val]) => {
+    // Highlight PEP YES in red if found
+    if (label === "PEP Identified:" && val === "YES") {
+        doc.setFont("helvetica", "bold"); doc.text(label, margin + 5, summaryY)
+        doc.setTextColor(220, 38, 38); // Red
+        doc.setFont("helvetica", "bold"); doc.text(val, margin + 35, summaryY)
+        doc.setTextColor(0, 0, 0); // Reset
+    } else {
+        doc.setFont("helvetica", "bold"); doc.text(label, margin + 5, summaryY)
+        doc.setFont("helvetica", "normal"); doc.text(val, margin + 35, summaryY)
+    }
+    summaryY += 6
+  })
+
+  // Right Box: Outcome
+  const maxConf = Math.max(...bestBySource.map(s => s.best_confidence || 0))
+  const risk = getRiskLevel(maxConf)
+  
+  // Determine overall decision based on first annotation choice
+  const annotations = Object.values(sourceAnnotationChoice).filter(Boolean)
+  let finalDecision = "Pending Review"
+  if (annotations.length > 0) {
+    finalDecision = annotations[0] // Use the first annotation as final decision
+  }
+  
+  const outcomeBoxHeight = 70 // Increased height to properly cover all text
+  
+  doc.roundedRect(margin + colWidth + 6, y, colWidth, outcomeBoxHeight, 3, 3)
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(12)
+  doc.setTextColor(0, 0, 0)
+  doc.text("Outcome", margin + colWidth + 11, y + 8)
+
+  doc.setTextColor(0, 0, 0)
+  doc.setFontSize(9)
+  let outcomeY = y + 18
+  
+  // Final Decision first (from first annotation)
+  doc.setFont("helvetica", "bold"); doc.text("Final Decision:", margin + colWidth + 11, outcomeY)
+  doc.setFont("helvetica", "normal")
+  const decisionText = doc.splitTextToSize(finalDecision, colWidth - 52)
+  doc.text(decisionText, margin + colWidth + 48, outcomeY)
+  outcomeY += (decisionText.length * 5) + 4
+  
+  // Confidence Score
+  doc.setFont("helvetica", "bold"); doc.text("Confidence Score:", margin + colWidth + 11, outcomeY)
+  doc.setFont("helvetica", "normal"); doc.text(`${(maxConf / 100).toFixed(2)}`, margin + colWidth + 48, outcomeY)
+  outcomeY += (decisionText.length * 5) + 4
+  
+  // Result with color
+  doc.setFont("helvetica", "bold"); doc.text("Result:", margin + colWidth + 11, outcomeY)
+  doc.setTextColor(...risk.color)
+  doc.setFont("helvetica", "bold"); doc.text(risk.label, margin + colWidth + 48, outcomeY)
   doc.setTextColor(0, 0, 0)
 
-  // Add a new page for the rest of the report
-  doc.addPage()
-  let y = 30
 
-  // --- EXECUTIVE SUMMARY (Single Page) ---
-  doc.setFontSize(14)
-  doc.setFont("helvetica", "bold")
-  doc.text("Executive Summary", margin, y)
-  y += 8
-  doc.setFontSize(11)
-  doc.setFont("helvetica", "normal")
+  y += outcomeBoxHeight + 10
 
-  // Audit statistics (moved to bottom)
-  // Use total_search from the response if available
-  const totalSearch = total_search ? total_search : 0;
-  const totalHits = bestBySource.reduce((acc, src) => acc + (src.data ? src.data.filter(Boolean).length : 0), 0)
-  const totalSources = bestBySource.length
-  const sourcesWithHits = bestBySource.filter(src => (src.data || []).filter(Boolean).length > 0).map(src => src.source)
-  const sourcesWithoutHits = bestBySource.filter(src => !(src.data || []).filter(Boolean).length).map(src => src.source)
-
-  // Build summary hint
-  let summaryHint = ""
-  if (sourcesWithHits.length === 0) {
-    summaryHint = `No Match found under ${bestBySource.map(s => s.source).join(", ")}`
-  } else if (sourcesWithoutHits.length === 0) {
-    summaryHint = `Match found under ${bestBySource.map(s => s.source).join(", ")}`
-  } else {
-    summaryHint = `Match found under ${sourcesWithHits.join(", ")}. No match found under ${sourcesWithoutHits.join(", ")}.`
+  // --- AUDIT TRAIL ---
+  // Check if there's enough space for audit trail (estimated ~35mm needed)
+  if (y > 235) {
+    doc.addPage()
+    y = 30
   }
 
-  // Executive summary as a sentence
-  const sourcesCount = bestBySource.length
-  const foundCount = sourcesWithHits.length
-  let summarySentence = `Screening was performed across ${sourcesCount} sources. Results were found in ${foundCount} source${foundCount !== 1 ? 's' : ''}.`
-  if (foundCount === 0) summarySentence = `Screening was performed across ${sourcesCount} sources. No results were found in any source.`
-  doc.text(summarySentence, margin, y, { maxWidth: pageWidth - margin * 2 })
-  y += 8
-  doc.setFont("helvetica", "bold")
-  doc.text("Summary:", margin, y)
-  doc.setFont("helvetica", "normal")
-  doc.text(summaryHint, margin + 20, y, { maxWidth: pageWidth - margin * 2 - 20 })
-  y += 8
-  doc.setFont("helvetica", "normal")
-  doc.text(`Report generated on: ${new Date().toLocaleString()}`, margin, y)
-  y += 10
-
-  // Ensure executive summary fits on a single page
-  if (y > 250) { doc.addPage(); y = 20 }
-
-  // --- RESULT PAGE (Overview) ---
   doc.setFontSize(13)
-  doc.setFont("helvetica", "bold")
-  doc.text("Screening Results Overview", margin, y)
-  y += 7
-  doc.setFontSize(10)
-  doc.setFont("helvetica", "normal")
-  for (const src of bestBySource) {
-    if (y > 260) { doc.addPage(); y = 20 }
-    const hasResult = (src.data || []).filter(Boolean).length > 0
-    doc.setFont("helvetica", hasResult ? "bold" : "normal")
-    doc.text(`• ${src.source}: ${hasResult ? "Result found" : "No result found"}`, margin, y)
-    y += 6
-  }
+  doc.setFont("times", "bold")
+  doc.setTextColor(40, 40, 40)
+  doc.text("Audit Trail", margin, y)
+  y += 5
 
-  // --- DETAILED NAME MATCH REPORT ---
-  y += 6
-  doc.setFontSize(13)
-  doc.setFont("helvetica", "bold")
-  doc.text("Detailed Name Match & Hit Report", margin, y)
-  y += 7
-  doc.setFontSize(10)
-  doc.setFont("helvetica", "normal")
-  for (const src of bestBySource) {
-    const candidates = (src.data || []).filter(Boolean) as Candidate[]
-    if (candidates.length === 0) continue
-    if (y > 240) { doc.addPage(); y = 20 }
-    y += 4
-    doc.setFontSize(12)
-    doc.setFont("helvetica", "bold")
-    doc.setTextColor(59, 130, 246)
-    doc.text(src.source, margin, y)
-    doc.setTextColor(0, 0, 0)
-    y += 7
-    for (const c of candidates) {
-      if (y > 250) { doc.addPage(); y = 20 }
-      doc.setFontSize(11)
-      doc.setFont("helvetica", "bold")
-      doc.text(`Name: ${c.name || "-"}`, margin + 2, y)
-      y += 5
-      if (c.original_name) { doc.setFont("helvetica", "normal"); const lines = doc.splitTextToSize(`Original Name: ${c.original_name}`, pageWidth - margin * 2 - 2); doc.text(lines, margin + 2, y); y += lines.length * 5 }
-      if (c.nationality || c.country) { doc.setFont("helvetica", "normal"); const lines = doc.splitTextToSize(`Country/Nationality: ${c.nationality || c.country}`, pageWidth - margin * 2 - 2); doc.text(lines, margin + 2, y); y += lines.length * 5 }
-      if (c.address) {
-        doc.setFont("helvetica", "normal");
-        doc.text(`Address:`, margin + 2, y)
-        y += 5
-        // Wrap address lines and long lines
-        const addressLines = c.address.split(/\r?\n/).flatMap(line => {
-          const wrapped = doc.splitTextToSize(line, pageWidth - margin * 2 - 8)
-          return wrapped
-        })
-        for (const line of addressLines) {
-          doc.text(line, margin + 8, y)
-          y += 5
-        }
-      }
-      if (c.sanctions) { doc.setFont("helvetica", "normal"); const lines = doc.splitTextToSize(`Sanctions: ${c.sanctions}`, pageWidth - margin * 2 - 2); doc.text(lines, margin + 2, y); y += lines.length * 5 }
-      if (c.other_information) { doc.setFont("helvetica", "normal"); const lines = doc.splitTextToSize(`Other Information: ${c.other_information}`, pageWidth - margin * 2 - 2); doc.text(lines, margin + 2, y); y += lines.length * 5 }
-      // Annotation & Decision
-      const anno = sourceAnnotationChoice[src.source] || "-"
-      const annoText = sourceAnnotationText[src.source] || ""
-      const dec = sourceDecision[src.source] || "-"
-      y += 2
-      doc.setFont("helvetica", "bold")
-      const annoLines = doc.splitTextToSize(`Annotation: ${anno}${anno === "Other" ? ` - ${annoText}` : ""}`, pageWidth - margin * 2 - 2)
-      doc.text(annoLines, margin + 2, y)
-      y += annoLines.length * 5
-      doc.setFont("helvetica", "bold")
-      doc.text(`Decision: ${dec}`, margin + 2, y)
-      y += 8
-    }
-    y += 2
-  }
+  const auditHeader = [["Particular", "Description"]];
 
-  // --- AUDIT STATISTICS AT BOTTOM ---
-  if (y > 250) { doc.addPage(); y = 20 }
-  y += 8
-  doc.setFontSize(12)
-  doc.setFont("helvetica", "bold")
-  doc.text("Audit Statistics", margin, y)
-  y += 7
-  doc.setFontSize(10)
-  doc.setFont("helvetica", "normal")
-  // Use autoTable for audit statistics
+  const auditBody = [
+    ["Total Searches Performed", total_search?.toString() || "0"],
+    ["Total Results Found", bestBySource.reduce((sum, src) => sum + (src.data || []).filter(Boolean).length, 0).toString()],
+    ["Search Timestamp", new Date().toLocaleString()],
+    ["User Details", user_id || "N/A"]
+  ];
+
   autoTable(doc, {
     startY: y,
-    head: [["Metric", "Value"]],
-    body: [
-      ["Total checks performed", totalSearch],
-      ["Total results found", totalHits],
-      // ["Total sources", totalSources],
-      // ["Sources with hits", sourcesWithHits.length],
-      // ["Sources without hits", sourcesWithoutHits.length],
-    ],
-    theme: "grid",
+    head: auditHeader, 
+    body: auditBody,
+    theme: "striped", 
+    headStyles: { 
+      fillColor: [93, 50, 145], 
+      textColor: [255, 255, 255],
+      fontSize: 10,
+      fontStyle: 'bold' 
+    },
+    bodyStyles: { fontSize: 9 },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 80 },
+      1: { cellWidth: 'auto' }
+    },
     margin: { left: margin, right: margin },
-    headStyles: { fillColor: [110, 70, 255], textColor: 255 },
-    styles: { fontSize: 10 },
+    styles: { 
+      lineColor: [200, 200, 200],
+      lineWidth: 0.1
+    }
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 10
+
+  // --- MATCH SUMMARY TABLE ---
+  // Estimate space needed for match summary table (header + rows + spacing)
+  const estimatedMatchSummaryHeight = 15 + (bestBySource.length * 8)
+  
+  // Check if there's enough space for Match Summary table header + at least 3 rows
+  if (y + Math.min(estimatedMatchSummaryHeight, 40) > 270) {
+    doc.addPage()
+    y = 30
+  }
+
+  doc.setFontSize(13)
+  doc.setFont("helvetica", "bold")
+  doc.text("Match Summary", margin, y)
+  y += 5
+
+  const tableData = bestBySource.map(src => {
+    const hits = (src.data || []).filter(Boolean).length
+    const sourceHasPep = (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1'));
+    
+    let displaySource = src.source;
+    if (src.source && src.source.toUpperCase().includes("UAE")) {
+        displaySource = "UAE Local list";
+    }
+    if (src.source && src.source.toUpperCase().includes("UN")) {
+        displaySource = "UNSCR";
+    }
+    const isWhitelisted = (src.data || []).some((c: any) => c && (c.is_whitelisted === true || c.is_whitelisted === 'true' || c.is_whitelisted === 1));
+    const annotation = sourceAnnotationChoice[src.source] || "No Comment";
+    
+    return [
+      sourceHasPep ? `${displaySource} (PEP)` : displaySource,
+      hits,
+      hits > 0 ? `${src.best_confidence}/100` : "-",
+      hits > 0 ? (sourceDecision[src.source] || "Review") : "Clear",
+      isWhitelisted ? `WL: Yes | ${annotation}` : annotation
+    ]
   })
-  y = (doc as any).lastAutoTable.finalY + 8
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Source List", "Matches", "Highest Match", "Status", "Notes"]],
+    body: tableData,
+    headStyles: { fillColor: [110, 70, 255] },
+    margin: { left: margin, right: margin },
+    theme: "striped"
+  })
+
+  y = (doc as any).lastAutoTable.finalY + 15
+
+  // --- DETAILED RESULTS ---
+  // Only add new page if there's not enough space for at least one evidence box
+  if (y > 240) {
+    doc.addPage()
+    y = 30
+  }
+  
+  doc.setFontSize(13)
+  doc.setFont("times", "bold")
+  doc.setTextColor(40, 40, 40)
+  doc.text("Evidence", margin, y)
+  y += 8
+
+  bestBySource.forEach(src => {
+    const candidates = (src.data || []).filter(Boolean)
+    candidates.forEach((c: any) => {
+      
+      const riskInfo = getRiskLevel(c.confidence)
+      // Updated PEP check here as well
+      const isPep = c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1';
+
+      // Calculate address lines to determine box height dynamically
+      const addr = doc.splitTextToSize(c.address || "N/A", contentWidth - 45)
+      const addressLines = Array.isArray(addr) ? addr.length : 1
+      
+      // Base height + extra space for PEP + address lines (5mm per line)
+      const baseHeight = 39 // Base for name, decision, annotation labels
+      const pepHeight = isPep ? 6 : 0
+      const addressHeight = addressLines * 5
+      const boxHeight = baseHeight + pepHeight + addressHeight
+      
+      // Check if box fits on current page, if not add new page
+      if (y + boxHeight > 270) { doc.addPage(); y = 30 }
+      
+      doc.setDrawColor(200, 200, 200)
+      doc.roundedRect(margin, y, contentWidth, boxHeight, 2, 2)
+      
+      doc.setFontSize(11)
+      doc.setFont("times", "bold")
+      doc.text(`${src.source} Result Details`, margin + 5, y + 8)
+      
+      // Hit Badge
+      doc.setFillColor(...riskInfo.color)
+      doc.roundedRect(margin + contentWidth - 35, y + 4, 30, 6, 2, 2, "F")
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(8)
+      doc.text(`${(c.confidence/100).toFixed(2)} Match`, margin + contentWidth - 20, y + 8.2, { align: "center" })
+
+      doc.setTextColor(0, 0, 0)
+      doc.setFontSize(9)
+      let detailY = y + 16
+      doc.setFont("times", "bold"); doc.text("Matched Name:", margin + 5, detailY)
+      doc.setFont("times", "normal"); doc.text(c.name || "-", margin + 35, detailY)
+      detailY += 6
+
+      if (isPep) {
+        doc.setFont("times", "bold"); doc.text("PEP Status:", margin + 5, detailY)
+        doc.setTextColor(220, 38, 38)
+        doc.setFont("times", "bold"); doc.text("Politically Exposed Person", margin + 35, detailY)
+        doc.setTextColor(0, 0, 0)
+        detailY += 6
+      }
+
+      doc.setFont("times", "bold"); doc.text("Decision:", margin + 5, detailY)
+      doc.setFont("times", "normal"); doc.text(sourceDecision[src.source] || "Not Set", margin + 35, detailY)
+      detailY += 6
+      doc.setFont("times", "bold"); doc.text("Annotation:", margin + 5, detailY)
+      const annotationText = sourceAnnotationChoice[src.source] === 'Other' ? sourceAnnotationText[src.source] : sourceAnnotationChoice[src.source]
+      doc.setFont("times", "normal"); doc.text(annotationText || "None", margin + 35, detailY)
+      detailY += 6
+      doc.setFont("times", "bold"); doc.text("Address:", margin + 5, detailY)
+      doc.setFont("times", "normal"); doc.text(addr, margin + 35, detailY)
+
+      y += boxHeight + 10 // Dynamic spacing based on calculated box height
+    })
+  })
 
   // --- FOOTER ---
-  const pageCount = (doc as any).internal.getNumberOfPages()
+  const pageCount = doc.getNumberOfPages()
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i)
     doc.setFontSize(8)
-    doc.setTextColor(128, 128, 128)
-    doc.text(
-      `Page ${i} of ${pageCount} | Confidential Report`,
-      pageWidth / 2,
-      290,
-      { align: "center" }
-    )
-    doc.setTextColor(0, 0, 0)
+    doc.setTextColor(150, 150, 150)
+    doc.text(`Confidential - AML Meter Report`, margin, 285)
+    doc.text(`Generated: ${new Date().toLocaleString()} | Page ${i} of ${pageCount}`, pageWidth - margin, 285, { align: "right" })
   }
 
-  doc.save(`screening_session_report_${new Date().getTime()}.pdf`)
+  doc.save(`${searchedFor.replace(/\s+/g, '_')}.pdf`)
 }

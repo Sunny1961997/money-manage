@@ -73,14 +73,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[#2563EB] rounded flex items-center justify-center">
-              <span className="text-white font-bold text-xl">AML</span>
-            </div>
-            <div>
-              <CardTitle className="text-2xl">Meter Screening Solution</CardTitle>
-              {/* <CardDescription>WMS Dashboard v2.0</CardDescription> */}
-            </div>
+          <div className="flex items-center justify-center gap-3">
+            <img 
+              src="/aml_meter_2.png" 
+              alt="AML Meter" 
+              className="h-20 w-auto object-contain rounded" 
+            />
           </div>
         </CardHeader>
         <CardContent>

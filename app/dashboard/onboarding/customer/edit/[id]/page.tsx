@@ -39,7 +39,7 @@ const occupations = [
   { value: "Business Services Other", label: "Business Services Other" },
   { value: "Charitable Organizations and Foundations", label: "Charitable Organizations and Foundations" },
   { value: "Counsulting/Freelancer", label: "Counsulting/Freelancer" },
-  { value: "Data Analystics, Management and Internet", label: "Data Analystics, Management and Internet" },
+  { value: "Data Analytics, Management and Internet", label: "Data Analytics, Management and Internet" },
   { value: "Defense", label: "Defense" },
   { value: "Education", label: "Education" },
   { value: "Facilities Management and Maintenance", label: "Facilities Management and Maintenance" },

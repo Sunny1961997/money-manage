@@ -11,6 +11,7 @@ import { generateScreeningPDF } from "@/lib/screening-pdf-generator"
 import { generateScreeningSessionPDF } from "@/lib/screening-session-pdf"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
+
 type Candidate = {
     id: number
     source: string
@@ -32,11 +33,15 @@ type BestBySourceItem = {
 type ScreeningResponse = {
     status: string
     message: string
+    user_id?: number | string
     data?: {
+        user_id?: number | string
         searched_for?: string
+        customer_type?: string
         total_candidates?: number
         best_by_source?: BestBySourceItem[]
         total_search?: number
+        total_found?: number
     }
 }
 
@@ -75,11 +80,13 @@ function hasNoSpForSource(candidates: Candidate[]) {
 }
 
 const ANNOTATION_OPTIONS = [
-    { value: "False Positive", label: "False Positive" },
-    { value: "Name Match Only", label: "Name Match Only" },
+    // { value: "No Annotation", label: "Select Annotation" },
+    { value: "True Match", label: "True Match" },
+    { value: "Potential Match", label: "Potential Match" },
     { value: "Insufficient Data", label: "Insufficient Data" },
-    { value: "Needs Review", label: "Needs Review" },
-    { value: "No Comment", label: "No Comment" },
+    { value: "False Positive", label: "False Positive" },
+    { value: "Escalation Required", label: "Escalation Required" },
+    { value: "Name matched", label: "Name matched" },
     { value: "Other", label: "Other (type below)" },
 ] as const
 
@@ -95,15 +102,19 @@ export default function QuickScreeningResultsPage() {
         const raw = sessionStorage.getItem("screening_results")
         if (!raw) return
         try {
-            setPayload(JSON.parse(raw))
+            const parsed = JSON.parse(raw)
+            console.log("Full payload:", parsed)
+            console.log("User ID from payload:", parsed?.data?.user_id)
+            setPayload(parsed)
         } catch {
             setPayload(null)
         }
     }, [])
-
+    const userId = String(payload?.data?.user_id || payload?.user_id || "N/A")
     const searchedFor = payload?.data?.searched_for || "-"
+    const customerType = payload?.data?.customer_type || "individual"
     const bestBySource = payload?.data?.best_by_source || [];
-    const totalSearch = payload?.data?.total_search || 0;
+    const totalSearch = payload?.data?.total_found || 0;
 
     const [sourceDecision, setSourceDecision] = React.useState<Record<string, SourceDecision>>({})
     const [sourceAnnotationChoice, setSourceAnnotationChoice] = React.useState<Record<string, string>>({})
@@ -117,7 +128,7 @@ export default function QuickScreeningResultsPage() {
 
         for (const src of bestBySource) {
             nextDecision[src.source] = null // Don't pre-select
-            nextAnnoChoice[src.source] = "No Comment"
+            nextAnnoChoice[src.source] = "No Annotation"
             nextAnnoText[src.source] = ""
         }
 
@@ -159,7 +170,7 @@ export default function QuickScreeningResultsPage() {
 
             // Get decision and annotation for this source
             const decision = sourceDecision[c.source] || null
-            const annotationChoice = sourceAnnotationChoice[c.source] || "No Comment"
+            const annotationChoice = sourceAnnotationChoice[c.source] || "No Annotation"
             const annotationText = sourceAnnotationText[c.source] || ""
 
             // Generate PDF with decision and annotation
@@ -175,14 +186,52 @@ export default function QuickScreeningResultsPage() {
     const handleDownloadSessionPDF = async () => {
         await generateScreeningSessionPDF({
             searchedFor,
+            customerType,
             bestBySource,
             sourceDecision,
             sourceAnnotationChoice,
             sourceAnnotationText,
             detailsById,
             total_search: totalSearch,
+            user_id: userId
         })
     }
+    const getConfidenceColor = (percentage: number) => {
+        if (percentage >= 80) return 'bg-green-100 text-green-800 border-green-200';
+        if (percentage >= 50) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-red-100 text-red-800 border-red-200';
+    };
+
+    const renderDetailValue = (value: any): React.ReactNode => {
+        if (value === null || value === undefined) return <span className="text-muted-foreground">-</span>;
+        if (typeof value === 'boolean') return value ? "Yes" : "No";
+        
+        if (Array.isArray(value)) {
+            if (value.length === 0) return <span className="text-muted-foreground">Empty</span>;
+            return (
+                <ul className="list-disc pl-4 space-y-1">
+                    {value.map((item, i) => (
+                        <li key={i} className="text-sm">{renderDetailValue(item)}</li>
+                    ))}
+                </ul>
+            );
+        }
+
+        if (typeof value === 'object') {
+            return (
+                <div className="pl-3 border-l-2 border-muted space-y-1 mt-1">
+                    {Object.entries(value).map(([k, v]) => (
+                        <div key={k} className="grid grid-cols-[140px_1fr] gap-2 text-sm">
+                            <span className="font-medium text-muted-foreground capitalize">{k.replace(/_/g, ' ')}:</span>
+                            <span>{renderDetailValue(v)}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        return String(value);
+    };
 
     if (!payload) {
         return (
@@ -190,7 +239,7 @@ export default function QuickScreeningResultsPage() {
                 <Card>
                     <CardContent className="pt-6 space-y-3">
                         <div className="text-sm text-muted-foreground">No results found in session. Run a search first.</div>
-                        <Button onClick={() => (window.location.href = "/dashboard/screening/quick")}>Back to Quick Screening</Button>
+                        <Button onClick={() => (window.location.href = "/dashboard/screening/quick")}>Back to Name Screening</Button>
                     </CardContent>
                 </Card>
             </div>
@@ -218,7 +267,6 @@ export default function QuickScreeningResultsPage() {
 
             {/* List view for results */}
             <div className="bg-white rounded shadow p-4">
-                {/* <p className="text-sm text-muted-foreground">Found {bestBySource.length} results</p> */}
                 {totalSearch === 0 ? (
                     <div className="text-center py-8 text-muted-foreground text-lg">No results found.</div>
                 ) : (
@@ -230,16 +278,26 @@ export default function QuickScreeningResultsPage() {
                                     <li key={`${src.source}:${c.id}`} className="border rounded p-4 flex flex-col gap-2 shadow-lg">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <div className="font-semibold text-base">{c.name || '-'}</div>
-                                                {/* <div className="text-xs text-muted-foreground">Source: {src.source}</div> */}
+                                                <a
+                                                    href={`/dashboard/screening/entity/${c.id}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="font-semibold text-base text-primary hover:underline cursor-pointer flex items-center gap-2"
+                                                >
+                                                    {c.name || '-'}
+                                                    <span className="text-xs font-normal text-muted-foreground no-underline">(view details)</span>
+                                                </a>
+                                                <div className="text-xs text-muted-foreground">Source: {src.source}</div>
                                             </div>
-                                            {/* <div className="flex flex-col items-end">
-                                                <span className="text-xs font-medium px-2 py-1 rounded bg-blue-100 text-blue-800">{c.subject_type}</span>
-                                                <span className="text-xs text-muted-foreground">Confidence: {c.confidence}%</span>
-                                            </div> */}
+                                            <div className="flex flex-col items-end">
+                                                <span className={`text-[15px] font-bold px-2 py-0.5 rounded-full border ${getConfidenceColor(c.confidence)}`}>
+                                                    Confidence Level: {c.confidence !== 0 ? (c.confidence / 100).toFixed(2) : c.confidence}
+                                                </span>
+                                            </div>
                                         </div>
                                         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                                             {c.nationality && <span>🌍 {c.nationality}</span>}
+                                            {c.address && <span>📍 {c.address}</span>}
                                             {c.dob && <span>📅 {c.dob}</span>}
                                             {c.gender && <span>👤 {c.gender}</span>}
                                         </div>
@@ -267,7 +325,7 @@ export default function QuickScreeningResultsPage() {
                                                     onValueChange={(val) => setSourceAnnotationChoice((prev) => ({ ...prev, [src.source]: val }))}
                                                 >
                                                     <SelectTrigger className="w-40">
-                                                        <SelectValue placeholder="Select annotation" />
+                                                        <SelectValue placeholder="No Annotation" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {ANNOTATION_OPTIONS.map(opt => (

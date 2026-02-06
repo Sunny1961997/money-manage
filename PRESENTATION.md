@@ -93,7 +93,7 @@ A comprehensive **Anti-Money Laundering (AML)** compliance platform designed for
 
 ## 🔍 Advanced Screening Engine
 
-**Quick Screening:**
+**Name Screening:**
 - Individual, Entity, and Vessel screening
 - Searchable country dropdowns (Combobox)
 - Adjustable confidence slider (10-90%)

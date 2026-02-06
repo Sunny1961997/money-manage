@@ -7,6 +7,9 @@ import { SoftwareFeatures } from '@/components/landing/software-features';
 import { CTA } from '@/components/landing/cta';
 import { Contact } from '@/components/landing/contact';
 import { Footer } from '@/components/landing/footer';
+import { Products } from '@/components/landing/products';
+import { BookCallPopup } from '@/components/landing/book-call-popup';
+import { ScrollToTop } from '@/components/landing/scroll-to-top';
 
 export default function Home() {
   return (
@@ -14,12 +17,15 @@ export default function Home() {
       <Header />
       <Hero />
       <Features />
+      <Products />
       <Themes />
       <Specialties />
       <SoftwareFeatures />
       <CTA />
       <Contact />
       <Footer />
+      <BookCallPopup />
+      <ScrollToTop />
     </main>
   );
 }

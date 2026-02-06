@@ -18,6 +18,7 @@ import {
   Settings,
   Building2,
   Shield,
+  Ticket,
 } from "lucide-react"
 import { useState, Dispatch, SetStateAction } from "react"
 import { Button } from "@/components/ui/button"
@@ -30,14 +31,20 @@ type NavItem = {
 }
 
 const companyAdminNavigation: NavItem[] = [
-  { name: "Profile", href: "/dashboard/profile", icon: User },
-  { name: "Account Info", href: "/dashboard/account-stats", icon: FileText },
-  { name: "Customers", href: "/dashboard/customers", icon: Users },
+  {
+    name: "Dashboard",
+    icon: Shield,
+    children: [
+      { name: "Profile", href: "/dashboard/profile" },
+      { name: "Account Info", href: "/dashboard/account-stats" },
+      { name: "Customers", href: "/dashboard/customers" },
+    ],
+  },
   {
     name: "Screening",
     icon: Search,
     children: [
-      { name: "Quick Screening", href: "/dashboard/screening/quick" },
+      { name: "Name Screening", href: "/dashboard/screening/quick" },
     ],
   },
   {
@@ -49,8 +56,9 @@ const companyAdminNavigation: NavItem[] = [
     ],
   },
   { name: "Adverse Search", href: "/dashboard/adverse-search", icon: AlertCircle },
-  { name: "Screening Logs", href: "/dashboard/screening-logs", icon: FileCheck },
+  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
   { name: "GOAML Reporting", href: "/dashboard/goaml-reporting", icon: FileCheck },
+  { name: "Support Ticket", href: "/dashboard/tickets", icon: Ticket },
 ]
 
 const adminNavigation: NavItem[] = [
@@ -59,6 +67,7 @@ const adminNavigation: NavItem[] = [
   { name: "Company Users", href: "/dashboard/admin/company-users", icon: Building2 },
   { name: "System Users", href: "/dashboard/admin/users", icon: Users },
   { name: "Products", href: "/dashboard/admin/product", icon: FileCheck },
+  { name: "Support Tickets", href: "/dashboard/tickets", icon: Ticket },
 ]
 
 const authorNavigation: NavItem[] = [
@@ -68,21 +77,31 @@ const authorNavigation: NavItem[] = [
     name: "Screening",
     icon: Search,
     children: [
-      { name: "Quick Screening", href: "/dashboard/screening/quick" },
+      { name: "Name Screening", href: "/dashboard/screening/quick" },
     ],
   },
-  { name: "Screening Logs", href: "/dashboard/screening-logs", icon: FileCheck },
+  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
+  { name: "Support Tickets", href: "/dashboard/tickets", icon: Ticket },
 ]
 
 const mlroNavigation: NavItem[] = [
-  { name: "Profile", href: "/dashboard/profile", icon: User },
-  { name: "Account Info", href: "/dashboard/account-stats", icon: FileText },
-  { name: "Customers", href: "/dashboard/customers", icon: Users },
+  {
+    name: "Dashboard",
+    icon: Shield,
+    children: [
+      { name: "Profile", href: "/dashboard/profile" },
+      { name: "Account Info", href: "/dashboard/account-stats" },
+      { name: "Customers", href: "/dashboard/customers" },
+    ],
+  },
+  // { name: "Profile", href: "/dashboard/profile", icon: User },
+  // { name: "Account Info", href: "/dashboard/account-stats", icon: FileText },
+  // { name: "Customers", href: "/dashboard/customers", icon: Users },
   {
     name: "Screening",
     icon: Search,
     children: [
-      { name: "Quick Screening", href: "/dashboard/screening/quick" },
+      { name: "Name Screening", href: "/dashboard/screening/quick" },
     ],
   },
   {
@@ -94,18 +113,27 @@ const mlroNavigation: NavItem[] = [
     ],
   },
   { name: "Adverse Search", href: "/dashboard/adverse-search", icon: AlertCircle },
-  { name: "Screening Logs", href: "/dashboard/screening-logs", icon: FileCheck },
+  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
   { name: "GOAML Reporting", href: "/dashboard/goaml-reporting", icon: FileCheck },
 ]
 
 const flaNavigation: NavItem[] = [
-  { name: "Profile", href: "/dashboard/profile", icon: User },
-  { name: "Customers", href: "/dashboard/customers", icon: Users },
+  {
+    name: "Dashboard",
+    icon: Shield,
+    children: [
+      { name: "Profile", href: "/dashboard/profile" },
+      // { name: "Account Info", href: "/dashboard/account-stats" },
+      { name: "Customers", href: "/dashboard/customers" },
+    ],
+  },
+  // { name: "Profile", href: "/dashboard/profile", icon: User },
+  // { name: "Customers", href: "/dashboard/customers", icon: Users },
   {
     name: "Screening",
     icon: Search,
     children: [
-      { name: "Quick Screening", href: "/dashboard/screening/quick" },
+      { name: "Name Screening", href: "/dashboard/screening/quick" },
     ],
   },
   {
@@ -116,8 +144,9 @@ const flaNavigation: NavItem[] = [
       { name: "Quick Onboarding", href: "/dashboard/onboarding/quick" },
     ],
   },
-  { name: "Screening Logs", href: "/dashboard/screening-logs", icon: FileCheck },
+  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
   { name: "GOAML Reporting", href: "/dashboard/goaml-reporting", icon: FileCheck },
+  { name: "Support Tickets", href: "/dashboard/tickets", icon: Ticket },
 ]
 
 // Helper function to get navigation based on role
@@ -160,11 +189,11 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       <aside className="fixed top-0 left-0 h-screen w-52 border-r border-border bg-sidebar flex flex-col">
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center"></div>
-            <div>
-              <div className="font-semibold text-sm">AML Meter</div>
-              <div className="text-xs text-muted-foreground">Loading...</div>
-            </div>
+            <img 
+              src="/aml_meter.png" 
+              alt="AML Meter" 
+              className="h-8 w-auto object-contain" 
+            />
           </div>
         </div>
       </aside>
@@ -183,18 +212,23 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       <div className="flex items-center justify-between p-4 border-b border-border">
         {!isCollapsed ? (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-8 bg-red-500 rounded flex items-center justify-center">
-              <span className="w-10 h-8 bg-primary text-white rounded flex items-center justify-center font-bold text-sm">AML</span>
-            </div>
-            <div>
-              <div className="font-semibold text-sm">Meter</div>
-            </div>
+            <Link href="/dashboard">
+              <img 
+                src="/aml_meter_2.png" 
+                alt="AML Meter" 
+                className="h-14 w-auto object-contain" 
+              />
+            </Link>
           </div>
         ) : (
           <div className="flex justify-center">
-            <div className="w-8 h-8 bg-primary text-white rounded flex items-center justify-center font-bold text-sm">
-              <span className="text-white font-bold text-sm">AM</span>
-            </div>
+            <Link href="/dashboard" className="w-10 h-10 flex items-center justify-center">
+              <img 
+                src="/aml_meter_2.png" 
+                alt="AM" 
+                className="w-full h-full object-contain" 
+              />
+            </Link>
           </div>
         )}
         <Button
