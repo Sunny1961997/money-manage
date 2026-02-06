@@ -2,13 +2,14 @@
 
 import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
 import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast"
 
 export function Contact() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     message: ''
   });
@@ -17,15 +18,10 @@ export function Contact() {
     e.preventDefault();
     setLoading(true);
 
-    // Split full name into first and last name
-    const nameParts = formData.fullName.trim().split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-
     try {
       const payload = {
-        first_name: firstName,
-        last_name: lastName, // Backend allows nullable or check if empty
+        first_name: formData.firstName,
+        last_name: formData.lastName,
         email: formData.email,
         message: formData.message,
         company_name: null,
@@ -43,26 +39,28 @@ export function Contact() {
       const data = await res.json();
 
       if (!res.ok) {
-        // throw new Error(data.message || 'Failed to submit');
         toast({
-          title: "Error",
-          description: data.message || "Failed to submit.",
+          title: "Submission Failed",
+          description: data.message || "Failed to submit request.",
+          // variant: "destructive",
         });
+        return;
       }
 
       toast({
         title: "Message Sent",
         description: data.message || "Thank you for contacting us.",
         // variant: "default",
-        className: "bg-green-500 text-white border-none"
+        className: "bg-green-600 text-white border-green-600"
       });
 
-      setFormData({ fullName: '', email: '', message: '' });
+      setFormData({ firstName: '', lastName: '', email: '', message: '' });
     } catch (error: any) {
       console.error("Submission error:", error);
       toast({
         title: "Error",
         description: error.message || "Could not send message. Please try again.",
+        // variant: "destructive"
       });
     } finally {
       setLoading(false);
@@ -78,14 +76,25 @@ export function Contact() {
 
         <div className="grid md:grid-cols-2 gap-12 mb-12">
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Your Full Name"
-              value={formData.fullName}
-              onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-              required
-              className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="First Name"
+                value={formData.firstName}
+                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                required
+                className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <input
+                type="text"
+                placeholder="Last Name"
+                value={formData.lastName}
+                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                required
+                className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
+            
             <input
               type="email"
               placeholder="Your Email Address"
@@ -140,18 +149,15 @@ export function Contact() {
                 <h3 className="font-semibold text-foreground mb-2">Email</h3>
                 <p className="text-muted-foreground text-sm">
                   info@amlmeter.com<br />
-                  We'll respond within 24 hours
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-border pt-8">
+        {/* <div className="border-t border-border pt-8">
           <div className="flex flex-col sm:flex-row items-center justify-between">
-            <p className="text-muted-foreground text-sm">
-              © 2024 AML Meter Inc. All rights reserved
-            </p>
+            
             <div className="flex gap-4 mt-4 sm:mt-0">
               <a href="#" className="text-muted-foreground hover:text-primary transition">
                 <Facebook className="w-5 h-5" />
@@ -159,7 +165,7 @@ export function Contact() {
               <a href="#" className="text-muted-foreground hover:text-primary transition">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition">
+              <a href="https://www.linkedin.com/company/amlmeter/posts/?feedView=all" target='_blank' className="text-muted-foreground hover:text-primary transition">
                 <Linkedin className="w-5 h-5" />
               </a>
               <a href="#" className="text-muted-foreground hover:text-primary transition">
@@ -167,7 +173,7 @@ export function Contact() {
               </a>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

@@ -4,8 +4,8 @@ import Link from "next/link";
 export default function Products() {
   const products = [
     {
-      title: "Sanction Screening",
-      description: "Real-time screening against global sanction lists to ensure compliance with international regulations.",
+      title: "Name Screening",
+      description: "Real-time screening against global lists to ensure compliance with international regulations.",
       features: [
         "Automated screening processes",
         "Multi-jurisdictional coverage",
@@ -56,7 +56,7 @@ export default function Products() {
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-primary to-primary/80 text-white py-20">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6">Our Products</h1>
+          <h1 className="text-5xl font-bold mb-6">Our Solution</h1>
           <p className="text-xl text-white/90 max-w-3xl mx-auto">
             Comprehensive AML solutions designed to keep your organization compliant, secure, and efficient.
           </p>

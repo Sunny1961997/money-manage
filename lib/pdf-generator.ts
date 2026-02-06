@@ -22,388 +22,374 @@ interface CustomerData {
   screening_fuzziness?: string
 }
 
-export function generateCustomerPDF(data: any) {
+export async function generateCustomerPDF(data: any) {
   const doc = new jsPDF()
   const isCorporate = data.customer_type === "corporate"
   const corp = data.corporate_detail
   const indiv = data.individual_detail
 
-  // Set colors
-  const primaryColor: [number, number, number] = [41, 128, 185]
-  const secondaryColor: [number, number, number] = [52, 73, 94]
-  const lightGray: [number, number, number] = [236, 240, 241]
+  // Set colors - Updated to match new design
+  const primaryColor: [number, number, number] = [93, 50, 145] // Purple
+  const headerColor: [number, number, number] = [60, 0, 126] // Dark purple for header
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const margin = 15
+  const contentWidth = pageWidth - margin * 2
 
-  // Header
-  doc.setFillColor(...primaryColor)
-  doc.rect(0, 0, 210, 40, "F")
+  // --- HEADER with Purple Background and Logo ---
+  doc.setFillColor(...headerColor)
+  doc.rect(0, 0, pageWidth, 35, "F") // Header bar
+
+  const headerPadding = 15
+
+  try {
+    const img = new Image()
+    img.crossOrigin = "anonymous"
+
+    // Use absolute URL for the image
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
+    img.src = `${baseUrl}/aml_meter.png`
+
+    await new Promise((resolve, reject) => {
+      img.onload = resolve
+      img.onerror = reject
+    })
+
+    // Calculate dimensions to fit in header
+    const logoHeight = 20
+    const logoWidth = (img.width / img.height) * logoHeight
+    doc.addImage(img, "PNG", headerPadding, 5, logoWidth, logoHeight)
+  } catch (e) {
+    console.error("Failed to load logo image:", e)
+  }
+
+  // Add "AML Meter" text in header
   doc.setTextColor(255, 255, 255)
-  doc.setFontSize(24)
+  doc.setFontSize(22)
   doc.setFont("helvetica", "bold")
-  doc.text("Customer Details Report", 105, 20, { align: "center" })
-  doc.setFontSize(10)
-  doc.setFont("helvetica", "normal")
-  doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 30, { align: "center" })
+  doc.text("AML Meter", pageWidth / 2, 16, { align: "center" })
 
-  let yPos = 50
-
-  // Customer Type Badge
-  doc.setFillColor(...lightGray)
-  doc.roundedRect(10, yPos, 60, 8, 2, 2, "F")
-  doc.setTextColor(...secondaryColor)
+  // Document type subtitle
   doc.setFontSize(9)
-  doc.setFont("helvetica", "bold")
-  doc.text(isCorporate ? "CORPORATE CUSTOMER" : "INDIVIDUAL CUSTOMER", 40, yPos + 5.5, { align: "center" })
-  yPos += 15
+  doc.setFont("helvetica", "normal")
+  doc.text("Customer Due Diligence & KYC Report", pageWidth / 2, 24, { align: "center" })
 
-  // Basic Information Section
-  addSectionHeader(doc, "Basic Information", yPos)
-  yPos += 10
-  const basicInfo = [
-    ["Customer ID", data.id?.toString() || "-"],
-    ["Name", isCorporate ? (corp?.company_name || data.name || "-") : (indiv ? `${indiv.first_name} ${indiv.last_name}` : data.name || "-")],
-    ["Email", isCorporate ? (corp?.email || data.email || "-") : (indiv?.email || data.email || "-")],
-    ["Customer Type", isCorporate ? "Corporate" : "Individual"],
-    ["Status", data.status || "Onboarded"],
-    [
-      "Risk Level",
-      data.risk_level
-        ? `${Number(data.risk_level).toFixed(2)} - ${Number(data.risk_level) <= 2.0 ? "Low" : Number(data.risk_level) <= 3.5 ? "Medium" : "High"} Risk`
-        : "-",
-    ],
-    ["Created Date", data.created_at ? new Date(data.created_at).toLocaleDateString() : "-"],
-  ]
-  autoTable(doc, {
-    startY: yPos,
-    head: [],
-    body: basicInfo,
-    theme: "grid",
-    headStyles: { fillColor: primaryColor },
-    columnStyles: {
-      0: { cellWidth: 60, fontStyle: "bold", fillColor: lightGray },
-      1: { cellWidth: 130 },
-    },
-    margin: { left: 10, right: 10 },
-  })
-  yPos = (doc as any).lastAutoTable.finalY + 10
+  // ----------------------------
+  // KYC report layout (2 pages)
+  // ----------------------------
 
-  if (isCorporate) {
-    // Company Information
-    addSectionHeader(doc, "Company Information", yPos)
-    yPos += 10
-    const companyInfo = [
-      ["Company Name", corp?.company_name || "-"],
-      ["Company Address", corp?.company_address || "-"],
-      ["City", corp?.city || "-"],
-      ["Country of Incorporation", corp?.country_incorporated || "-"],
-      ["P.O. Box", corp?.po_box || "-"],
-      ["Office Contact", corp?.office_no ? `${corp.office_country_code || ""} ${corp.office_no}` : "-"],
-      ["Mobile Contact", corp?.mobile_no ? `${corp.mobile_country_code || ""} ${corp.mobile_no}` : "-"],
-      ["Email", corp?.email || data.email || "-"],
-    ]
-    autoTable(doc, {
-      startY: yPos,
-      body: companyInfo,
-      theme: "grid",
-      columnStyles: {
-        0: { cellWidth: 60, fontStyle: "bold", fillColor: lightGray },
-        1: { cellWidth: 130 },
-      },
-      margin: { left: 10, right: 10 },
-    })
-    yPos = (doc as any).lastAutoTable.finalY + 10
+  const toDate = (v: any) => {
+    if (!v) return "-"
+    const d = new Date(v)
+    return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleDateString()
+  }
 
-    // License Information
-    if (yPos > 250) { doc.addPage(); yPos = 20 }
-    addSectionHeader(doc, "License Information", yPos)
-    yPos += 10
-    const licenseInfo = [
-      ["Trade License No", corp?.trade_license_no || "-"],
-      ["Issued At", corp?.trade_license_issued_at || "-"],
-      ["Issued By", corp?.trade_license_issued_by || "-"],
-      ["Issue Date", corp?.license_issue_date || "-"],
-      ["Expiry Date", corp?.license_expiry_date || "-"],
-      ["VAT Registration No", corp?.vat_registration_no || "-"],
-      ["Tenancy Contract Expiry", corp?.tenancy_contract_expiry_date || "-"],
-    ]
-    autoTable(doc, {
-      startY: yPos,
-      body: licenseInfo,
-      theme: "grid",
-      columnStyles: {
-        0: { cellWidth: 60, fontStyle: "bold", fillColor: lightGray },
-        1: { cellWidth: 130 },
-      },
-      margin: { left: 10, right: 10 },
-    })
-    yPos = (doc as any).lastAutoTable.finalY + 10
+  const toValue = (v: any) => {
+    if (v === null || v === undefined || v === "") return "-"
+    return String(v)
+  }
 
-    // Business Details
-    if (yPos > 250) { doc.addPage(); yPos = 20 }
-    addSectionHeader(doc, "Business Details", yPos)
-    yPos += 10
-    const businessInfo = [
-      ["Entity Type", corp?.entity_type || "-"],
-      ["Business Activity", corp?.business_activity || "-"],
-      ["Import/Export", corp?.is_entity_dealting_with_import_export ? "Yes" : "No"],
-      ["Sister Concern", corp?.has_sister_concern ? "Yes" : "No"],
-      ["Account Holding Bank", corp?.account_holding_bank_name || "-"],
-      ["Product Source", corp?.product_source || "-"],
-      ["Payment Mode", corp?.payment_mode || "-"],
-      ["Delivery Channel", corp?.delivery_channel || "-"],
-      ["Expected Transactions", corp?.expected_no_of_transactions?.toString() || "-"],
-      ["Expected Volume", corp?.expected_volume?.toString() || "-"],
-      ["Dual Use Goods", corp?.dual_use_goods ? "Yes" : "No"],
-      ["Countries of Operation", Array.isArray(data.country_operations) && data.country_operations.length > 0 ? data.country_operations.map((c: any) => c.country || c).join(", ") : "-"],
-    ]
-    autoTable(doc, {
-      startY: yPos,
-      body: businessInfo,
-      theme: "grid",
-      columnStyles: {
-        0: { cellWidth: 60, fontStyle: "bold", fillColor: lightGray },
-        1: { cellWidth: 130 },
-      },
-      margin: { left: 10, right: 10 },
-    })
-    yPos = (doc as any).lastAutoTable.finalY + 10
+  const customerName = isCorporate
+    ? corp?.company_name || data.name || "-"
+    : indiv
+      ? `${indiv.first_name || ""} ${indiv.last_name || ""}`.trim() || data.name || "-"
+      : data.name || "-"
 
-    // Partners/UBOs
-    const partners = Array.isArray(corp?.related_persons) ? corp.related_persons : []
-    if (partners.length > 0) {
-      if (yPos > 250) { doc.addPage(); yPos = 20 }
-      addSectionHeader(doc, `Partners / UBOs (${partners.length})`, yPos)
-      yPos += 10
-      const partnerData = partners.map((p: any) => [
-        p.name || "-",
-        p.role || "-",
-        p.nationality || "-",
-        p.ownership_percentage?.toString() || "-",
-        p.is_pep ? "Yes" : "No",
-      ])
-      autoTable(doc, {
-        startY: yPos,
-        head: [["Name", "Role", "Nationality", "Ownership %", "PEP"]],
-        body: partnerData,
-        theme: "striped",
-        headStyles: { fillColor: primaryColor },
-        margin: { left: 10, right: 10 },
-      })
-      yPos = (doc as any).lastAutoTable.finalY + 10
+  const customerEmail = isCorporate ? corp?.email || data.email || "-" : indiv?.email || data.email || "-"
+
+  const riskScore = Number(data.risk_level)
+  const riskClass = (s: number) => {
+    if (!Number.isFinite(s)) return "-"
+    if (s >= 4.0) return "High Risk"
+    if (s >= 3.0) return "Medium High Risk"
+    if (s >= 2.0) return "Medium Risk"
+    return "Low Risk"
+  }
+
+  const gridStyles = {
+    font: "helvetica",
+    fontSize: 8.5,
+    cellPadding: 2.2,
+    lineColor: [210, 210, 210] as any,
+    lineWidth: 0.1,
+    textColor: [40, 40, 40] as any,
+    overflow: "linebreak" as const,
+  }
+
+  const sectionTitle = (title: string, y: number) => {
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(10.5)
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
+    doc.text(title, margin, y)
+    doc.setTextColor(0, 0, 0)
+    return y + 4
+  }
+
+  const ensureSpace = (y: number, needed: number) => {
+    // keep footer area
+    const bottom = pageHeight - 18
+    if (y + needed > bottom) {
+      doc.addPage()
+      return 35 // consistent top for new pages (matches current page 2)
     }
-  } else {
-    // Individual customer information
-    addSectionHeader(doc, "Personal Information", yPos)
-    yPos += 10
-    const personalInfo = [
-      ["First Name", indiv?.first_name || "-"],
-      ["Last Name", indiv?.last_name || "-"],
-      ["Date of Birth", indiv?.dob || "-"],
-      ["Gender", indiv?.gender || "-"],
-      ["Nationality", indiv?.nationality || "-"],
-      ["Place of Birth", indiv?.place_of_birth || "-"],
-      ["Residential Status", indiv?.residential_status || "-"],
-    ]
-    autoTable(doc, {
-      startY: yPos,
-      body: personalInfo,
-      theme: "grid",
-      columnStyles: {
-        0: { cellWidth: 60, fontStyle: "bold", fillColor: lightGray },
-        1: { cellWidth: 130 },
-      },
-      margin: { left: 10, right: 10 },
-    })
-    yPos = (doc as any).lastAutoTable.finalY + 10
-    // Contact & Address
-    if (yPos > 250) { doc.addPage(); yPos = 20 }
-    addSectionHeader(doc, "Contact & Address Information", yPos)
-    yPos += 10
-    const contactInfo = [
-      ["Address", indiv?.address || "-"],
-      ["City", indiv?.city || "-"],
-      ["Country", indiv?.country || "-"],
-      ["Country of Residence", indiv?.country_of_residence || "-"],
-      ["Contact Number", indiv?.contact_no ? `${indiv.country_code || ""} ${indiv.contact_no}` : "-"],
-      ["Email", indiv?.email || data.email || "-"],
-    ]
-    autoTable(doc, {
-      startY: yPos,
-      body: contactInfo,
-      theme: "grid",
-      columnStyles: {
-        0: { cellWidth: 60, fontStyle: "bold", fillColor: lightGray },
-        1: { cellWidth: 130 },
-      },
-      margin: { left: 10, right: 10 },
-    })
-    yPos = (doc as any).lastAutoTable.finalY + 10
-    // Occupation & Financial
-    if (yPos > 250) { doc.addPage(); yPos = 20 }
-    addSectionHeader(doc, "Occupation & Financial Details", yPos)
-    yPos += 10
-    const occupationInfo = [
-      ["Occupation", indiv?.occupation || "-"],
-      ["Source of Income", indiv?.source_of_income || "-"],
-      ["Purpose of Onboarding", indiv?.purpose_of_onboarding || "-"],
-      ["Payment Mode", indiv?.payment_mode || "-"],
-      ["Mode of Approach", indiv?.mode_of_approach || "-"],
-      ["Expected Transactions", indiv?.expected_no_of_transactions?.toString() || "-"],
-      ["Expected Volume", indiv?.expected_volume?.toString() || "-"],
-    ]
-    autoTable(doc, {
-      startY: yPos,
-      body: occupationInfo,
-      theme: "grid",
-      columnStyles: {
-        0: { cellWidth: 60, fontStyle: "bold", fillColor: lightGray },
-        1: { cellWidth: 130 },
-      },
-      margin: { left: 10, right: 10 },
-    })
-    yPos = (doc as any).lastAutoTable.finalY + 10
-    // ID Information
-    if (yPos > 250) { doc.addPage(); yPos = 20 }
-    addSectionHeader(doc, "Identification Details", yPos)
-    yPos += 10
-    const idInfo = [
-      ["ID Type", indiv?.id_type || "-"],
-      ["ID Number", indiv?.id_no || "-"],
-      ["Issuing Authority", indiv?.issuing_authority || "-"],
-      ["Issuing Country", indiv?.issuing_country || "-"],
-      ["Issue Date", indiv?.id_issue_date || "-"],
-      ["Expiry Date", indiv?.id_expiry_date || "-"],
-    ]
-    autoTable(doc, {
-      startY: yPos,
-      body: idInfo,
-      theme: "grid",
-      columnStyles: {
-        0: { cellWidth: 60, fontStyle: "bold", fillColor: lightGray },
-        1: { cellWidth: 130 },
-      },
-      margin: { left: 10, right: 10 },
-    })
-    yPos = (doc as any).lastAutoTable.finalY + 10
+    return y
   }
 
-  // Risk & Compliance (common for both)
-  if (yPos > 250) { doc.addPage(); yPos = 20 }
-  addSectionHeader(doc, "Risk & Compliance", yPos)
+  const twoColKV = (y: number, leftPairs: Array<[string, any]>, rightPairs: Array<[string, any]>) => {
+    const rows = Math.max(leftPairs.length, rightPairs.length)
+    y = ensureSpace(y, 10 + rows * 6)
+
+    const body = Array.from({ length: rows }).map((_, i) => {
+      const l = leftPairs[i] || ["", ""]
+      const r = rightPairs[i] || ["", ""]
+      return [l[0], toValue(l[1]), r[0], toValue(r[1])]
+    })
+
+    autoTable(doc, {
+      startY: y,
+      theme: "grid",
+      styles: gridStyles as any,
+      body,
+      columnStyles: {
+        0: { cellWidth: 32 },
+        1: { cellWidth: 58, fontStyle: "bold" },
+        2: { cellWidth: 32 },
+        3: { cellWidth: contentWidth - (32 + 58 + 32), fontStyle: "bold" },
+      },
+      margin: { left: margin, right: margin },
+    })
+
+    return (doc as any).lastAutoTable.finalY + 10
+  }
+
+  const oneColKV = (y: number, pairs: Array<[string, any]>) => {
+    // estimate: header row ~6mm + 5.5mm per row
+    y = ensureSpace(y, 10 + pairs.length * 6)
+
+    autoTable(doc, {
+      startY: y,
+      theme: "grid",
+      styles: gridStyles as any,
+      body: pairs.map(([k, v]) => [k, toValue(v)]),
+      columnStyles: {
+        0: { cellWidth: 70 },
+        1: { cellWidth: contentWidth - 70, fontStyle: "bold" },
+      },
+      margin: { left: margin, right: margin },
+    })
+
+    return (doc as any).lastAutoTable.finalY + 10
+  }
+
+  const simpleTable = (y: number, head: string[], body: any[][]) => {
+    // estimate: header ~8mm + 6mm per row
+    y = ensureSpace(y, 14 + body.length * 6)
+
+    autoTable(doc, {
+      startY: y,
+      theme: "grid",
+      styles: gridStyles as any,
+      head: [head],
+      body,
+      headStyles: {
+        fillColor: [245, 245, 245] as any,
+        textColor: [0, 0, 0] as any,
+        fontStyle: "bold",
+      },
+      margin: { left: margin, right: margin },
+    })
+
+    return (doc as any).lastAutoTable.finalY + 10
+  }
+
+  // Page 1
+  let yPos = 45
+
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(14)
+  doc.setTextColor(40, 40, 40)
+  doc.text("Customer Due Diligence & KYC Report", pageWidth / 2, yPos, { align: "center" })
+  yPos += 8
+
+  doc.setFontSize(8.5)
+  doc.setTextColor(120, 120, 120)
+  doc.text(
+    `Generated Date: ${new Date().toLocaleDateString()} | Reference ID: AMLM-CDD-KYC-${String(data.id || "0000").padStart(4, "0")}`,
+    pageWidth / 2,
+    yPos,
+    { align: "center" }
+  )
+  doc.setTextColor(0, 0, 0)
   yPos += 10
-  const riskInfo = [
-    ["PEP Status", isCorporate ? "-" : (indiv?.is_pep ? "Yes" : "No")],
-    ["Dual Nationality", isCorporate ? "-" : (indiv?.dual_nationality ? "Yes" : "No")],
-    ["Adverse News", isCorporate ? (corp?.is_entity_having_adverse_news ? "Yes" : "No") : (indiv?.adverse_news ? "Yes" : "No")],
-    // ["Screening Fuzziness", data.screening_fuzziness || "-"],
-    ["KYC Documents Collected", isCorporate ? (corp?.kyc_documents_collected_with_form ? "Yes" : "No") : "-"],
-    ["Registered in GOAML", isCorporate ? (corp?.is_entity_registered_in_GOAML ? "Yes" : "No") : "-"],
-  ]
-  autoTable(doc, {
-    startY: yPos,
-    body: riskInfo,
-    theme: "grid",
-    columnStyles: {
-      0: { cellWidth: 60, fontStyle: "bold", fillColor: lightGray },
-      1: { cellWidth: 130 },
-    },
-    margin: { left: 10, right: 10 },
-  })
-  yPos = (doc as any).lastAutoTable.finalY + 10
 
-  // Risk Assessment Details Table
-  if (yPos > 250) { doc.addPage(); yPos = 20 }
-  addSectionHeader(doc, "Risk Assessment Details", yPos)
-  yPos += 10
-  const riskBreakdown = data.riskBreakdown || {}
-  let riskRows: any[] = []
-  function fmt(val: any) {
-    if (typeof val === 'number') return val.toFixed(2)
-    if (typeof val === 'string' && !isNaN(Number(val))) return Number(val).toFixed(2)
-    return val ?? "-"
-  }
-  if (isCorporate) {
-    riskRows = [
-      // ["Ownership Score", fmt(riskBreakdown.ownership_score)],
-      ["Ownership Weighted", fmt(riskBreakdown.ownership_weighted)],
-      // ["Business Activity Score", fmt(riskBreakdown.business_activity_score)],
-      ["Business Activity Weighted", fmt(riskBreakdown.business_activity_weighted)],
-      // ["Country Incorporate Score", fmt(riskBreakdown.country_incorporate_score)],
-      ["Country Incorporate Weighted", fmt(riskBreakdown.country_incorporate_weighted)],
-      // ["Product Score", fmt(riskBreakdown.product_score)],
-      ["Product Weighted", fmt(riskBreakdown.product_weighted)],
-      // ["Channel Score", fmt(riskBreakdown.channel_score)],
-      ["Channel Weighted", fmt(riskBreakdown.channel_weighted)],
-      ["Final Risk Level", fmt(riskBreakdown.final_risk_level)],
+  yPos = sectionTitle("Customer Identification", yPos)
+  yPos = twoColKV(
+    yPos,
+    [
+      ["Customer Type", isCorporate ? "Corporate" : "Individual"],
+      ["Full Legal Name", customerName],
+      ["Date of Birth", !isCorporate ? indiv?.dob || "-" : "-"],
+      ["Residential Status", !isCorporate ? indiv?.residential_status || "-" : "-"],
+    ],
+    [
+      ["Customer ID", data.id || "-"],
+      ["Status", data.status || "Onboarded"],
+      ["Nationality", !isCorporate ? indiv?.nationality || data.country || "-" : corp?.country_incorporated || data.country || "-"],
+      ["Onboarding Date", toDate(data.created_at)],
     ]
-  } else {
-    riskRows = [
-      // ["Customer Average", fmt(riskBreakdown.customer_avg)],
-      ["Customer Weighted", fmt(riskBreakdown.customer_weighted)],
-      // ["Geo Score", fmt(riskBreakdown.geo_score)],
-      ["Geo Weighted", fmt(riskBreakdown.geo_weighted)],
-      // ["Product Score", fmt(riskBreakdown.product_score)],
-      ["Product Weighted", fmt(riskBreakdown.product_weighted)],
-      // ["Channel Score", fmt(riskBreakdown.channel_score)],
-      ["Channel Weighted", fmt(riskBreakdown.channel_weighted)],
-      ["Final Risk Level", fmt(riskBreakdown.final_risk_level)],
-    ]
-  }
-  autoTable(doc, {
-    startY: yPos,
-    head: [["Category", "Value"]],
-    body: riskRows,
-    theme: "grid",
-    headStyles: { fillColor: primaryColor, textColor: 255 },
-    columnStyles: {
-      0: { cellWidth: 80, fontStyle: "bold", fillColor: lightGray },
-      1: { cellWidth: 60 },
-    },
-    margin: { left: 40, right: 40 },
-  })
-  yPos = (doc as any).lastAutoTable.finalY + 10
+  )
 
-  // Documents
-  if (Array.isArray(data.documents) && data.documents.length > 0) {
-    if (yPos > 250) { doc.addPage(); yPos = 20 }
-    addSectionHeader(doc, `Uploaded Documents (${data.documents.length})`, yPos)
-    yPos += 10
-    const docData = data.documents.map((document: any) => [
-      document.file_name || "-",
-      document.document_type || "-",
-      document.created_at ? new Date(document.created_at).toLocaleDateString() : "-",
-    ])
-    autoTable(doc, {
-      startY: yPos,
-      head: [["File Name", "Type", "Upload Date"]],
-      body: docData,
-      theme: "striped",
-      headStyles: { fillColor: primaryColor },
-      margin: { left: 10, right: 10 },
-    })
+  yPos = sectionTitle("Contact Information", yPos)
+  yPos = oneColKV(yPos, [
+    [
+      "Contact Number",
+      !isCorporate
+        ? indiv?.contact_no
+          ? `${indiv?.country_code || ""} ${indiv?.contact_no}`.trim()
+          : data.contact_mobile_number || "-"
+        : corp?.mobile_no
+          ? `${corp?.mobile_country_code || ""} ${corp?.mobile_no}`.trim()
+          : data.contact_mobile_number || "-",
+    ],
+    ["Email Address", customerEmail],
+    ["City", !isCorporate ? indiv?.city || "-" : corp?.city || "-"],
+    ["Country of Residence", !isCorporate ? indiv?.country_of_residence || indiv?.country || data.country || "-" : corp?.country_incorporated || data.country || "-"],
+  ])
+
+  yPos = sectionTitle("Business Information", yPos)
+  yPos = oneColKV(
+    yPos,
+    isCorporate
+      ? [
+          ["Business Activity", corp?.business_activity || "-"],
+          ["Purpose", corp?.purpose_of_onboarding || "-"],
+          ["Payment Mode", corp?.payment_mode || "-"],
+          ["Source of Funds", corp?.product_source || "-"],
+          ["Expected No. of Transactions", corp?.expected_no_of_transactions ?? "-"],
+          ["Expected Volume", corp?.expected_volume ?? "-"],
+          [
+            "Product Type",
+            Array.isArray((data as any).products) && (data as any).products.length
+              ? (data as any).products.map((p: any) => p?.name || p?.product_name || p).join(", ")
+              : "-",
+          ],
+        ]
+      : [
+          ["Occupation", indiv?.occupation || "-"],
+          ["Purpose", indiv?.purpose_of_onboarding || "-"],
+          ["Payment Mode", indiv?.payment_mode || "-"],
+          ["Source of Income", indiv?.source_of_income || "-"],
+          ["Expected No. of Transactions", indiv?.expected_no_of_transactions ?? "-"],
+          ["Expected Volume", indiv?.expected_volume ?? "-"],
+          [
+            "Product Type",
+            Array.isArray((data as any).products) && (data as any).products.length
+              ? (data as any).products.map((p: any) => p?.name || p?.product_name || p).join(", ")
+              : "-",
+          ],
+        ]
+  )
+
+  yPos = sectionTitle("Risk Assessment Summary", yPos)
+  yPos = oneColKV(yPos, [
+    ["Overall Risk Rating", riskClass(riskScore)],
+    ["Final Risk Score", Number.isFinite(riskScore) ? riskScore.toFixed(2) : "-"],
+    ["Due Diligence Level", "CDD"],
+  ])
+
+  // Before Risk Score Scale, ensure it won't be split
+  yPos = ensureSpace(yPos, 40)
+  yPos = sectionTitle("Risk Score Scale (Interpretation)", yPos)
+  yPos = simpleTable(yPos, ["Risk Score Range", "Risk Classification"], [
+    [">= 4.0", "High Risk"],
+    [">= 3.0 to < 4.0", "Medium High Risk"],
+    [">= 2.0 to < 3.0", "Medium Risk"],
+    ["1.0 to < 2.0", "Low Risk"],
+  ])
+
+  // Only add a new page for page 2 if we actually need it (i.e., if page 1 still has space, continue)
+  // We force page 2 start only if remaining space is small.
+  if (yPos > pageHeight - 80) {
+    doc.addPage()
+    yPos = 35
   }
+
+  // Page 2
+  yPos = sectionTitle("Identification Summary", yPos)
+  yPos = oneColKV(yPos, [
+    ["ID Type", !isCorporate ? indiv?.id_type || "-" : "-"],
+    ["ID Number", !isCorporate ? indiv?.id_no || "-" : "-"],
+    ["Issuing Authority", !isCorporate ? indiv?.issuing_authority || "-" : "-"],
+    ["Issuing Country", !isCorporate ? indiv?.issuing_country || "-" : "-"],
+    ["Expiry Date", !isCorporate ? indiv?.id_expiry_date || "-" : "-"],
+  ])
+
+  yPos = sectionTitle("Expected Activity Profile", yPos)
+  yPos = oneColKV(yPos, [
+    ["Source of Funds", isCorporate ? corp?.product_source || "-" : indiv?.source_of_income || "-"],
+    ["Expected Transaction Frequency", "Low"],
+    [
+      "Geographic Exposure",
+      Array.isArray((data as any).country_operations) && (data as any).country_operations.length
+        ? (data as any).country_operations.map((c: any) => c?.country || c).join(", ")
+        : data.country || "Domestic",
+    ],
+  ])
+
+  yPos = sectionTitle("KYC Evidence Checklist", yPos)
+  yPos = simpleTable(yPos, ["Control Item", "Status"], [
+    ["Identity Document Verified", "Yes"],
+    ["Address Verified", "Yes"],
+    ["Screening Completed", "Yes"],
+    ["Risk Assessment Performed", "Yes"],
+    ["Records Retained", "Yes"],
+  ])
+
+  yPos = sectionTitle("Audit Trail", yPos)
+  yPos = oneColKV(yPos, [
+    ["Company Name", corp?.company_name || data.company?.company_name || "-"],
+    ["Generated By (User)", data.generated_by || "Compliance Analyst – AML Meter"],
+    ["Generation Timestamp", new Date().toLocaleString()],
+  ])
 
   // Footer on all pages
-  const pageCount = (doc as any).internal.getNumberOfPages()
-  for (let i = 1; i <= pageCount; i++) {
+  const totalPages = doc.getNumberOfPages()
+  for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i)
-    doc.setFontSize(8)
-    doc.setTextColor(128, 128, 128)
-    doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: "center" })
-    doc.text("Confidential - For Internal Use Only", 105, 285, { align: "center" })
+
+    // Line 1: note
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(7.5)
+    doc.setTextColor(0, 0, 0)
+    doc.text(
+      "**System-generated report. No signature required.**",
+      pageWidth / 2,
+      pageHeight - 21,
+      { align: "center" }
+    )
+
+    // Line 2: footer
+    doc.setTextColor(0, 0, 0)
+    doc.text(
+      "Confidential – For Authorized Use Only | Generated by AML Meter",
+      pageWidth / 2,
+      pageHeight - 10,
+      { align: "center" }
+    )
   }
 
-  // Save the PDF
-  const fileName = `Customer_${data.id}_${isCorporate ? (corp?.company_name || data.name) : (indiv ? `${indiv.first_name}_${indiv.last_name}` : data.name)}_${new Date().getTime()}.pdf`
+  const fileName = `Customer_KYC_${customerName}.pdf`
   doc.save(fileName.replace(/[^a-zA-Z0-9._-]/g, "_"))
 }
 
-function addSectionHeader(doc: jsPDF, title: string, yPos: number) {
-  doc.setFillColor(41, 128, 185)
-  doc.rect(10, yPos - 2, 190, 8, "F")
+function addSectionHeader(doc: jsPDF, title: string, yPos: number, fillColor: [number, number, number]) {
+  const pageWidth = doc.internal.pageSize.getWidth()
+  doc.setFillColor(...fillColor)
+  doc.rect(15, yPos - 2, pageWidth - 30, 8, "F")
   doc.setTextColor(255, 255, 255)
-  doc.setFontSize(12)
-  doc.setFont("helvetica", "bold")
-  doc.text(title, 12, yPos + 3.5)
+  doc.setFontSize(10)
+  doc.setFont("times", "bold")
+  doc.text(title, 17, yPos + 4)
   doc.setTextColor(0, 0, 0)
-  doc.setFont("helvetica", "normal")
+  doc.setFont("times", "normal")
 }

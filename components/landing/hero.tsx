@@ -4,8 +4,13 @@ export function Hero() {
   return (
     <section id="home" className="bg-gradient-to-b from-primary via-primary to-primary/80 text-white py-24 sm:py-32">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
-        <div className="w-20 h-20 border-2 border-white rounded flex items-center justify-center mb-8">
-          <span className="text-3xl font-bold">AML</span>
+        <div className="w-25 h-25 border-2 border-white rounded flex items-center justify-center mb-8">
+          {/* <span className="text-3xl font-bold">AML</span> */}
+            <img 
+              src="/aml_meter_transparent.png" 
+              alt="AML Meter" 
+              // className="h-20 w-auto object-contain" 
+            />
         </div>
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-balance leading-tight">
           AML Management Solutions

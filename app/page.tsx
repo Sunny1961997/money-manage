@@ -8,6 +8,8 @@ import { CTA } from '@/components/landing/cta';
 import { Contact } from '@/components/landing/contact';
 import { Footer } from '@/components/landing/footer';
 import { Products } from '@/components/landing/products';
+import { BookCallPopup } from '@/components/landing/book-call-popup';
+import { ScrollToTop } from '@/components/landing/scroll-to-top';
 
 export default function Home() {
   return (
@@ -22,6 +24,8 @@ export default function Home() {
       <CTA />
       <Contact />
       <Footer />
+      <BookCallPopup />
+      <ScrollToTop />
     </main>
   );
 }

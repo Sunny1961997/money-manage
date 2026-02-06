@@ -25,6 +25,51 @@ function clampPercent(value: string) {
   return String(Math.min(100, Math.max(10, n)))
 }
 
+const ConfidenceInput = React.memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+  const numValue = value === "" ? 10 : Number(value)
+  const safeValue = Number.isFinite(numValue) ? Math.min(100, Math.max(10, numValue)) : 10
+  
+  const percentage = ((safeValue - 10) / 90) * 100
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label>Confidence rating</Label>
+        <div className="text-sm text-muted-foreground tabular-nums">{safeValue}%</div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Input
+          type="number"
+          min={10}
+          max={100}
+          step={1}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="10 - 100"
+          className="w-28"
+        />
+        <div className="flex-1">
+          <input
+            aria-label="Confidence rating"
+            type="range"
+            min={10}
+            max={100}
+            step={1}
+            value={safeValue}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full accent-blue-600 cursor-pointer h-2 rounded-lg appearance-none bg-gray-200"
+            style={{
+              background: `linear-gradient(to right, #2563eb 0%, #2563eb ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+})
+ConfidenceInput.displayName = "ConfidenceInput"
+
 export default function QuickScreeningPage() {
   const { toast } = useToast()
 
@@ -156,45 +201,6 @@ export default function QuickScreeningPage() {
     />
   )
 
-  const ConfidenceInput = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
-    const v = value === "" ? 10 : Number(value)
-    const safe = Number.isFinite(v) ? Math.min(100, Math.max(10, v)) : 10
-
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Confidence rating</Label>
-          <div className="text-sm text-muted-foreground tabular-nums">{value ? `${safe}%` : "-"}</div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Input
-            type="number"
-            min={10}
-            max={100}
-            step={1}
-            value={value}
-            onChange={(e) => onChange(clampPercent(e.target.value))}
-            placeholder="10 - 100"
-            className="w-28"
-          />
-          <div className="flex-1">
-            <input
-              aria-label="Confidence rating"
-              type="range"
-              min={10}
-              max={100}
-              step={1}
-              value={safe}
-              onChange={(e) => onChange(clampPercent(String(e.target.value)))}
-              className="w-full accent-blue-600"
-            />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
@@ -206,7 +212,7 @@ export default function QuickScreeningPage() {
         <CardHeader className="bg-blue-50/50 border-b">
           <div className="flex items-center gap-2">
             <Search className="w-5 h-5 text-blue-600" />
-            <CardTitle className="text-base font-medium">Quick Screening</CardTitle>
+            <CardTitle className="text-base font-medium">Name Screening</CardTitle>
           </div>
         </CardHeader>
 

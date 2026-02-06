@@ -182,7 +182,7 @@ export default function CustomerOnboardingPage() {
           >
             <Building2 className="w-6 h-6 mb-2" />
             <div className="font-semibold">Corporate</div>
-            <div className="text-sm text-muted-foreground">For businesses, organizations, or entities.</div>
+            <div className="text-sm text-muted-foreground">For Gold, Jewellery, Real Estate, Agent, Broker, CSP, DNFBP.</div>
           </button>
         </div>
       </div>
@@ -944,14 +944,14 @@ function CorporateForm({
     { value: "Ajman Free Zone", label: "Ajman Free Zone" },
   ]
   const entity_types = [
-    { value: "LLC", label: "LLC" },
-    { value: "Sole Proprietorship", label: "Sole Proprietorship" },
-    { value: "Partnership", label: "Partnership" },
-    { value: "Govt. Entity", label: "Govt. Entity" },
-    { value: "FZE", label: "FZE" },
-    { value: "FZCO", label: "FZCO" },
-    { value: "Private Limited", label: "Private Limited" },
-    { value: "Public Limited", label: "Public Limited" },
+    { value: "IFZA", label: "IFZA" },
+    { value: "Meydan", label: "Meydan" },
+    { value: "Shams", label: "Shams" },
+    { value: "DMCC", label: "DMCC" },
+    { value: "MOEDED", label: "MOEDED" },
+    // { value: "FZCO", label: "FZCO" },
+    // { value: "Private Limited", label: "Private Limited" },
+    // { value: "Public Limited", label: "Public Limited" },
   ]
   const business_activities = [
     { value: "Accounting/Auditing Firm", label: "Accounting/Auditing Firm" },

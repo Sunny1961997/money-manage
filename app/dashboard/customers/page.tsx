@@ -183,7 +183,7 @@ export default function CustomersPage() {
                                       <div className="flex items-center justify-end gap-2 p-2">
                                         {user?.role !== "Analyst" && (
                                           <Link href={`/dashboard/onboarding/customer/edit/${customer.id}`}>
-                                            <Button variant="outline" size="sm">Edit User</Button>
+                                            <Button variant="outline" size="sm">Edit Information</Button>
                                           </Link>
                                         )}
 
