@@ -178,6 +178,13 @@ export default function CustomersPage() {
                                   ].filter((arr: any) => Array.isArray(arr));
                                   const partners = possiblePersonsArrays.reduce((acc: any[], arr: any[]) => acc.concat(arr), [] as any[]);
                                   const partnersCount = partners.length;
+                                  const questionAnswers: any[] = Array.isArray(corp?.question_answers) ? corp.question_answers : []
+                                  const groupedQA = questionAnswers.reduce((acc: Record<string, any[]>, qa: any) => {
+                                    const cat = qa?.question?.category || "Other"
+                                    if (!acc[cat]) acc[cat] = []
+                                    acc[cat].push(qa)
+                                    return acc
+                                  }, {})
                                   return (
                                     <div className="border rounded-lg">
                                       <div className="flex items-center justify-end gap-2 p-2">
@@ -205,6 +212,8 @@ export default function CustomersPage() {
                                             <TabsTrigger value="partners">Partners{partnersCount ? ` (${partnersCount})` : ""}</TabsTrigger>
                                             <TabsTrigger value="documents">Documents</TabsTrigger>
                                             <TabsTrigger value="risk-details">Risk Details</TabsTrigger>
+                                            <TabsTrigger value="aml-questionnaires">AML Questionnaires</TabsTrigger>
+                                            <TabsTrigger value="aml-questionnaire-answers">AML Questionnaire Answers</TabsTrigger>
                                           </TabsList>
                                           <TabsContent value="company-info">
                                             <div className="grid grid-cols-2 gap-4 mt-4">
@@ -404,6 +413,71 @@ export default function CustomersPage() {
                                                 <div className="mt-1 p-2 border rounded">{data.risk_level != null ? Number(data.risk_level).toFixed(2) : "-"}</div>
                                               </div>
                                             </div>
+                                          </TabsContent>
+                                          <TabsContent value="aml-questionnaires">
+                                            {questionAnswers.length > 0 ? (
+                                              <div className="space-y-4 mt-4">
+                                                {Object.entries(groupedQA).map(([category, items]) => (
+                                                  <div key={category} className="border rounded p-3">
+                                                    <div className="font-medium mb-2">{category}</div>
+                                                    <div className="space-y-2">
+                                                      {(items as any[])
+                                                        .slice()
+                                                        .sort((a, b) => (Number(a?.question?.order || 0) - Number(b?.question?.order || 0)))
+                                                        .map((qa) => {
+                                                          const ans = qa?.answer
+                                                          const yesNo = typeof ans === "boolean" ? (ans ? "Yes" : "No") : ans === 1 ? "Yes" : ans === 0 ? "No" : (ans ?? "-")
+                                                          const qText = qa?.question?.question || "-"
+                                                          return (
+                                                            <div key={qa.id || `${qa.compliance_question_id}-${qText}`} className="grid grid-cols-12 gap-3 border rounded p-2">
+                                                              <div className="col-span-10 text-sm">{qText}</div>
+                                                              <div className="col-span-2 text-sm font-semibold text-right">{yesNo}</div>
+                                                            </div>
+                                                          )
+                                                        })}
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            ) : (
+                                              <div className="text-sm text-muted-foreground mt-4">No AML questionnaire answers available.</div>
+                                            )}
+                                          </TabsContent>
+                                          <TabsContent value="aml-questionnaire-answers">
+                                            {Array.isArray(corp?.question_answers) && corp.question_answers.length > 0 ? (
+                                              <div className="space-y-4 mt-4">
+                                                {Object.entries(
+                                                  (corp.question_answers as any[]).reduce((acc: Record<string, any[]>, qa: any) => {
+                                                    const cat = qa?.question?.category || "Other"
+                                                    if (!acc[cat]) acc[cat] = []
+                                                    acc[cat].push(qa)
+                                                    return acc
+                                                  }, {})
+                                                ).map(([category, items]) => (
+                                                  <div key={category} className="border rounded p-3">
+                                                    <div className="font-medium mb-2">{category}</div>
+                                                    <div className="space-y-2">
+                                                      {(items as any[])
+                                                        .slice()
+                                                        .sort((a, b) => Number(a?.question?.order || 0) - Number(b?.question?.order || 0))
+                                                        .map((qa) => {
+                                                          const ans = qa?.answer
+                                                          const yesNo = typeof ans === "boolean" ? (ans ? "Yes" : "No") : ans === 1 ? "Yes" : ans === 0 ? "No" : ans ?? "-"
+                                                          const qText = qa?.question?.question || "-"
+                                                          return (
+                                                            <div key={qa.id || `${qa.compliance_question_id}-${qText}`} className="grid grid-cols-12 gap-3 border rounded p-2">
+                                                              <div className="col-span-10 text-sm">{qText}</div>
+                                                              <div className="col-span-2 text-sm font-semibold text-right">{yesNo}</div>
+                                                            </div>
+                                                          )
+                                                        })}
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            ) : (
+                                              <div className="text-sm text-muted-foreground mt-4">No AML questionnaire answers available.</div>
+                                            )}
                                           </TabsContent>
                                         </Tabs>
                                       ) : (

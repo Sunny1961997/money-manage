@@ -48,7 +48,7 @@ export async function generateCustomerPDF(data: any) {
 
     // Use absolute URL for the image
     const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
-    img.src = `${baseUrl}/aml_meter.png`
+    img.src = `${baseUrl}/aml_meter_transparent.png`
 
     await new Promise((resolve, reject) => {
       img.onload = resolve
@@ -106,27 +106,33 @@ export async function generateCustomerPDF(data: any) {
     return "Low Risk"
   }
 
+  // Make tables more compact to reduce page count
   const gridStyles = {
     font: "helvetica",
-    fontSize: 8.5,
-    cellPadding: 2.2,
+    fontSize: 8,
+    cellPadding: 1.6,
     lineColor: [210, 210, 210] as any,
     lineWidth: 0.1,
     textColor: [40, 40, 40] as any,
     overflow: "linebreak" as const,
   }
 
+  // Add a small gap after titles to prevent title/table overlap
+  // Decrease so title sits closer to the next table
+  const TITLE_GAP = 2
+
   const sectionTitle = (title: string, y: number, minAfter = 14) => {
-    // Ensure the title isn't orphaned at the bottom of the page.
-    // minAfter approximates (title + a couple rows of the upcoming table).
+    // ensure room for title + at least a couple table rows
     y = ensureSpace(y, minAfter)
 
     doc.setFont("helvetica", "normal")
-    doc.setFontSize(10.5)
+    doc.setFontSize(10)
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
     doc.text(title, margin, y)
     doc.setTextColor(0, 0, 0)
-    return y + 4
+
+    // return with extra spacing so the next table doesn't collide with the title
+    return y + 3 + TITLE_GAP
   }
 
   const ensureSpace = (y: number, needed: number) => {
@@ -134,14 +140,18 @@ export async function generateCustomerPDF(data: any) {
     const bottom = pageHeight - 18
     if (y + needed > bottom) {
       doc.addPage()
-      return 35 // consistent top for new pages (matches current page 2)
+      // use more of the top space on pages 2+
+      return 12
     }
     return y
   }
 
+  // Increase vertical spacing between sections/tables
+  const TABLE_GAP = 8
+
   const twoColKV = (y: number, leftPairs: Array<[string, any]>, rightPairs: Array<[string, any]>) => {
     const rows = Math.max(leftPairs.length, rightPairs.length)
-    y = ensureSpace(y, 10 + rows * 6)
+    y = ensureSpace(y, 8 + rows * 4.4)
 
     const body = Array.from({ length: rows }).map((_, i) => {
       const l = leftPairs[i] || ["", ""]
@@ -163,12 +173,11 @@ export async function generateCustomerPDF(data: any) {
       margin: { left: margin, right: margin },
     })
 
-    return (doc as any).lastAutoTable.finalY + 10
+    return (doc as any).lastAutoTable.finalY + TABLE_GAP
   }
 
   const oneColKV = (y: number, pairs: Array<[string, any]>) => {
-    // estimate: header row ~6mm + 5.5mm per row
-    y = ensureSpace(y, 10 + pairs.length * 6)
+    y = ensureSpace(y, 8 + pairs.length * 4.4)
 
     autoTable(doc, {
       startY: y,
@@ -182,12 +191,11 @@ export async function generateCustomerPDF(data: any) {
       margin: { left: margin, right: margin },
     })
 
-    return (doc as any).lastAutoTable.finalY + 10
+    return (doc as any).lastAutoTable.finalY + TABLE_GAP
   }
 
   const simpleTable = (y: number, head: string[], body: any[][]) => {
-    // estimate: header ~8mm + 6mm per row
-    y = ensureSpace(y, 14 + body.length * 6)
+    y = ensureSpace(y, 12 + body.length * 4.4)
 
     autoTable(doc, {
       startY: y,
@@ -203,18 +211,12 @@ export async function generateCustomerPDF(data: any) {
       margin: { left: margin, right: margin },
     })
 
-    return (doc as any).lastAutoTable.finalY + 10
+    return (doc as any).lastAutoTable.finalY + TABLE_GAP
   }
 
   // --- Corporate report (matches corporate screenshots) ---
   if (isCorporate) {
     let yPos = 45
-
-    doc.setFont("helvetica", "normal")
-    doc.setFontSize(14)
-    doc.setTextColor(40, 40, 40)
-    doc.text("Customer Due Diligence & KYC Report", pageWidth / 2, yPos, { align: "center" })
-    yPos += 8
 
     doc.setFontSize(8.5)
     doc.setTextColor(120, 120, 120)
@@ -327,9 +329,13 @@ export async function generateCustomerPDF(data: any) {
       ["1.0 to < 2.0", "Low Risk"],
     ])
 
-    // Page 2
-    doc.addPage()
-    yPos = 35
+    // Page 2: only start a new page if we don't have enough room for the next section.
+    // This avoids leaving a large empty block after the Risk Score Scale.
+    // Estimate next section needs ~55mm (title + 5 rows table).
+    if (yPos > pageHeight - 70) {
+      doc.addPage()
+      yPos = 16
+    }
 
     yPos = sectionTitle("Entity Identity Verification", yPos)
     yPos = oneColKV(yPos, [
@@ -377,12 +383,6 @@ export async function generateCustomerPDF(data: any) {
   } else {
     // Page 1
     let yPos = 45
-
-    doc.setFont("helvetica", "normal")
-    doc.setFontSize(14)
-    doc.setTextColor(40, 40, 40)
-    doc.text("Customer Due Diligence & KYC Report", pageWidth / 2, yPos, { align: "center" })
-    yPos += 8
 
     doc.setFontSize(8.5)
     doc.setTextColor(120, 120, 120)
@@ -480,11 +480,10 @@ export async function generateCustomerPDF(data: any) {
       ["1.0 to < 2.0", "Low Risk"],
     ])
 
-    // Only add a new page for page 2 if we actually need it (i.e., if page 1 still has space, continue)
-    // We force page 2 start only if remaining space is small.
-    if (yPos > pageHeight - 80) {
+    // Only add a new page for page 2 if we actually need it
+    if (yPos > pageHeight - 70) {
       doc.addPage()
-      yPos = 35
+      yPos = 16
     }
 
     // Page 2
