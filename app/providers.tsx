@@ -19,7 +19,7 @@ import {
 
 // 1. Plus Jakarta Sans (Current: Modern, Geometric, Tech-focused)
 
-// const font = Plus_Jakarta_Sans({
+// const font = Plus_Jakarta_Sans({ 
 //   subsets: ["latin"],
 //   weight: ["400", "500", "600", "700"],
 //   display: "swap",
