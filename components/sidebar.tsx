@@ -56,8 +56,8 @@ const companyAdminNavigation: NavItem[] = [
     ],
   },
   { name: "Adverse Search", href: "/dashboard/adverse-search", icon: AlertCircle },
-  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
   { name: "GOAML Reporting", href: "/dashboard/goaml-reporting", icon: FileCheck },
+  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
   { name: "Support Ticket", href: "/dashboard/tickets", icon: Ticket },
 ]
 
@@ -113,8 +113,8 @@ const mlroNavigation: NavItem[] = [
     ],
   },
   { name: "Adverse Search", href: "/dashboard/adverse-search", icon: AlertCircle },
-  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
   { name: "GOAML Reporting", href: "/dashboard/goaml-reporting", icon: FileCheck },
+  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
 ]
 
 const flaNavigation: NavItem[] = [
@@ -144,8 +144,8 @@ const flaNavigation: NavItem[] = [
       { name: "Quick Onboarding", href: "/dashboard/onboarding/quick" },
     ],
   },
-  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
   { name: "GOAML Reporting", href: "/dashboard/goaml-reporting", icon: FileCheck },
+  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
   { name: "Support Tickets", href: "/dashboard/tickets", icon: Ticket },
 ]
 
@@ -212,7 +212,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       <div className="flex items-center justify-between p-4 border-b border-border">
         {!isCollapsed ? (
           <div className="flex items-center gap-3">
-            <Link href="/dashboard">
+            <Link href="/dashboard/profile">
               <img 
                 src="/aml_meter_2.png" 
                 alt="AML Meter" 

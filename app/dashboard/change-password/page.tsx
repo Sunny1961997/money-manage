@@ -215,6 +215,9 @@ export default function ChangePasswordPage() {
             <li>• Minimum 8 characters long</li>
             <li>• Must match the confirmation password</li>
             <li>• Should be different from your current password</li>
+            <li>• Must have at least one uppercase and one lowercase letters</li>
+            <li>• Must have at least one number</li>
+            <li>• Must have at least one special character</li>
           </ul>
         </div>
       </Card>

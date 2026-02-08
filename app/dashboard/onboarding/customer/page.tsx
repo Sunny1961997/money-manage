@@ -1269,7 +1269,7 @@ function CorporateForm({
               Identity Information
             </TabsTrigger>
             <TabsTrigger value="operations" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Operations Information
+              Business Information
             </TabsTrigger>
             <TabsTrigger value="product" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Product Details
@@ -1280,14 +1280,14 @@ function CorporateForm({
             <TabsTrigger value="related" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Partner/Representative
             </TabsTrigger>
-            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Upload Documents
-            </TabsTrigger>
             <TabsTrigger value="aml-questionnaires" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               AML Questionnaires
             </TabsTrigger>
             <TabsTrigger value="additional" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Additional Information
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Upload Documents
             </TabsTrigger>
           </TabsList>
         </div>
@@ -1442,11 +1442,11 @@ function CorporateForm({
           </TabsContent>
 
           <TabsContent value="operations" className="mt-0">
-            {/* Operations Information */}
+            {/* Business Information */}
             <Card className="p-6 bg-blue-50/30">
               <div className="flex items-center gap-2 mb-4">
                 <Globe className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Operations Information</h4>
+                <h4 className="font-semibold">Business Information</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -1803,7 +1803,7 @@ function CorporateForm({
                             if (v === "yes") setQuestionnaireAnswer(q.id, 1)
                             if (v === "no") setQuestionnaireAnswer(q.id, 0)
                           }}
-                          className="flex gap-6"
+                          className="flex gap-6 "
                         >
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id={`q-${q.id}-yes`} />

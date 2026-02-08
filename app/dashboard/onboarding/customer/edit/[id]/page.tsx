@@ -822,10 +822,6 @@ function IndividualEditForm({
 
           <TabsContent value="documents" className="mt-0">
             <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <Upload className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Upload Documents</h4>
-              </div>
               <div
                 className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
                 onClick={openFilePicker}
@@ -1006,6 +1002,27 @@ function CorporateEditForm({
   
   const [activeTab, setActiveTab] = useState("company")
 
+  // Compliance questionnaire answers (prefill from API)
+  // Stored as: { [question_id]: boolean | null }
+  const existingQAs: any[] = Array.isArray(corp?.question_answers) ? corp.question_answers : []
+  const [complianceQuestionAnswers, setComplianceQuestionAnswers] = useState<Record<number, boolean | null>>(() => {
+    const map: Record<number, boolean | null> = {}
+    for (const qa of existingQAs) {
+      const qid = Number(qa?.compliance_question_id ?? qa?.question?.id)
+      if (!Number.isFinite(qid) || qid <= 0) continue
+      // backend returns answer as boolean (or null)
+      map[qid] = qa?.answer === null || qa?.answer === undefined ? null : Boolean(qa.answer)
+    }
+    return map
+  })
+
+  const setComplianceAnswer = (questionId: number, v: "yes" | "no" | "") => {
+    setComplianceQuestionAnswers(prev => ({
+      ...prev,
+      [questionId]: v === "" ? null : v === "yes",
+    }))
+  }
+
   const handleSingleSelect = (setter: (v: string) => void) => (value: string | string[]) => {
     if (typeof value === "string") setter(value)
   }
@@ -1098,6 +1115,15 @@ function CorporateEditForm({
         is_entity_having_adverse_news: hasAdverseNews,
       },
       corporate_related_persons: relatedPersons,
+
+      // Add compliance questionnaire answers for Laravel
+      aml_questionnaires: Object.entries(complianceQuestionAnswers)
+        .filter(([qid]) => Number(qid) > 0)
+        .map(([qid, answer]) => ({
+          question_id: Number(qid),
+          answer: answer === null ? null : Boolean(answer),
+        })),
+
       products: productTypes,
       country_operations: operationCountries,
     }
@@ -1165,11 +1191,14 @@ function CorporateEditForm({
             <TabsTrigger value="related" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Partner/Representative
             </TabsTrigger>
-            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Upload Documents
+            <TabsTrigger value="compliance-questionnaire" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Compliance questionnaire
             </TabsTrigger>
             <TabsTrigger value="additional" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Additional Information
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Upload Documents
             </TabsTrigger>
           </TabsList>
         </div>
@@ -1737,6 +1766,65 @@ function CorporateEditForm({
                   </div>
                 </Card>
               ))}
+            </Card>
+          </TabsContent>
+
+          {/* Compliance Questionnaire Tab */}
+          <TabsContent value="compliance-questionnaire" className="space-y-4">
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <FileCheck className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Compliance questionnaire</h4>
+              </div>
+
+              {existingQAs.length > 0 ? (
+                <div className="space-y-4">
+                  {Object.entries(
+                    existingQAs.reduce((acc: Record<string, any[]>, qa: any) => {
+                      const cat = qa?.question?.category || "Other"
+                      if (!acc[cat]) acc[cat] = []
+                      acc[cat].push(qa)
+                      return acc
+                    }, {})
+                  ).map(([category, items]) => (
+                    <div key={category} className="border rounded p-3">
+                      <div className="font-medium mb-2">{category}</div>
+                      <div className="space-y-3">
+                        {(items as any[]).map((qa: any) => {
+                          const qid = Number(qa?.compliance_question_id ?? qa?.question?.id)
+                          const qText = qa?.question?.question || "-"
+                          const current = complianceQuestionAnswers[qid]
+                          const value = current === true ? "yes" : current === false ? "no" : ""
+
+                          return (
+                            <div key={qa.id || `${qid}-${qText}`} className="rounded-md border bg-white p-3">
+                              <div className="text-sm font-medium">{qText}</div>
+                              <div className="mt-3">
+                                <RadioGroup
+                                  value={value}
+                                  onValueChange={(v) => (v === "yes" || v === "no" || v === "") && setComplianceAnswer(qid, v as any)}
+                                  className="flex gap-6"
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="yes" id={`cq-${qid}-yes`} />
+                                    <Label htmlFor={`cq-${qid}-yes`}>Yes</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="no" id={`cq-${qid}-no`} />
+                                    <Label htmlFor={`cq-${qid}-no`}>No</Label>
+                                  </div>
+                                </RadioGroup>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">No compliance questionnaire answers available.</div>
+              )}
             </Card>
           </TabsContent>
 
