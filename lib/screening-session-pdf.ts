@@ -295,29 +295,63 @@ export async function generateScreeningSessionPDF({
   y = (doc as any).lastAutoTable.finalY + 10
 
   // --- MATCH SUMMARY TABLE ---
-  // Estimate space needed for match summary table (header + rows + spacing)
-  const estimatedMatchSummaryHeight = 15 + (bestBySourceForPdf.length * 8)
-  
-  // Check if there's enough space for Match Summary table header + at least 3 rows
-  if (y + Math.min(estimatedMatchSummaryHeight, 40) > 270) {
-    doc.addPage()
-    y = 30
+  const normalizeSource = (s: string) => (s || "").toLowerCase()
+
+  const belongsTo = {
+    global: (s: string) => {
+      const n = normalizeSource(s)
+      return n.includes("un") || n.includes("unsc") || n.includes("unscr") || n.includes("ofac") || n.includes("sdn") || n.includes("eu") || n.includes("europe") || n.includes("uk") || n.includes("united kingdom")
+    },
+    regional: (s: string) => {
+      const n = normalizeSource(s)
+      return n.includes("canada") || n.includes("uae") || n.includes("united arab emirates")
+    },
+    pep: (s: string) => {
+      const n = normalizeSource(s)
+      return n.includes("pep") || n.includes("opensanctions")
+    },
   }
 
-  doc.setFontSize(13)
-  doc.setFont("helvetica", "bold")
-  doc.text("Match Summary", margin, y)
-  y += 5
+  const labelSource = (src: any) => {
+    const raw = src?.source || ""
+    const n = normalizeSource(raw)
 
-  const tableData = bestBySourceForPdf.map(src => {
+    if (n.includes("unscr") || (n.includes("un") && n.includes("sanction"))) {
+      return "United Nations Security Council Consolidated Sanctions List (UNSCR)"
+    }
+    if (n.includes("ofac") || n.includes("sdn")) {
+      return "United States OFAC – Specially Designated Nationals and Blocked Persons List (SDN)"
+    }
+    if (n.includes("eu") || n.includes("european union")) {
+      return "European Union Consolidated Sanctions List"
+    }
+    if (n.includes("uk") || n.includes("united kingdom")) {
+      return "United Kingdom Consolidated Sanctions List"
+    }
+    if (n.includes("canada")) {
+      return "Government of Canada Consolidated Sanctions List"
+    }
+    if (n.includes("uae") || n.includes("united arab emirates")) {
+      return "United Arab Emirates Local Terrorist and Sanctions List"
+    }
+    if (n.includes("opensanctions-regulatory") || n.includes("opensanctions_regulatory")) {
+      return "OpenSanctions - Regulatory"
+    }
+
+    if (n.includes("opensanctions") || n.includes("pep")) {
+      return "OpenSanctions – Politically Exposed Persons (PEP)"
+    }
+
+    // fallback
+    return raw
+  }
+
+  const buildRow = (src: any) => {
     const hits = (src.data || []).filter(Boolean).length
     const sourceHasPep = (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1'))
 
-    let displaySource = src.source
-    if (src.source && src.source.toUpperCase().includes("UAE")) displaySource = "UAE Local list"
-    if (src.source && src.source.toUpperCase().includes("UN")) displaySource = "UNSCR"
+    const displaySource = labelSource(src)
 
-    // For summary notes: if exactly one candidate, show its saved annotation; otherwise fall back to first.
     const first = (src.data || []).filter(Boolean)[0] as any
     const cid = Number(first?.id) || 0
     const chosen = annChoiceForSource(src.source)
@@ -335,7 +369,48 @@ export async function generateScreeningSessionPDF({
       hits > 0 ? status : "Clear",
       isWhitelisted ? `WL: Yes | ${notes}` : notes,
     ]
-  })
+  }
+
+  const globalRows = (bestBySourceForPdf || []).filter((s: any) => belongsTo.global(s.source) && !belongsTo.pep(s.source)).map(buildRow)
+  const regionalRows = (bestBySourceForPdf || []).filter((s: any) => belongsTo.regional(s.source)).map(buildRow)
+  const pepRows = (bestBySourceForPdf || [])
+    .filter((s: any) => belongsTo.pep(s.source))
+    // Keep a stable order: PEP first, Regulatory second
+    .sort((a: any, b: any) => {
+      const la = labelSource(a)
+      const lb = labelSource(b)
+      if (la === lb) return 0
+      if (la === "OpenSanctions – Politically Exposed Persons (PEP)") return -1
+      if (lb === "OpenSanctions – Politically Exposed Persons (PEP)") return 1
+      if (la === "OpenSanctions - Regulatory") return -1
+      if (lb === "OpenSanctions - Regulatory") return 1
+      return la.localeCompare(lb)
+    })
+    .map(buildRow)
+
+  const otherRows = (bestBySourceForPdf || [])
+    .filter((s: any) => !belongsTo.global(s.source) && !belongsTo.regional(s.source) && !belongsTo.pep(s.source))
+    .map(buildRow)
+
+  const tableData: any[] = []
+
+  // Section 1
+  tableData.push(["Global Sanctions Lists", "", "", "", ""])
+  globalRows.forEach(r => tableData.push(r))
+
+  // Section 2
+  tableData.push(["Regional and National Sanctions Lists", "", "", "", ""])
+  regionalRows.forEach(r => tableData.push(r))
+
+  // Section 3
+  tableData.push(["Politically Exposed Persons and Regulatory Intelligence", "", "", "", ""])
+  pepRows.forEach(r => tableData.push(r))
+
+  // Any remaining sources
+  if (otherRows.length) {
+    tableData.push(["Other", "", "", "", ""])
+    otherRows.forEach(r => tableData.push(r))
+  }
 
   // Append a full-width note row at the end
   tableData.push([
@@ -354,8 +429,24 @@ export async function generateScreeningSessionPDF({
     margin: { left: margin, right: margin },
     theme: "striped",
     didParseCell: (data) => {
-      // Make the last row span all columns
+      const isSectionRow = data.section === "body" && [
+        "1. Global Sanctions Lists",
+        "2. Regional and National Sanctions Lists",
+        "3. Politically Exposed Persons and Regulatory Intelligence",
+        "Other",
+      ].includes(String((data.row.raw as any[])?.[0] || ""))
+
       const isLastRow = data.section === "body" && data.row.index === tableData.length - 1
+
+      if (isSectionRow) {
+        if (data.column.index === 0) (data.cell as any).colSpan = 5
+        else (data.cell as any).text = ""
+        data.cell.styles.fontStyle = "bold"
+        data.cell.styles.fillColor = [245, 245, 245]
+        data.cell.styles.textColor = [40, 40, 40]
+      }
+
+      // Make the last row span all columns
       if (isLastRow) {
         if (data.column.index === 0) (data.cell as any).colSpan = 5
         else (data.cell as any).text = ""
@@ -366,14 +457,6 @@ export async function generateScreeningSessionPDF({
   })
 
   y = (doc as any).lastAutoTable.finalY + 5
-
-  // Append methodology note
-  // const methodologyNote = "Note: The match summary is based on automated name matching algorithms and confidence scoring methodology."
-  // doc.setFontSize(9)
-  // doc.setFont("helvetica", "italic")
-  // doc.text(methodologyNote, margin, y)
-
-  y += 10
 
   // --- DETAILED RESULTS ---
   // Only add new page if there's not enough space for at least one evidence box
