@@ -2,11 +2,11 @@
 
 import type { ReactNode } from "react"
 import { Toaster } from "@/components/ui/toaster"
-import { 
-  Plus_Jakarta_Sans, 
-  Inter, 
-  Poppins, 
-  Outfit, 
+import {
+  Plus_Jakarta_Sans,
+  Inter,
+  Poppins,
+  Outfit,
   DM_Sans,
   Urbanist,
   Manrope,
@@ -27,11 +27,11 @@ import {
 
 
 // 2. Outfit (Clean, Stylish, Premium feel - Highly Recommended)
-// const font = Outfit({ 
-//   subsets: ["latin"],
-//   weight: ["400", "500", "600", "700"],
-//   display: "swap",
-// })
+const font = Outfit({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+})
 
 // 3. Inter (The industry standard: Neutral, Professional, very readable)
 
@@ -88,9 +88,15 @@ import {
 // })
 
 // 10. Nunito (Rounded, very friendly and soft)
-const font = Nunito({ 
+// const font = Nunito({ 
+//   subsets: ["latin"],
+//   weight: ["400", "500", "600", "700"],
+//   display: "swap",
+// })
+
+// --- BODY FONT ---
+const bodyFont = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 })
 
@@ -98,6 +104,11 @@ const font = Nunito({
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <div className={font.className}>
+      <style jsx global>{`
+        p, ul, ol, blockquote, input, textarea, select, td {
+          font-family: ${bodyFont.style.fontFamily}, sans-serif;
+        }
+      `}</style>
       {children}
       <Toaster />
     </div>
