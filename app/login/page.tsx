@@ -106,7 +106,7 @@ export default function LoginPage() {
               />
             </div>
             {error && <div className="text-sm text-red-500 bg-red-50 p-3 rounded-md">{error}</div>}
-            <Button type="submit" className="w-full bg-[#2563EB] hover:bg-[#1D4ED8]" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
             </Button>
           </form>

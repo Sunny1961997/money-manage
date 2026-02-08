@@ -249,9 +249,11 @@ export default function QuickScreeningResultsPage() {
     return (
         <div className="max-w-6xl mx-auto space-y-6 p-6">
             <div className="flex items-center justify-between gap-4">
-                <div>
-                    <div className="text-sm text-muted-foreground">Searched for</div>
-                    <div className="text-2xl font-semibold">{searchedFor}</div>
+                <div className="border p-4 rounded rounded-bottom-xlsx pr-30">
+                    <div className="flex items-center justify-start text-left">
+                        <div className="text-2xl font-bold text-foreground">Subject:&nbsp;</div>
+                        <div className="text-2xl font-semibold">{searchedFor}</div>
+                    </div>
                     {/* <div className="text-sm text-muted-foreground mt-1">
                         Found results in {bestBySource.filter(src => (src.data || []).filter(Boolean).length > 0).length} out of {bestBySource.length} sources
                     </div> */}
@@ -276,18 +278,17 @@ export default function QuickScreeningResultsPage() {
                                 if (!c) return null;
                                 return (
                                     <li key={`${src.source}:${c.id}`} className="border rounded p-4 flex flex-col gap-2 shadow-lg">
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-center justify-between p-2">
                                             <div>
                                                 <a
                                                     href={`/dashboard/screening/entity/${c.id}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="font-semibold text-base text-primary hover:underline cursor-pointer flex items-center gap-2"
+                                                    className="text-xl font-semibold text-base text-primary hover:underline cursor-pointer flex items-center gap-2"
                                                 >
                                                     {c.name || '-'}
                                                     <span className="text-xs font-normal text-muted-foreground no-underline">(view details)</span>
                                                 </a>
-                                                <div className="text-xs text-muted-foreground">Source: {src.source}</div>
                                             </div>
                                             <div className="flex flex-col items-end">
                                                 <span className={`text-[15px] font-bold px-2 py-0.5 rounded-full border ${getConfidenceColor(c.confidence)}`}>
@@ -295,16 +296,16 @@ export default function QuickScreeningResultsPage() {
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                        <div className="flex flex-wrap gap-2 text-xls text-muted-foreground">
                                             {c.nationality && <span>🌍 {c.nationality}</span>}
                                             {c.address && <span>📍 {c.address}</span>}
                                             {c.dob && <span>📅 {c.dob}</span>}
                                             {c.gender && <span>👤 {c.gender}</span>}
                                         </div>
                                         {/* Interactive annotation and decision system */}
-                                        <div className="mt-2 text-xs space-y-2">
-                                            <div>
-                                                <Label>Decision:</Label>
+                                        <div className="mt-2 text-xls space-y-2">
+                                            <div className="p-2">
+                                                <Label className="text-xls">Decision:</Label>
                                                 <RadioGroup
                                                     className="flex gap-4 mt-1"
                                                     value={sourceDecision[src.source] || ''}
@@ -318,7 +319,7 @@ export default function QuickScreeningResultsPage() {
                                                     <Label htmlFor={`decision-nosp-${src.source}`}>No SP</Label> */}
                                                 </RadioGroup>
                                             </div>
-                                            <div>
+                                            <div className="p-2">
                                                 <Label className="mb-2">Annotation:</Label>
                                                 <Select
                                                     value={sourceAnnotationChoice[src.source] || ''}

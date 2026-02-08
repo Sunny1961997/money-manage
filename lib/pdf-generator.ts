@@ -23,7 +23,11 @@ interface CustomerData {
 }
 
 export async function generateCustomerPDF(data: any) {
-  const doc = new jsPDF()
+  const doc = new jsPDF({
+    unit: "mm",
+    format: "a4",
+    compress: true // This compresses the internal PDF stream
+  })
   const isCorporate = data.customer_type === "corporate"
   const corp = data.corporate_detail
   const indiv = data.individual_detail
@@ -45,8 +49,6 @@ export async function generateCustomerPDF(data: any) {
   try {
     const img = new Image()
     img.crossOrigin = "anonymous"
-
-    // Use absolute URL for the image
     const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
     img.src = `${baseUrl}/aml_meter_transparent.png`
 
@@ -55,10 +57,30 @@ export async function generateCustomerPDF(data: any) {
       img.onerror = reject
     })
 
-    // Calculate dimensions to fit in header
+    // --- START OPTIMIZATION (PRESERVE TRANSPARENCY) ---
+    const canvas = document.createElement("canvas")
+    const ctx = canvas.getContext("2d")
+    if (!ctx) throw new Error("Canvas 2D context not available")
+
+    // Downscale the image; still plenty for a 20mm logo and keeps alpha channel
+    const targetWidth = 400
+    const targetHeight = (img.height / img.width) * targetWidth
+    canvas.width = targetWidth
+    canvas.height = targetHeight
+
+    // IMPORTANT: do NOT fill a background; keep transparency
+    ctx.clearRect(0, 0, targetWidth, targetHeight)
+    ctx.drawImage(img, 0, 0, targetWidth, targetHeight)
+
+    // Keep as PNG to preserve alpha (transparent background)
+    const compressedDataUrl = canvas.toDataURL("image/png")
+
     const logoHeight = 20
     const logoWidth = (img.width / img.height) * logoHeight
-    doc.addImage(img, "PNG", headerPadding, 5, logoWidth, logoHeight)
+
+    // Embed as PNG so transparency is preserved
+    doc.addImage(compressedDataUrl, "PNG", headerPadding, 5, logoWidth, logoHeight, undefined, "FAST")
+    // --- END OPTIMIZATION ---
   } catch (e) {
     console.error("Failed to load logo image:", e)
   }

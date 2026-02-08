@@ -212,8 +212,8 @@ export default function CustomersPage() {
                                             <TabsTrigger value="partners">Partners{partnersCount ? ` (${partnersCount})` : ""}</TabsTrigger>
                                             <TabsTrigger value="documents">Documents</TabsTrigger>
                                             <TabsTrigger value="risk-details">Risk Details</TabsTrigger>
-                                            <TabsTrigger value="aml-questionnaires">AML Questionnaires</TabsTrigger>
-                                            <TabsTrigger value="aml-questionnaire-answers">AML Questionnaire Answers</TabsTrigger>
+                                            {/* <TabsTrigger value="aml-questionnaires">AML Questionnaires</TabsTrigger> */}
+                                            <TabsTrigger value="aml-questionnaire-answers">Compliance questionnaire</TabsTrigger>
                                           </TabsList>
                                           <TabsContent value="company-info">
                                             <div className="grid grid-cols-2 gap-4 mt-4">
@@ -414,7 +414,7 @@ export default function CustomersPage() {
                                               </div>
                                             </div>
                                           </TabsContent>
-                                          <TabsContent value="aml-questionnaires">
+                                          {/* <TabsContent value="aml-questionnaires">
                                             {questionAnswers.length > 0 ? (
                                               <div className="space-y-4 mt-4">
                                                 {Object.entries(groupedQA).map(([category, items]) => (
@@ -440,9 +440,9 @@ export default function CustomersPage() {
                                                 ))}
                                               </div>
                                             ) : (
-                                              <div className="text-sm text-muted-foreground mt-4">No AML questionnaire answers available.</div>
+                                              <div className="text-sm text-muted-foreground mt-4">No Compliance questionnaire available.</div>
                                             )}
-                                          </TabsContent>
+                                          </TabsContent> */}
                                           <TabsContent value="aml-questionnaire-answers">
                                             {Array.isArray(corp?.question_answers) && corp.question_answers.length > 0 ? (
                                               <div className="space-y-4 mt-4">
@@ -476,7 +476,7 @@ export default function CustomersPage() {
                                                 ))}
                                               </div>
                                             ) : (
-                                              <div className="text-sm text-muted-foreground mt-4">No AML questionnaire answers available.</div>
+                                              <div className="text-sm text-muted-foreground mt-4">No Compliance questionnaire available.</div>
                                             )}
                                           </TabsContent>
                                         </Tabs>

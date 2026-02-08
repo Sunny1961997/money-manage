@@ -45,7 +45,11 @@ export async function generateScreeningSessionPDF({
   total_search?: number
   user_id?: string
 }) {
-  const doc = new jsPDF({ unit: "mm", format: "a4" })
+  const doc = new jsPDF({ 
+    unit: "mm", 
+    format: "a4",
+    compress: true 
+  })
   // addCustomFonts(doc)
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 15
@@ -60,23 +64,45 @@ export async function generateScreeningSessionPDF({
   try {
     const img = new Image()
     img.crossOrigin = "anonymous"
-    
-    // Use absolute URL for the image
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-    img.src = `${baseUrl}/aml_meter.png`
+    img.src = `${baseUrl}/aml_meter_transparent.png`
     
     await new Promise((resolve, reject) => {
       img.onload = resolve
       img.onerror = reject
     })
     
-    // Calculate dimensions to fit in header (max height ~18mm)
+    // --- START IMAGE OPTIMIZATION ---
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+
+    // Target width of 800px is more than enough for a 22mm logo
+    const targetWidth = 800
+    const targetHeight = (img.height / img.width) * targetWidth
+    canvas.width = targetWidth
+    canvas.height = targetHeight
+
+    if (!ctx) throw new Error("Canvas 2D context not available")
+
+    // Fill background with header color if the PNG is transparent
+    // to avoid black boxes after JPEG conversion
+    ctx.fillStyle = "#3c007e" // Your header purple color
+    ctx.fillRect(0, 0, targetWidth, targetHeight)
+
+    ctx.drawImage(img, 0, 0, targetWidth, targetHeight)
+
+    // Convert to compressed JPEG (Quality 0.75)
+    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75)
+    // --- END IMAGE OPTIMIZATION ---
+
     const logoHeight = 22
     const logoWidth = (img.width / img.height) * logoHeight
-    doc.addImage(img, "PNG", headerPadding, 5, logoWidth, logoHeight)
+
+    // Use 'FAST' compression alias
+    doc.addImage(compressedDataUrl, "JPEG", headerPadding, 5, logoWidth, logoHeight, undefined, 'FAST')
+
   } catch (e) {
     console.error("Failed to load logo image:", e)
-    // Fallback if image fails
   }
 
   // Add "AML Meter" text in bold between logo and case ID
@@ -109,7 +135,7 @@ export async function generateScreeningSessionPDF({
 
   // --- CASE SUMMARY & OUTCOME (Two Columns) ---
   const colWidth = (contentWidth - 6) / 2
-  const boxHeight = 70 // Same height for both boxes
+  const boxHeight = 49 // Reduced height by 30%
   
   // Left Box: Case Summary
   doc.setDrawColor(200, 200, 200)
@@ -117,7 +143,7 @@ export async function generateScreeningSessionPDF({
   doc.setFont("helvetica", "bold")
   doc.setFontSize(12)
   doc.setTextColor(0, 0, 0)
-  doc.text("Case Summary", margin + 5, y + 8)
+  doc.text("Summary", margin + 5, y + 8)
 
   const hasPep = bestBySource.some(src => (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1')));
   
@@ -156,7 +182,7 @@ export async function generateScreeningSessionPDF({
     finalDecision = annotations[0] // Use the first annotation as final decision
   }
   
-  const outcomeBoxHeight = 70 // Increased height to properly cover all text
+  const outcomeBoxHeight = 49 // Reduced height by 30%
   
   doc.roundedRect(margin + colWidth + 6, y, colWidth, outcomeBoxHeight, 3, 3)
   doc.setFont("helvetica", "bold")
@@ -274,16 +300,43 @@ export async function generateScreeningSessionPDF({
     ]
   })
 
+  // Append a full-width note row at the end
+  tableData.push([
+    "Screening conducted against global, regional, and national sanctions lists, and politically exposed person databases, using a risk-based methodology",
+    "",
+    "",
+    "",
+    "",
+  ])
+
   autoTable(doc, {
     startY: y,
     head: [["Source List", "Matches", "Highest Match", "Status", "Notes"]],
     body: tableData,
     headStyles: { fillColor: [110, 70, 255] },
     margin: { left: margin, right: margin },
-    theme: "striped"
+    theme: "striped",
+    didParseCell: (data) => {
+      // Make the last row span all columns
+      const isLastRow = data.section === "body" && data.row.index === tableData.length - 1
+      if (isLastRow) {
+        if (data.column.index === 0) (data.cell as any).colSpan = 5
+        else (data.cell as any).text = ""
+        data.cell.styles.fontStyle = "italic"
+        data.cell.styles.textColor = [80, 80, 80]
+      }
+    },
   })
 
-  y = (doc as any).lastAutoTable.finalY + 15
+  y = (doc as any).lastAutoTable.finalY + 5
+
+  // Append methodology note
+  // const methodologyNote = "Note: The match summary is based on automated name matching algorithms and confidence scoring methodology."
+  // doc.setFontSize(9)
+  // doc.setFont("helvetica", "italic")
+  // doc.text(methodologyNote, margin, y)
+
+  y += 10
 
   // --- DETAILED RESULTS ---
   // Only add new page if there's not enough space for at least one evidence box

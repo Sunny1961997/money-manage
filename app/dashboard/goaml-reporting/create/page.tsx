@@ -309,8 +309,8 @@ export default function CreateGoamlReportPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Transaction Type</label>
                 <select className="border p-2 rounded w-full" value={formData.transaction_type} onChange={(e) => setFormData({ ...formData, transaction_type: e.target.value })}>
                     <option value="">Select a transaction type</option>
-                    <option value="sale">Sale</option>
-                    <option value="purchase">Purchase</option>
+                    <option value="Sale">Sale</option>
+                    <option value="Purchase">Purchase</option>
                 </select>
             </div>
         </div>
