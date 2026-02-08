@@ -34,6 +34,7 @@ export async function generateScreeningSessionPDF({
   detailsById,
   total_search,
   user_id,
+  user_company,
 }: {
   searchedFor: string
   customerType: string
@@ -44,6 +45,7 @@ export async function generateScreeningSessionPDF({
   detailsById: Record<string, any>
   total_search?: number
   user_id?: string
+  user_company?: string
 }) {
   const doc = new jsPDF({ 
     unit: "mm", 
@@ -54,6 +56,35 @@ export async function generateScreeningSessionPDF({
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 15
   const contentWidth = pageWidth - margin * 2
+
+  // Helper to decide if a candidate should be included in Evidence
+  const decisionForSource = (source: string) => (sourceDecision as any)[source] ?? null
+
+  // Selected annotation is per-source
+  const annChoiceForSource = (source: string) => (sourceAnnotationChoice as any)[source] ?? ""
+
+  // Typed annotation can be per-candidate (key: `${source}:${candidateId}`) with fallback to per-source
+  const annTextFor = (source: string, candidateId: number) => {
+    const key = `${source}:${candidateId}`
+    return (sourceAnnotationText as any)[key] ?? (sourceAnnotationText as any)[source] ?? ""
+  }
+
+  const includeInEvidence = (source: string, c: any) => {
+    const conf = Number(c?.confidence) || 0
+    const d = decisionForSource(source)
+    return d === "relevant" || conf >= 80
+  }
+
+  // Pre-filter sources/candidates for the PDF
+  const bestBySourceFiltered = (bestBySource || [])
+    .map((src: any) => ({
+      ...src,
+      data: (src.data || []).filter((c: any) => c && includeInEvidence(src.source, c)),
+    }))
+    .filter((src: any) => (src.data || []).length > 0)
+
+  // Use original list for Match Summary
+  const bestBySourceForPdf = bestBySource
 
   // --- HEADER ---
   doc.setFillColor(60, 0, 126)
@@ -131,7 +162,7 @@ export async function generateScreeningSessionPDF({
   y += 5
   doc.setDrawColor(220, 220, 220)
   doc.line(margin, y, pageWidth - margin, y)
-  y += 12
+  y += 3
 
   // --- CASE SUMMARY & OUTCOME (Two Columns) ---
   const colWidth = (contentWidth - 6) / 2
@@ -145,7 +176,7 @@ export async function generateScreeningSessionPDF({
   doc.setTextColor(0, 0, 0)
   doc.text("Summary", margin + 5, y + 8)
 
-  const hasPep = bestBySource.some(src => (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1')));
+  const hasPep = bestBySourceForPdf.some(src => (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1')));
   
   doc.setFontSize(9)
   doc.setFont("helvetica", "normal")
@@ -172,7 +203,7 @@ export async function generateScreeningSessionPDF({
   })
 
   // Right Box: Outcome
-  const maxConf = Math.max(...bestBySource.map(s => s.best_confidence || 0))
+  const maxConf = Math.max(...bestBySourceForPdf.map(s => s.best_confidence || 0))
   const risk = getRiskLevel(maxConf)
   
   // Determine overall decision based on first annotation choice
@@ -232,9 +263,10 @@ export async function generateScreeningSessionPDF({
 
   const auditBody = [
     ["Total Searches Performed", total_search?.toString() || "0"],
-    ["Total Results Found", bestBySource.reduce((sum, src) => sum + (src.data || []).filter(Boolean).length, 0).toString()],
+    ["Total Results Found", bestBySourceForPdf.reduce((sum, src) => sum + (src.data || []).filter(Boolean).length, 0).toString()],
     ["Search Timestamp", new Date().toLocaleString()],
-    ["User Details", user_id || "N/A"]
+    ["User Details", user_id || "N/A"],
+    ["Company Name", user_company || "N/A"],
   ];
 
   autoTable(doc, {
@@ -264,7 +296,7 @@ export async function generateScreeningSessionPDF({
 
   // --- MATCH SUMMARY TABLE ---
   // Estimate space needed for match summary table (header + rows + spacing)
-  const estimatedMatchSummaryHeight = 15 + (bestBySource.length * 8)
+  const estimatedMatchSummaryHeight = 15 + (bestBySourceForPdf.length * 8)
   
   // Check if there's enough space for Match Summary table header + at least 3 rows
   if (y + Math.min(estimatedMatchSummaryHeight, 40) > 270) {
@@ -277,26 +309,31 @@ export async function generateScreeningSessionPDF({
   doc.text("Match Summary", margin, y)
   y += 5
 
-  const tableData = bestBySource.map(src => {
+  const tableData = bestBySourceForPdf.map(src => {
     const hits = (src.data || []).filter(Boolean).length
-    const sourceHasPep = (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1'));
-    
-    let displaySource = src.source;
-    if (src.source && src.source.toUpperCase().includes("UAE")) {
-        displaySource = "UAE Local list";
-    }
-    if (src.source && src.source.toUpperCase().includes("UN")) {
-        displaySource = "UNSCR";
-    }
-    const isWhitelisted = (src.data || []).some((c: any) => c && (c.is_whitelisted === true || c.is_whitelisted === 'true' || c.is_whitelisted === 1));
-    const annotation = sourceAnnotationChoice[src.source] || "No Comment";
-    
+    const sourceHasPep = (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1'))
+
+    let displaySource = src.source
+    if (src.source && src.source.toUpperCase().includes("UAE")) displaySource = "UAE Local list"
+    if (src.source && src.source.toUpperCase().includes("UN")) displaySource = "UNSCR"
+
+    // For summary notes: if exactly one candidate, show its saved annotation; otherwise fall back to first.
+    const first = (src.data || []).filter(Boolean)[0] as any
+    const cid = Number(first?.id) || 0
+    const chosen = annChoiceForSource(src.source)
+    const typed = annTextFor(src.source, cid)
+    const notes = [chosen, typed].filter(Boolean).join(" - ") || "No Comment"
+
+    const status = hits > 0 ? (decisionForSource(src.source) || "Review") : "Clear"
+
+    const isWhitelisted = (src.data || []).some((c: any) => c && (c.is_whitelisted === true || c.is_whitelisted === 'true' || c.is_whitelisted === 1))
+
     return [
       sourceHasPep ? `${displaySource} (PEP)` : displaySource,
       hits,
       hits > 0 ? `${src.best_confidence}/100` : "-",
-      hits > 0 ? (sourceDecision[src.source] || "Review") : "Clear",
-      isWhitelisted ? `WL: Yes | ${annotation}` : annotation
+      hits > 0 ? status : "Clear",
+      isWhitelisted ? `WL: Yes | ${notes}` : notes,
     ]
   })
 
@@ -351,7 +388,7 @@ export async function generateScreeningSessionPDF({
   doc.text("Evidence", margin, y)
   y += 8
 
-  bestBySource.forEach(src => {
+  bestBySourceFiltered.forEach(src => {
     const candidates = (src.data || []).filter(Boolean)
     candidates.forEach((c: any) => {
       
@@ -402,12 +439,16 @@ export async function generateScreeningSessionPDF({
       }
 
       doc.setFont("times", "bold"); doc.text("Decision:", margin + 5, detailY)
-      doc.setFont("times", "normal"); doc.text(sourceDecision[src.source] || "Not Set", margin + 35, detailY)
+      doc.setFont("times", "normal"); doc.text(decisionForSource(src.source) || "Not Set", margin + 35, detailY)
       detailY += 6
+
       doc.setFont("times", "bold"); doc.text("Annotation:", margin + 5, detailY)
-      const annotationText = sourceAnnotationChoice[src.source] === 'Other' ? sourceAnnotationText[src.source] : sourceAnnotationChoice[src.source]
+      const chosen = annChoiceForSource(src.source)
+      const typed = annTextFor(src.source, Number(c.id))
+      const annotationText = [chosen, typed].filter(Boolean).join(" - ")
       doc.setFont("times", "normal"); doc.text(annotationText || "None", margin + 35, detailY)
       detailY += 6
+
       doc.setFont("times", "bold"); doc.text("Address:", margin + 5, detailY)
       doc.setFont("times", "normal"); doc.text(addr, margin + 35, detailY)
 
