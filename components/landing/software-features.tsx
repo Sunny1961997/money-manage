@@ -38,13 +38,13 @@ function FeatureCard({
       className={[
         'relative h-full min-h-[240px] rounded-xl p-6 flex flex-col justify-between transition-shadow hover:shadow-lg',
         variant === 'tinted'
-          ? 'bg-sky-100/50' 
+          ? 'bg-sky-100/50'
           : 'bg-gray-50/50 border border-gray-100 shadow-sm'
       ].join(' ')}
     >
       <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-4">{title}</h3>
-        <p className="text-gray-600 leading-relaxed text-sm">{description}</p>
+        <h3 className="text-xl font-bold text-slate-900 mb-4">{title}</h3>
+        <p className="text-slate-600 leading-relaxed text-sm">{description}</p>
       </div>
 
       <div className="flex justify-end mt-4">
@@ -58,21 +58,21 @@ function FeatureCard({
 
 export function SoftwareFeatures() {
   return (
-    <section id="features" className="py-16 sm:py-24 bg-white">
+    <section id="features" className="py-16 sm:py-24 bg-white scroll-mt-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             Our Features
           </h2>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          <p className="text-lg text-slate-600 max-w-3xl mx-auto">
             Comprehensive compliance and intelligence tools designed to protect your business
           </p>
         </div>
 
         {/* Layout mimicking the screenshot */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
+
           {/* Core Compliance Group (Spans 3/4) */}
           <div className="lg:col-span-3">
             <div className="relative pt-6 h-full">
@@ -82,7 +82,7 @@ export function SoftwareFeatures() {
                   Core Compliance
                 </span>
               </div>
-              
+
               {/* Dashed Border Container */}
               <div className="h-full border-t-2 border-l-2 border-r-2 border-dashed border-green-500 rounded-t-xl pt-8 px-4 pb-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">

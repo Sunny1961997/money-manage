@@ -15,26 +15,26 @@ const specialties = [
 
 export function Specialties() {
   return (
-    <section className="py-16 sm:py-24 bg-gradient-to-r from-primary via-primary to-primary/90 text-white">
+    <section id="specialties" className="py-16 sm:py-24 bg-white scroll-mt-32 border-t border-slate-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-balance">
+        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-balance text-slate-900">
           AML Meter Specialties
         </h2>
-        <p className="text-center text-white/80 max-w-3xl mx-auto mb-12 text-lg">
+        <p className="text-center text-slate-600 max-w-3xl mx-auto mb-12 text-lg">
           We combine cutting-edge technology with thoughtful design to deliver powerful, accessible, and beautiful web experiences. Every feature is crafted with precision and purpose.
         </p>
         <div className="grid md:grid-cols-4 gap-8">
           {specialties.map((specialty, index) => {
             const Icon = specialty.icon;
             return (
-              <div key={index} className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4">
-                  <Icon className="w-8 h-8 text-white" />
+              <div key={index} className="flex flex-col items-center text-center group">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Icon className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="font-semibold mb-2">
+                <h3 className="font-semibold mb-2 text-slate-900">
                   {specialty.title}
                 </h3>
-                <p className="text-sm text-gray-200">
+                <p className="text-sm text-slate-600">
                   {specialty.description}
                 </p>
               </div>

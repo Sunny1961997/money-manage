@@ -68,9 +68,9 @@ export function Contact() {
   };
 
   return (
-    <section id="contact" className="bg-white py-16 sm:py-24 border-t border-border">
+    <section id="contact" className="bg-white py-16 sm:py-24 border-t border-slate-100 scroll-mt-32">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl sm:text-4xl font-bold text-center text-foreground mb-12 text-balance">
+        <h2 className="text-3xl sm:text-4xl font-bold text-center text-slate-900 mb-12 text-balance">
           Connect with Our Team
         </h2>
 
@@ -81,7 +81,7 @@ export function Contact() {
                 type="text"
                 placeholder="First Name"
                 value={formData.firstName}
-                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                 required
                 className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
@@ -89,17 +89,17 @@ export function Contact() {
                 type="text"
                 placeholder="Last Name"
                 value={formData.lastName}
-                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                 required
                 className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
-            
+
             <input
               type="email"
               placeholder="Your Email Address"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
               className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
@@ -107,11 +107,11 @@ export function Contact() {
               placeholder="Your Message"
               rows={4}
               value={formData.message}
-              onChange={(e) => setFormData({...formData, message: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
               className="w-full bg-primary text-white px-6 py-3 rounded font-semibold hover:bg-primary/90 transition-all duration-200 disabled:opacity-50"
             >
@@ -136,10 +136,10 @@ export function Contact() {
               <Phone className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-foreground mb-2">Phone Support</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">  
-                +971 509627076  <br />
-                +971 562953927  <br />
-                +971 588961136  <br />
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  +971 509627076  <br />
+                  +971 562953927  <br />
+                  +971 588961136  <br />
                 </p>
               </div>
             </div>
