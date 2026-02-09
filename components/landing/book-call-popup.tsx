@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
@@ -8,6 +8,8 @@ export function BookCallPopup() {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
+  const hasOpenedRef = useRef(false)
+  const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -18,13 +20,60 @@ export function BookCallPopup() {
     message: ''
   })
 
-  // Open popup shortly after mount
+  // Open popup after scroll progress or dwell time
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const minDelayMs = 15000
+    const maxDelayMs = 30000
+    const delayMs = Math.floor(Math.random() * (maxDelayMs - minDelayMs + 1)) + minDelayMs
+    const minScroll = 0.4
+    const maxScroll = 0.6
+    const scrollTrigger = minScroll + Math.random() * (maxScroll - minScroll)
+
+    const clearOpenTimer = () => {
+      if (openTimerRef.current) {
+        clearTimeout(openTimerRef.current)
+        openTimerRef.current = null
+      }
+    }
+
+    const openPopup = () => {
+      if (hasOpenedRef.current) return
+      hasOpenedRef.current = true
       setIsOpen(true)
-    }, 1500) // 1.5 second delay for better UX
-    return () => clearTimeout(timer)
+      clearOpenTimer()
+      window.removeEventListener("scroll", handleScroll)
+    }
+
+    const handleScroll = () => {
+      if (hasOpenedRef.current) return
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+      if (scrollHeight <= 0) return
+      const progress = window.scrollY / scrollHeight
+      if (progress >= scrollTrigger) {
+        openPopup()
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    openTimerRef.current = setTimeout(openPopup, delayMs)
+    handleScroll()
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      clearOpenTimer()
+    }
   }, [])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false)
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isOpen])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -81,11 +130,15 @@ export function BookCallPopup() {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-      <div 
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300"
+      onClick={() => setIsOpen(false)}
+    >
+      <div
         className="bg-white rounded-xl shadow-2xl w-full max-w-lg relative overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100"
         role="dialog"
         aria-modal="true"
+        onClick={(event) => event.stopPropagation()}
       >
         {/* Close Button */}
         <button 
