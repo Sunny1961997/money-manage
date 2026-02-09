@@ -12,16 +12,19 @@ interface HeaderProps {
 }
 
 export function Header({ showUnderline = false }: HeaderProps) {
+  const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeLink, setActiveLink] = useState("Home");
 
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -71,21 +74,22 @@ export function Header({ showUnderline = false }: HeaderProps) {
   return (
     <header
       className={cn(
-        "fixed top-0 w-full z-50 transition-[background-color,border-color,box-shadow,backdrop-filter] duration-200 border-b py-4",
+        "fixed top-0 w-full z-50 border-b",
+        mounted ? "transition-all duration-300" : "transition-none",
         isSolid
-          ? "bg-white/95 backdrop-blur-xl border-slate-200 shadow-sm"
-          : "bg-transparent border-transparent"
+          ? "bg-white/95 backdrop-blur-xl border-slate-200 shadow-sm py-3"
+          : "bg-transparent border-transparent py-4"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-full">
-        <div className="flex-1 flex items-center">
-          <Link href="/" className="flex-shrink-0">
+        <div className="flex-1 flex items-center transition-all duration-300">
+          <Link href="/" className="flex-shrink-0 group">
             <img
               src="/aml_meter_2.png"
               alt="AML Meter"
               className={cn(
-                "h-10 md:h-12 w-auto object-contain transition-all duration-200",
-                isTransparent ? "brightness-0 invert" : "brightness-100 invert-0"
+                "h-10 md:h-12 w-auto object-contain transition-all duration-500",
+                isTransparent ? "brightness-0 invert opacity-90 group-hover:opacity-100" : "brightness-100 invert-0"
               )}
             />
           </Link>
@@ -97,10 +101,10 @@ export function Header({ showUnderline = false }: HeaderProps) {
               key={item.label}
               href={item.href}
               className={cn(
-                "text-base font-semibold transition-all duration-300 hover:scale-105 whitespace-nowrap relative h-full flex items-center group",
-                activeLink === item.label
-                  ? (isSolid ? "text-primary" : "text-white")
-                  : (isSolid ? "text-slate-600 hover:text-primary/80" : "text-white/60 hover:text-white")
+                "text-base font-semibold transition-all duration-300 hover:scale-105 whitespace-nowrap relative h-full flex items-center group px-1",
+                isSolid
+                  ? (activeLink === item.label ? "text-primary" : "text-slate-600 hover:text-primary")
+                  : (activeLink === item.label ? "text-white" : "text-white/70 hover:text-white")
               )}
             >
               {item.label}
