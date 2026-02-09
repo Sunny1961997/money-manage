@@ -15,7 +15,7 @@ const specialties = [
 
 export function Specialties() {
   return (
-    <section id="specialties" className="py-16 sm:py-24 bg-white scroll-mt-32 border-t border-slate-100">
+    <section className="py-12 sm:py-20 bg-white scroll-mt-32 border-t border-slate-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-balance text-slate-900">
           AML Meter Specialties
@@ -31,7 +31,7 @@ export function Specialties() {
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <Icon className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="font-semibold mb-2 text-slate-900">
+                <h3 className="font-semibold mb-2 text-slate-900 group-hover:text-primary transition-colors duration-300">
                   {specialty.title}
                 </h3>
                 <p className="text-sm text-slate-600">

@@ -49,7 +49,7 @@ export function Features() {
   };
 
   return (
-    <section className="py-12 sm:py-20 bg-white scroll-mt-32">
+    <section id="features" className="py-12 sm:py-20 bg-white scroll-mt-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial="hidden"
@@ -126,7 +126,7 @@ export function Features() {
           </motion.div>
         </motion.div>
 
-        <div id="about" className="scroll-mt-32">
+        <div id="about" className="scroll-mt-24">
           <motion.div
             initial="hidden"
             whileInView="visible"
