@@ -70,7 +70,7 @@ function FeatureCard({
         variant === 'tinted'
           ? 'border-primary/20 bg-primary/[0.02] shadow-sm'
           : 'border-slate-100 shadow-sm',
-        'hover:shadow-[0_15px_30px_-10px_rgba(124,58,237,0.1)] hover:-translate-y-1 hover:border-primary/30 group'
+        'hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 hover:border-primary/30 group'
       ].join(' ')}
     >
       <div>

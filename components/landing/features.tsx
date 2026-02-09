@@ -140,7 +140,7 @@ export function Features() {
 
             <div className="relative z-10">
               <h2 className="text-3xl sm:text-5xl font-bold text-center mb-6 text-balance">
-                About <span className="text-purple-200">AML Meter Management</span>
+                About <span className="text-primary-foreground/80">AML Meter Management</span>
               </h2>
               <p className="text-center text-purple-50/90 max-w-4xl mx-auto mb-10 text-lg md:text-xl leading-relaxed">
                 Over 25 Years of combined experience in the Industry around the globe,
@@ -162,7 +162,7 @@ export function Features() {
                       <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-xl border border-white/10">
                         <Icon className="w-10 h-10 text-white" />
                       </div>
-                      <h3 className="text-2xl font-bold text-white group-hover:text-purple-200 transition-colors duration-300 mb-4">
+                      <h3 className="text-2xl font-bold text-white group-hover:text-primary-foreground/90 transition-colors duration-300 mb-4">
                         {feature.title}
                       </h3>
                       <p className="text-white/90 text-sm md:text-base leading-relaxed">

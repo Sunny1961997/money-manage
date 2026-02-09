@@ -34,8 +34,8 @@ export function Hero() {
           }}
         />
 
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-purple-500/30 rounded-full blur-[120px] mix-blend-screen translate-x-1/2 -translate-y-1/2 transform-gpu" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-500/20 rounded-full blur-[100px] mix-blend-screen -translate-x-1/3 translate-y-1/3 transform-gpu" />
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/20 rounded-full blur-[120px] mix-blend-screen translate-x-1/2 -translate-y-1/2 transform-gpu" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[100px] mix-blend-screen -translate-x-1/3 translate-y-1/3 transform-gpu" />
 
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-20 [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
       </div>
@@ -86,14 +86,14 @@ export function Hero() {
           >
             <Link
               href="/contact-us"
-              className="bg-[#ffffff] text-purple-600 px-8 py-3 rounded-full font-semibold shadow-lg shadow-black/20 hover:bg-[#f3f4f6] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary transition duration-300 backface-hidden transform-gpu"
+              className="bg-[#ffffff] text-primary px-8 py-3 rounded-full font-semibold shadow-lg shadow-black/20 hover:bg-[#f3f4f6] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary transition duration-300 backface-hidden transform-gpu"
             >
               Request a Demo
             </Link>
 
             <Link
               href="/products"
-              className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-[#ffffff] hover:text-purple-600 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary transition duration-300 backface-hidden transform-gpu"
+              className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-[#ffffff] hover:text-primary hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary transition duration-300 backface-hidden transform-gpu"
             >
               Get Started Now
             </Link>
@@ -107,7 +107,7 @@ export function Hero() {
             className="relative mt-12 w-full max-w-5xl mx-auto perspective-1000 will-change-transform transform-gpu"
           >
             <div
-              className="absolute -inset-8 bg-gradient-to-r from-violet-600/60 to-indigo-600/60 rounded-xl blur-3xl opacity-100 -z-10 group-hover:opacity-100 transition-opacity duration-500"
+              className="absolute -inset-8 bg-gradient-to-r from-primary/40 to-indigo-600/40 rounded-xl blur-3xl opacity-100 -z-10 group-hover:opacity-100 transition-opacity duration-500"
             />
             <div className="absolute -top-px left-1/2 -translate-x-1/2 w-[80%] h-[2px] bg-gradient-to-r from-transparent via-white/50 to-transparent blur-[1px] z-20" />
 

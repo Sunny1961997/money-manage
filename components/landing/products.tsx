@@ -68,10 +68,10 @@ export function Products() {
   ];
 
   return (
-    <section id="products" className="py-20 bg-gray-50 scroll-mt-32">
+    <section id="services" className="py-20 bg-gray-50 scroll-mt-24">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900 leading-tight">Our Solution</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900 leading-tight">Our Services</h2>
           <p className="text-lg text-slate-600 max-w-xl mx-auto">
             Comprehensive AML solutions designed to keep your organization compliant, secure, and efficient.
           </p>
