@@ -68,11 +68,16 @@ export function Products() {
   ];
 
   return (
-    <section id="services" className="py-20 bg-gray-50 scroll-mt-24">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900 leading-tight">Our Services</h2>
-          <p className="text-lg text-slate-600 max-w-xl mx-auto">
+    <section id="services" className="relative py-16 sm:py-20 bg-white scroll-mt-24 overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-slate-50 to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] [mask-image:radial-gradient(ellipse_at_center,white,transparent)]" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center mb-10 sm:mb-14">
+          <h2 className="text-4xl sm:text-5xl font-extrabold mb-4 text-slate-900 tracking-tight leading-tight">Our <span className="text-primary">Services</span></h2>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
             Comprehensive AML solutions designed to keep your organization compliant, secure, and efficient.
           </p>
         </div>

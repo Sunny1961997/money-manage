@@ -46,7 +46,7 @@ const itemVariants = {
     y: 0,
     transition: {
       duration: 0.5,
-      ease: "easeOut" as const
+      ease: [0.4, 0, 0.2, 1] as const
     }
   }
 };
@@ -92,12 +92,12 @@ function FeatureCard({
 
 export function SoftwareFeatures() {
   return (
-    <section id="features" className="py-10 sm:py-16 bg-white scroll-mt-24">
+    <section id="features" className="relative py-16 sm:py-20 bg-white scroll-mt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-14">
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-            Our Features
+            Our <span className="text-primary">Features</span>
           </h2>
           <p className="text-lg text-slate-600 max-w-3xl mx-auto">
             Comprehensive compliance and intelligence tools designed to protect your business
@@ -108,9 +108,9 @@ export function SoftwareFeatures() {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           variants={containerVariants}
-          className="grid grid-cols-1 lg:grid-cols-4 gap-5"
+          className="grid grid-cols-1 lg:grid-cols-4 gap-8"
         >
 
           {/* Core Compliance Group (Spans 3/4) */}
