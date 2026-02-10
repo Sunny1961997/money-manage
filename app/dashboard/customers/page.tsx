@@ -20,14 +20,21 @@ export default function CustomersPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [detailsById, setDetailsById] = useState<Record<number, any>>({})
   const { user } = useAuthStore();
-  const getRisk = (val:any) => {
-    const s = Number(val);
-    if (!val || isNaN(s)) return { label: "-", color: "bg-gray-100 text-gray-600" };
-    
-    if (s <= 2.0) return { label: "Low", color: "bg-green-100 text-green-700 border-green-200" };
-    if (s <= 3.5) return { label: "Medium", color: "bg-amber-100 text-amber-700 border-amber-200" };
-    return { label: "High", color: "bg-red-100 text-red-700 border-red-200" };
-  };
+  const getRisk = (val: any) => {
+  const s = Number(val);
+  
+  // Handle empty, null, or invalid numbers
+  if (val === null || val === undefined || isNaN(s) || s < 1) return { label: "-", color: "bg-gray-100 text-gray-600 border-gray-200" };
+
+  if (s >= 4.0) return { label: "High Risk", color: "bg-red-100 text-red-700 border-red-200" };
+
+  if (s >= 3.0) return { label: "Medium High", color: "bg-orange-100 text-orange-700 border-orange-200" };
+
+  if (s >= 2.0) return { label: "Medium Risk", color: "bg-amber-100 text-amber-700 border-amber-200" };
+
+  if (s >= 1.5) return { label: "Low Medium", color: "bg-blue-100 text-blue-700 border-blue-200" };
+  return { label: "Low Risk", color: "bg-green-100 text-green-700 border-green-200" };
+};
 
   const toggleExpand = async (id: number) => {
     if (expandedId === id) {

@@ -38,7 +38,7 @@ type ScreeningResponse = {
         user_id?: number | string
         user_company?: string
         searched_for?: string
-        customer_type?: string
+        subject_type?: string
         total_candidates?: number
         best_by_source?: BestBySourceItem[]
         total_search?: number
@@ -111,6 +111,7 @@ export default function QuickScreeningResultsPage() {
             const parsed = JSON.parse(raw)
             console.log("Full payload:", parsed)
             console.log("User ID from payload:", parsed?.data?.user_id)
+            console.log("User ID from company name:", parsed?.data?.user_company)
             setPayload(parsed)
         } catch {
             setPayload(null)
@@ -119,7 +120,7 @@ export default function QuickScreeningResultsPage() {
     const userId = String(payload?.data?.user_id || payload?.user_id || "N/A")
     const userCompany = String(payload?.data?.user_company || "N/A")
     const searchedFor = payload?.data?.searched_for || "-"
-    const customerType = payload?.data?.customer_type || "individual"
+    const customerType = payload?.data?.subject_type || "individual"
     const bestBySource = payload?.data?.best_by_source || [];
     const totalSearch = payload?.data?.total_found || 0;
 
@@ -200,7 +201,6 @@ export default function QuickScreeningResultsPage() {
         await generateScreeningSessionPDF({
             searchedFor,
             customerType,
-            // IMPORTANT: pass full list so Match Summary shows all sources
             bestBySource,
             sourceDecision: sourceDecision as any,
             sourceAnnotationChoice: sourceAnnotationChoice,
@@ -329,48 +329,51 @@ export default function QuickScreeningResultsPage() {
                                             <div className="p-2">
                                                 <Label className="text-xls">Decision:</Label>
                                                 <RadioGroup
-                                                    className="flex gap-4 mt-1"
+                                                    className="flex gap-4 mt-3"
                                                     value={sourceDecision[src.source] || ''}
                                                     onValueChange={(val) => setSourceDecision((prev) => ({ ...prev, [src.source]: val as SourceDecision }))}
                                                 >
-                                                    <RadioGroupItem value="relevant" id={`decision-relevant-${src.source}`} />
+                                                    <RadioGroupItem value="Relevant" id={`decision-relevant-${src.source}`} />
                                                     <Label htmlFor={`decision-relevant-${src.source}`}>Relevant</Label>
-                                                    <RadioGroupItem value="irrelevant" id={`decision-irrelevant-${src.source}`} />
+                                                    <RadioGroupItem value="Irrelevant" id={`decision-irrelevant-${src.source}`} />
                                                     <Label htmlFor={`decision-irrelevant-${src.source}`}>Irrelevant</Label>
                                                 </RadioGroup>
                                             </div>
-                                            <div className="p-2">
-                                                <Label className="mb-2">Annotation:</Label>
-                                                <div className="flex flex-wrap items-start gap-3">
-                                                    <Select
-                                                        value={sourceAnnotationChoice[src.source] || ''}
-                                                        onValueChange={(val) => setSourceAnnotationChoice((prev) => ({ ...prev, [src.source]: val }))}
-                                                    >
-                                                        <SelectTrigger className="w-56">
-                                                            <SelectValue placeholder="No Annotation" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {ANNOTATION_OPTIONS.map(opt => (
-                                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
+                                            <div className="p-3">
+                                                <Label className="mb-2 block">Annotation:</Label>
+                                                <div className="flex flex-col gap-3">
+                                                    {/* Top Row: Select and Save Action */}
+                                                    <div className="flex flex-wrap items-center gap-3">
+                                                        <Select
+                                                            value={sourceAnnotationChoice[src.source] || ''}
+                                                            onValueChange={(val) => setSourceAnnotationChoice((prev) => ({ ...prev, [src.source]: val }))}
+                                                        >
+                                                            <SelectTrigger className="w-56">
+                                                                <SelectValue placeholder="No Annotation" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {ANNOTATION_OPTIONS.map(opt => (
+                                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
 
-                                                    {/* typing field is ALWAYS shown */}
+                                                        {/* <Button type="button" variant="outline" onClick={() => saveTypedForCandidate(src.source, c.id)}>
+                                                            Save
+                                                        </Button>
+
+                                                        {savedTyped !== undefined && (
+                                                            <span className="text-xs text-muted-foreground">Typed note saved</span>
+                                                        )} */}
+                                                    </div>
+
+                                                    {/* Bottom Row: Typing field now spanning full width or specific width */}
                                                     <Input
-                                                        className="w-80"
+                                                        className="w-full max-w-lg" // Changed from w-80 to span more naturally
                                                         value={sourceAnnotationText[src.source] || ''}
                                                         onChange={e => setSourceAnnotationText((prev) => ({ ...prev, [src.source]: e.target.value }))}
-                                                        placeholder="Type your annotation..."
+                                                        placeholder="Type your annotation details here..."
                                                     />
-
-                                                    <Button type="button" variant="outline" onClick={() => saveTypedForCandidate(src.source, c.id)}>
-                                                        Save
-                                                    </Button>
-
-                                                    {savedTyped !== undefined && (
-                                                        <span className="text-xs text-muted-foreground self-center">Typed note saved</span>
-                                                    )}
                                                 </div>
                                             </div>
                                         </div>

@@ -1280,9 +1280,6 @@ function CorporateForm({
             <TabsTrigger value="related" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Partner/Representative
             </TabsTrigger>
-            <TabsTrigger value="aml-questionnaires" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              AML Questionnaires
-            </TabsTrigger>
             <TabsTrigger value="additional" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Additional Information
             </TabsTrigger>
@@ -1636,6 +1633,36 @@ function CorporateForm({
                     </div>
                   </RadioGroup>
                 </div>
+
+                {Array.isArray(questionnaires) && questionnaires.length > 0 && (
+                  <>
+                    <div className="pt-4 border-t mt-6 mb-4"></div>
+                    {questionnaires.map((q) => (
+                      <div key={q.id} className="rounded-md border bg-white p-4">
+                        <div className="text-sm font-medium">{q.category ? `${q.category}: ` : ""}{q.question}</div>
+                        <div className="mt-3">
+                          <RadioGroup
+                            value={questionnaireAnswers[q.id] === 1 ? "yes" : questionnaireAnswers[q.id] === 0 ? "no" : ""}
+                            onValueChange={(v) => {
+                              if (v === "yes") setQuestionnaireAnswer(q.id, 1)
+                              if (v === "no") setQuestionnaireAnswer(q.id, 0)
+                            }}
+                            className="flex gap-6 "
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="yes" id={`q-${q.id}-yes`} />
+                              <Label htmlFor={`q-${q.id}-yes`}>Yes</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="no" id={`q-${q.id}-no`} />
+                              <Label htmlFor={`q-${q.id}-no`}>No</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
             </Card>
           </TabsContent>
@@ -1781,46 +1808,6 @@ function CorporateForm({
                   ))}
                 </div>
               </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="aml-questionnaires" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <FileCheck className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">AML Questionnaires</h4>
-              </div>
-
-              {Array.isArray(questionnaires) && questionnaires.length > 0 ? (
-                <div className="space-y-4">
-                  {questionnaires.map((q) => (
-                    <div key={q.id} className="rounded-md border bg-white p-4">
-                      <div className="text-sm font-medium">{q.category ? `${q.category}: ` : ""}{q.question}</div>
-                      <div className="mt-3">
-                        <RadioGroup
-                          value={questionnaireAnswers[q.id] === 1 ? "yes" : questionnaireAnswers[q.id] === 0 ? "no" : ""}
-                          onValueChange={(v) => {
-                            if (v === "yes") setQuestionnaireAnswer(q.id, 1)
-                            if (v === "no") setQuestionnaireAnswer(q.id, 0)
-                          }}
-                          className="flex gap-6 "
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id={`q-${q.id}-yes`} />
-                            <Label htmlFor={`q-${q.id}-yes`}>Yes</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id={`q-${q.id}-no`} />
-                            <Label htmlFor={`q-${q.id}-no`}>No</Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-sm text-muted-foreground">No questionnaires configured.</div>
-              )}
             </Card>
           </TabsContent>
 

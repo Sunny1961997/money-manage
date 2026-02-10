@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store"
 import {
@@ -20,7 +20,7 @@ import {
   Shield,
   Ticket,
 } from "lucide-react"
-import { useState, Dispatch, SetStateAction } from "react"
+import { useState, Dispatch, SetStateAction, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 
 type NavItem = {
@@ -45,6 +45,7 @@ const companyAdminNavigation: NavItem[] = [
     icon: Search,
     children: [
       { name: "Name Screening", href: "/dashboard/screening/quick" },
+      { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   {
@@ -78,6 +79,7 @@ const authorNavigation: NavItem[] = [
     icon: Search,
     children: [
       { name: "Name Screening", href: "/dashboard/screening/quick" },
+      { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
@@ -150,11 +152,10 @@ const flaNavigation: NavItem[] = [
 ]
 
 // Helper function to get navigation based on role
-function getNavigationByRole(): NavItem[] {
-  const { user } = useAuthStore()
-
+function getNavigationByRole(user: any): NavItem[] {
   // Normalize role to lowercase for comparison
-  const normalizedRole = user?.role.toLowerCase().trim()
+  console.log("[Sidebar] Current user role:", user)
+  const normalizedRole = (user?.role || "").toLowerCase().trim()
   console.log("[Sidebar] Determining navigation for role:", normalizedRole)
 
   switch (normalizedRole) {
@@ -180,9 +181,17 @@ type SidebarProps = {
 }
 
 export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
+  const router = useRouter()
+  const { user } = useAuthStore()
   const pathname = usePathname()
   const [openMenus, setOpenMenus] = useState<string[]>(["Screening", "Onboarding"])
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/auth/login")
+    }
+  }, [user, router])
 
   if (loading) {
     return (
@@ -249,7 +258,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
           </div>
         )}
         <ul className="space-y-1">
-          {getNavigationByRole().map((item) => {
+          {getNavigationByRole(user).map((item) => {
             if (item.children) {
               const isOpen = openMenus.includes(item.name)
               const isActive = item.children.some((child) => pathname === child.href)

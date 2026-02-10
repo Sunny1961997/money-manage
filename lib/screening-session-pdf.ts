@@ -58,7 +58,13 @@ export async function generateScreeningSessionPDF({
   const contentWidth = pageWidth - margin * 2
 
   // Helper to decide if a candidate should be included in Evidence
-  const decisionForSource = (source: string) => (sourceDecision as any)[source] ?? null
+  const decisionForSource = (source: string) => {
+     // normalized lookup to be safe
+     const exact = (sourceDecision as any)[source]
+     if (exact) return exact
+     const key = Object.keys(sourceDecision).find(k => k.toLowerCase().trim() === source.toLowerCase().trim())
+     return key ? sourceDecision[key] : null
+  }
 
   // Selected annotation is per-source
   const annChoiceForSource = (source: string) => (sourceAnnotationChoice as any)[source] ?? ""
@@ -166,7 +172,23 @@ export async function generateScreeningSessionPDF({
 
   // --- CASE SUMMARY & OUTCOME (Two Columns) ---
   const colWidth = (contentWidth - 6) / 2
-  const boxHeight = 49 // Reduced height by 30%
+  
+  // Calculate dynamic heights for boxes to prevent overlap
+  const summaryNameLines = doc.splitTextToSize(searchedFor, colWidth - 40)
+  // Base 16mm + name height + (4 other items * 6mm) + 5mm padding
+  const summaryHeight = 16 + (summaryNameLines.length * 5) + 24 + 5
+
+  // Outcome prep
+  const annotations = Object.values(sourceAnnotationChoice).filter(Boolean)
+  let finalDecision = "Pending Review"
+  if (annotations.length > 0) {
+    finalDecision = annotations[0] 
+  }
+  const decisionText = doc.splitTextToSize(finalDecision, colWidth - 52)
+  // Base 18mm + decision height + 4mm gap + conf(6) + result(6) + 5mm padding
+  const outcomeHeight = 18 + (decisionText.length * 5) + 4 + 12 + 5
+
+  const boxHeight = Math.max(49, summaryHeight, outcomeHeight)
   
   // Left Box: Case Summary
   doc.setDrawColor(200, 200, 200)
@@ -182,40 +204,37 @@ export async function generateScreeningSessionPDF({
   doc.setFont("helvetica", "normal")
   let summaryY = y + 16
   const summaryItems = [
-    ["Subject Name:", searchedFor],
+    ["Subject Name:", summaryNameLines], // Use split lines
     ["Subject Type:", customerType == "individual" ? "Individual" : (customerType == "entity" ? "Entity" : "Vessel")],
     ["Total Search:", total_search?.toString() || "0"],
     ["Screening Type:", "Automated Name Search"],
     ["PEP Identified:", hasPep ? "YES" : "No"]
   ]
   summaryItems.forEach(([label, val]) => {
+    doc.setFont("helvetica", "bold"); doc.text(label as string, margin + 5, summaryY)
+    
     // Highlight PEP YES in red if found
     if (label === "PEP Identified:" && val === "YES") {
-        doc.setFont("helvetica", "bold"); doc.text(label, margin + 5, summaryY)
         doc.setTextColor(220, 38, 38); // Red
-        doc.setFont("helvetica", "bold"); doc.text(val, margin + 35, summaryY)
+        doc.setFont("helvetica", "bold"); doc.text(val as string, margin + 35, summaryY)
         doc.setTextColor(0, 0, 0); // Reset
     } else {
-        doc.setFont("helvetica", "bold"); doc.text(label, margin + 5, summaryY)
-        doc.setFont("helvetica", "normal"); doc.text(val, margin + 35, summaryY)
+        doc.setFont("helvetica", "normal"); doc.text(val as string | string[], margin + 35, summaryY)
     }
-    summaryY += 6
+
+    if (Array.isArray(val)) {
+        summaryY += (val.length * 5) + 1
+    } else {
+        summaryY += 6
+    }
   })
 
   // Right Box: Outcome
   const maxConf = Math.max(...bestBySourceForPdf.map(s => s.best_confidence || 0))
   const risk = getRiskLevel(maxConf)
   
-  // Determine overall decision based on first annotation choice
-  const annotations = Object.values(sourceAnnotationChoice).filter(Boolean)
-  let finalDecision = "Pending Review"
-  if (annotations.length > 0) {
-    finalDecision = annotations[0] // Use the first annotation as final decision
-  }
-  
-  const outcomeBoxHeight = 49 // Reduced height by 30%
-  
-  doc.roundedRect(margin + colWidth + 6, y, colWidth, outcomeBoxHeight, 3, 3)
+  // Use calculated boxHeight for matching height
+  doc.roundedRect(margin + colWidth + 6, y, colWidth, boxHeight, 3, 3)
   doc.setFont("helvetica", "bold")
   doc.setFontSize(12)
   doc.setTextColor(0, 0, 0)
@@ -228,14 +247,13 @@ export async function generateScreeningSessionPDF({
   // Final Decision first (from first annotation)
   doc.setFont("helvetica", "bold"); doc.text("Final Decision:", margin + colWidth + 11, outcomeY)
   doc.setFont("helvetica", "normal")
-  const decisionText = doc.splitTextToSize(finalDecision, colWidth - 52)
   doc.text(decisionText, margin + colWidth + 48, outcomeY)
   outcomeY += (decisionText.length * 5) + 4
   
   // Confidence Score
   doc.setFont("helvetica", "bold"); doc.text("Confidence Score:", margin + colWidth + 11, outcomeY)
   doc.setFont("helvetica", "normal"); doc.text(`${(maxConf / 100).toFixed(2)}`, margin + colWidth + 48, outcomeY)
-  outcomeY += (decisionText.length * 5) + 4
+  outcomeY += 6
   
   // Result with color
   doc.setFont("helvetica", "bold"); doc.text("Result:", margin + colWidth + 11, outcomeY)
@@ -244,7 +262,7 @@ export async function generateScreeningSessionPDF({
   doc.setTextColor(0, 0, 0)
 
 
-  y += outcomeBoxHeight + 10
+  y += boxHeight + 10
 
   // --- AUDIT TRAIL ---
   // Check if there's enough space for audit trail (estimated ~35mm needed)
@@ -295,6 +313,12 @@ export async function generateScreeningSessionPDF({
   y = (doc as any).lastAutoTable.finalY + 10
 
   // --- MATCH SUMMARY TABLE ---
+  doc.setFontSize(13)
+  doc.setFont("times", "bold")
+  doc.setTextColor(40, 40, 40)
+  doc.text("Match Summary", margin, y)
+  y += 5
+
   const normalizeSource = (s: string) => (s || "").toLowerCase()
 
   const belongsTo = {
@@ -316,10 +340,10 @@ export async function generateScreeningSessionPDF({
     const raw = src?.source || ""
     const n = normalizeSource(raw)
 
-    if (n.includes("unscr") || (n.includes("un") && n.includes("sanction"))) {
+    if ((n.includes("un"))) {
       return "United Nations Security Council Consolidated Sanctions List (UNSCR)"
     }
-    if (n.includes("ofac") || n.includes("sdn")) {
+    if (n.includes("ofac")) {
       return "United States OFAC – Specially Designated Nationals and Blocked Persons List (SDN)"
     }
     if (n.includes("eu") || n.includes("european union")) {
@@ -395,20 +419,20 @@ export async function generateScreeningSessionPDF({
   const tableData: any[] = []
 
   // Section 1
-  tableData.push(["Global Sanctions Lists", "", "", "", ""])
+  // tableData.push(["Global Sanctions Lists", "", "", "", ""])
   globalRows.forEach(r => tableData.push(r))
 
   // Section 2
-  tableData.push(["Regional and National Sanctions Lists", "", "", "", ""])
+  // tableData.push(["Regional and National Sanctions Lists", "", "", "", ""])
   regionalRows.forEach(r => tableData.push(r))
 
   // Section 3
-  tableData.push(["Politically Exposed Persons and Regulatory Intelligence", "", "", "", ""])
+  // tableData.push(["Politically Exposed Persons and Regulatory Intelligence", "", "", "", ""])
   pepRows.forEach(r => tableData.push(r))
 
   // Any remaining sources
   if (otherRows.length) {
-    tableData.push(["Other", "", "", "", ""])
+    // tableData.push(["Other", "", "", "", ""])
     otherRows.forEach(r => tableData.push(r))
   }
 
@@ -428,23 +452,27 @@ export async function generateScreeningSessionPDF({
     headStyles: { fillColor: [110, 70, 255] },
     margin: { left: margin, right: margin },
     theme: "striped",
+    styles: { 
+      lineColor: [200, 200, 200],
+      lineWidth: 0.1
+    },
     didParseCell: (data) => {
-      const isSectionRow = data.section === "body" && [
-        "1. Global Sanctions Lists",
-        "2. Regional and National Sanctions Lists",
-        "3. Politically Exposed Persons and Regulatory Intelligence",
-        "Other",
-      ].includes(String((data.row.raw as any[])?.[0] || ""))
+      // const isSectionRow = data.section === "body" && [
+      //   "Global Sanctions Lists",
+      //   "Regional and National Sanctions Lists",
+      //   "Politically Exposed Persons and Regulatory Intelligence",
+      //   "Other",
+      // ].includes(String((data.row.raw as any[])?.[0] || ""))
 
       const isLastRow = data.section === "body" && data.row.index === tableData.length - 1
 
-      if (isSectionRow) {
-        if (data.column.index === 0) (data.cell as any).colSpan = 5
-        else (data.cell as any).text = ""
-        data.cell.styles.fontStyle = "bold"
-        data.cell.styles.fillColor = [245, 245, 245]
-        data.cell.styles.textColor = [40, 40, 40]
-      }
+      // if (isSectionRow) {
+      //   if (data.column.index === 0) (data.cell as any).colSpan = 5
+      //   else (data.cell as any).text = ""
+      //   data.cell.styles.fontStyle = "bold"
+      //   data.cell.styles.fillColor = [245, 245, 245]
+      //   data.cell.styles.textColor = [40, 40, 40]
+      // }
 
       // Make the last row span all columns
       if (isLastRow) {
