@@ -6,16 +6,20 @@ import { Button } from "../ui/button";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Menu, X, User } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 interface HeaderProps {
   showUnderline?: boolean;
+  mode?: "auto" | "solid";
 }
 
-export function Header({ showUnderline = false }: HeaderProps) {
+export function Header({ showUnderline = false, mode = "auto" }: HeaderProps) {
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeLink, setActiveLink] = useState("Home");
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
 
   useEffect(() => {
     setMounted(true);
@@ -29,6 +33,11 @@ export function Header({ showUnderline = false }: HeaderProps) {
   }, []);
 
   useEffect(() => {
+    if (!isHomePage) {
+      setActiveLink("Home");
+      return;
+    }
+
     const sections = ["home", "about", "services", "features", "news", "contact"];
     const observerOptions = {
       root: null,
@@ -57,18 +66,18 @@ export function Header({ showUnderline = false }: HeaderProps) {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [isHomePage]);
 
-  const isSolid = scrolled || mobileMenuOpen;
+  const isSolid = mode === "solid" || scrolled || mobileMenuOpen;
   const isTransparent = !isSolid;
 
   const navItems = [
     { label: "Home", href: "/" },
-    { label: "About Us", href: "#about" },
-    { label: "Services", href: "#services" },
-    { label: "Features", href: "#features" },
-    { label: "Latest News", href: "#news" },
-    { label: "Contact", href: "#contact" }
+    { label: "About Us", href: isHomePage ? "#about" : "/#about" },
+    { label: "Services", href: isHomePage ? "#services" : "/#services" },
+    { label: "Features", href: isHomePage ? "#features" : "/#features" },
+    { label: "Latest News", href: isHomePage ? "#news" : "/#news" },
+    { label: "Contact", href: isHomePage ? "#contact" : "/#contact" }
   ];
 
   return (

@@ -48,8 +48,8 @@ export function Footer() {
               <li><Link href="/#" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Blog</Link></li>
               <li><Link href="/#" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Resources</Link></li>
               <li><Link href="/#" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Insights</Link></li>
-              <li><Link href="#contact" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Contact</Link></li>
-              <li><Link href="/#" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">FAQs</Link></li>
+              <li><Link href="/contact-us" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Contact</Link></li>
+              <li><Link href="/faqs" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">FAQs</Link></li>
             </ul>
           </div>
 

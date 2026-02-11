@@ -1,4 +1,5 @@
 import { Header } from "@/components/landing/header";
+import { Footer } from "@/components/landing/footer";
 import Link from "next/link";
 
 export default function Products() {
@@ -54,7 +55,7 @@ export default function Products() {
       <Header />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-primary to-primary/80 text-white py-20">
+      <section className="bg-gradient-to-b from-primary to-primary/80 text-white pt-28 pb-20 sm:pt-32">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold mb-6">Our Solution</h1>
           <p className="text-xl text-white/90 max-w-3xl mx-auto">
@@ -114,6 +115,7 @@ export default function Products() {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 }

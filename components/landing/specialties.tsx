@@ -51,7 +51,7 @@ export function Specialties() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
-    <section className="relative py-16 sm:py-20 bg-gradient-to-br from-primary via-primary/95 to-indigo-950 scroll-mt-32 overflow-hidden">
+    <section id="features" className="relative py-16 sm:py-20 bg-gradient-to-br from-primary via-primary/95 to-indigo-950 scroll-mt-32 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
           className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-white/8 rounded-full blur-[100px]"
@@ -98,15 +98,6 @@ export function Specialties() {
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         <div className="text-center mb-10 sm:mb-14">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center px-4 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-sm font-medium text-white mb-4"
-          >
-            Our Specialties
-          </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -114,7 +105,7 @@ export function Specialties() {
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] as const, delay: 0.1 }}
             className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight text-balance mb-4 leading-tight"
           >
-            AML Meter <span className="text-indigo-200">Specialties</span>
+            Our Features
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
