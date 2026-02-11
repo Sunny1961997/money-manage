@@ -6,149 +6,195 @@ import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store"
 import {
   User,
-  FileText,
   Users,
-  Search,
-  UserPlus,
-  AlertCircle,
-  FileCheck,
+  ScanSearch,
+  UserCheck,
+  Newspaper,
+  FileSpreadsheet,
+  History,
+  LifeBuoy,
   ChevronDown,
   ChevronRight,
   ChevronLeft,
-  Settings,
   Building2,
-  Shield,
-  Ticket,
+  LayoutDashboard,
 } from "lucide-react"
 import { useState, Dispatch, SetStateAction, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type NavItem = {
   name: string
   icon: React.ComponentType<{ className?: string }>
   href?: string
-  children?: Array<{ name: string; href: string }>
+  disabled?: boolean
+  children?: Array<{ name: string; href?: string; disabled?: boolean }>
 }
 
 const companyAdminNavigation: NavItem[] = [
   {
-    name: "Dashboard",
-    icon: Shield,
+    name: "Compliance Dashboard",
+    icon: LayoutDashboard,
     children: [
-      { name: "Profile", href: "/dashboard/profile" },
-      { name: "Account Info", href: "/dashboard/account-stats" },
-      { name: "Customers", href: "/dashboard/customers" },
+      { name: "User Profile", href: "/dashboard/profile" },
+      { name: "Account Insights", href: "/dashboard/account-stats" },
+      { name: "Client Records Management", href: "/dashboard/customers" },
     ],
   },
   {
-    name: "Screening",
-    icon: Search,
+    name: "Customer Due Diligence",
+    icon: UserCheck,
     children: [
-      { name: "Name Screening", href: "/dashboard/screening/quick" },
-      { name: "Batch Screening", href: "/dashboard/screening/batch" },
-    ],
-  },
-  {
-    name: "Onboarding",
-    icon: UserPlus,
-    children: [
-      { name: "Customer Onboarding", href: "/dashboard/onboarding/customer" },
+      { name: "Digital Onboarding", href: "/dashboard/onboarding/customer" },
       { name: "Quick Onboarding", href: "/dashboard/onboarding/quick" },
     ],
   },
-  { name: "Adverse Search", href: "/dashboard/adverse-search", icon: AlertCircle },
-  { name: "GOAML Reporting", href: "/dashboard/goaml-reporting", icon: FileCheck },
-  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
-  { name: "Support Ticket", href: "/dashboard/tickets", icon: Ticket },
+  {
+    name: "Watchlist Screening",
+    icon: ScanSearch,
+    children: [
+      { name: "Name and PEP Screening", href: "/dashboard/screening/quick" },
+    ],
+  },
+  { name: "Adverse Media Check", icon: Newspaper, disabled: true },
+  {
+    name: "Regulatory Reporting",
+    icon: FileSpreadsheet,
+    children: [{ name: "GoAML Reporting", href: "/dashboard/goaml-reporting" }],
+  },
+  { name: "Audit Trail", href: "/dashboard/screening-logs", icon: History },
+  {
+    name: "Support Center",
+    icon: LifeBuoy,
+    children: [
+      { name: "Raise a Ticket", href: "/dashboard/tickets" },
+      { name: "Automated Bot", disabled: true },
+    ],
+  },
 ]
 
 const adminNavigation: NavItem[] = [
-  { name: "Dashboard", href: "/dashboard/admin", icon: Settings },
+  { name: "Compliance Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
   { name: "Companies", href: "/dashboard/admin/companies", icon: Building2 },
   { name: "Company Users", href: "/dashboard/admin/company-users", icon: Building2 },
   { name: "System Users", href: "/dashboard/admin/users", icon: Users },
-  { name: "Products", href: "/dashboard/admin/product", icon: FileCheck },
-  { name: "Support Tickets", href: "/dashboard/tickets", icon: Ticket },
+  { name: "Products", href: "/dashboard/admin/product", icon: FileSpreadsheet },
+  { name: "Support Center", href: "/dashboard/tickets", icon: LifeBuoy },
 ]
 
 const authorNavigation: NavItem[] = [
-  { name: "Profile", href: "/dashboard/profile", icon: User },
-  { name: "Customers", href: "/dashboard/customers", icon: Users },
+  { name: "User Profile", href: "/dashboard/profile", icon: User },
+  { name: "Client Records Management", href: "/dashboard/customers", icon: Users },
   {
-    name: "Screening",
-    icon: Search,
+    name: "Watchlist Screening",
+    icon: ScanSearch,
     children: [
-      { name: "Name Screening", href: "/dashboard/screening/quick" },
-      { name: "Batch Screening", href: "/dashboard/screening/batch" },
+      { name: "Name and PEP Screening", href: "/dashboard/screening/quick" },
     ],
   },
-  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
-  { name: "Support Tickets", href: "/dashboard/tickets", icon: Ticket },
+  { name: "Audit Trail", href: "/dashboard/screening-logs", icon: History },
+  {
+    name: "Support Center",
+    icon: LifeBuoy,
+    children: [
+      { name: "Raise a Ticket", href: "/dashboard/tickets" },
+      { name: "Automated Bot", disabled: true },
+    ],
+  },
 ]
 
 const mlroNavigation: NavItem[] = [
   {
-    name: "Dashboard",
-    icon: Shield,
+    name: "Compliance Dashboard",
+    icon: LayoutDashboard,
     children: [
-      { name: "Profile", href: "/dashboard/profile" },
-      { name: "Account Info", href: "/dashboard/account-stats" },
-      { name: "Customers", href: "/dashboard/customers" },
+      { name: "User Profile", href: "/dashboard/profile" },
+      { name: "Account Insights", href: "/dashboard/account-stats" },
+      { name: "Client Records Management", href: "/dashboard/customers" },
     ],
   },
   // { name: "Profile", href: "/dashboard/profile", icon: User },
   // { name: "Account Info", href: "/dashboard/account-stats", icon: FileText },
   // { name: "Customers", href: "/dashboard/customers", icon: Users },
   {
-    name: "Screening",
-    icon: Search,
+    name: "Customer Due Diligence",
+    icon: UserCheck,
     children: [
-      { name: "Name Screening", href: "/dashboard/screening/quick" },
-    ],
-  },
-  {
-    name: "Onboarding",
-    icon: UserPlus,
-    children: [
-      { name: "Customer Onboarding", href: "/dashboard/onboarding/customer" },
+      { name: "Digital Onboarding", href: "/dashboard/onboarding/customer" },
       { name: "Quick Onboarding", href: "/dashboard/onboarding/quick" },
     ],
   },
-  { name: "Adverse Search", href: "/dashboard/adverse-search", icon: AlertCircle },
-  { name: "GOAML Reporting", href: "/dashboard/goaml-reporting", icon: FileCheck },
-  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
+  {
+    name: "Watchlist Screening",
+    icon: ScanSearch,
+    children: [
+      { name: "Name and PEP Screening", href: "/dashboard/screening/quick" },
+    ],
+  },
+  { name: "Adverse Media Check", icon: Newspaper, disabled: true },
+  {
+    name: "Regulatory Reporting",
+    icon: FileSpreadsheet,
+    children: [{ name: "GoAML Reporting", href: "/dashboard/goaml-reporting" }],
+  },
+  { name: "Audit Trail", href: "/dashboard/screening-logs", icon: History },
+  {
+    name: "Support Center",
+    icon: LifeBuoy,
+    children: [
+      { name: "Raise a Ticket", href: "/dashboard/tickets" },
+      { name: "Automated Bot", disabled: true },
+    ],
+  },
 ]
 
 const flaNavigation: NavItem[] = [
   {
-    name: "Dashboard",
-    icon: Shield,
+    name: "Compliance Dashboard",
+    icon: LayoutDashboard,
     children: [
-      { name: "Profile", href: "/dashboard/profile" },
+      { name: "User Profile", href: "/dashboard/profile" },
       // { name: "Account Info", href: "/dashboard/account-stats" },
-      { name: "Customers", href: "/dashboard/customers" },
+      { name: "Client Records Management", href: "/dashboard/customers" },
     ],
   },
   // { name: "Profile", href: "/dashboard/profile", icon: User },
   // { name: "Customers", href: "/dashboard/customers", icon: Users },
   {
-    name: "Screening",
-    icon: Search,
+    name: "Customer Due Diligence",
+    icon: UserCheck,
     children: [
-      { name: "Name Screening", href: "/dashboard/screening/quick" },
-    ],
-  },
-  {
-    name: "Onboarding",
-    icon: UserPlus,
-    children: [
-      { name: "Customer Onboarding", href: "/dashboard/onboarding/customer" },
+      { name: "Digital Onboarding", href: "/dashboard/onboarding/customer" },
       { name: "Quick Onboarding", href: "/dashboard/onboarding/quick" },
     ],
   },
-  { name: "GOAML Reporting", href: "/dashboard/goaml-reporting", icon: FileCheck },
-  { name: "Audit Trails", href: "/dashboard/screening-logs", icon: FileCheck },
-  { name: "Support Tickets", href: "/dashboard/tickets", icon: Ticket },
+  {
+    name: "Watchlist Screening",
+    icon: ScanSearch,
+    children: [
+      { name: "Name and PEP Screening", href: "/dashboard/screening/quick" },
+    ],
+  },
+  {
+    name: "Regulatory Reporting",
+    icon: FileSpreadsheet,
+    children: [{ name: "GoAML Reporting", href: "/dashboard/goaml-reporting" }],
+  },
+  { name: "Audit Trail", href: "/dashboard/screening-logs", icon: History },
+  {
+    name: "Support Center",
+    icon: LifeBuoy,
+    children: [
+      { name: "Raise a Ticket", href: "/dashboard/tickets" },
+      { name: "Automated Bot", disabled: true },
+    ],
+  },
 ]
 
 // Helper function to get navigation based on role
@@ -184,7 +230,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
   const router = useRouter()
   const { user } = useAuthStore()
   const pathname = usePathname()
-  const [openMenus, setOpenMenus] = useState<string[]>(["Screening", "Onboarding"])
+  const [openMenus, setOpenMenus] = useState<string[]>(["Watchlist Screening", "Customer Due Diligence"])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -218,7 +264,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       style={{ minHeight: '100vh' }}
     >
       {/* Top section with logo and collapse button */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div
+        className={cn(
+          "border-b border-border",
+          isCollapsed ? "flex flex-col items-center gap-2 px-2 py-3" : "flex items-center justify-between p-4"
+        )}
+      >
         {!isCollapsed ? (
           <div className="flex items-center gap-3">
             <Link href="/dashboard/profile">
@@ -231,7 +282,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
           </div>
         ) : (
           <div className="flex justify-center">
-            <Link href="/dashboard" className="w-10 h-10 flex items-center justify-center">
+            <Link href="/dashboard" className="flex h-9 w-9 items-center justify-center">
               <img 
                 src="/aml_meter_2.png" 
                 alt="AM" 
@@ -244,7 +295,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="ml-2"
+          className={cn("shrink-0 rounded-lg", isCollapsed ? "h-8 w-8" : "ml-2")}
         >
           <ChevronLeft className={cn("w-4 h-4 transition-transform", isCollapsed && "rotate-180")} />
         </Button>
@@ -253,48 +304,131 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       {/* Navigation - scrollable */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
         {!isCollapsed && (
-          <div className="text-xs font-semibold text-muted-foreground mb-3 px-3 flex items-center gap-2">
-            <div className="w-4 h-4 flex items-center justify-center"></div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/80 mb-3 px-3">
+            Navigation
           </div>
         )}
-        <ul className="space-y-1">
+        <ul className="space-y-1.5">
           {getNavigationByRole(user).map((item) => {
             if (item.children) {
               const isOpen = openMenus.includes(item.name)
-              const isActive = item.children.some((child) => pathname === child.href)
+              const isActive = item.children.some((child) => !!child.href && pathname === child.href)
+
+              if (isCollapsed) {
+                return (
+                  <li key={item.name}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          aria-label={item.name}
+                          title={item.name}
+                          className={cn(
+                            "group w-full min-h-10 flex items-center justify-center px-2.5 py-2 text-sm rounded-xl transition-colors",
+                            "hover:bg-primary/10 hover:text-primary",
+                            isActive && "text-primary bg-primary/10 ring-1 ring-primary/20",
+                          )}
+                        >
+                          <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center">
+                            <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
+                          </span>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent side="right" align="start" sideOffset={10} className="w-64 rounded-xl p-2">
+                        <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                          {item.name}
+                        </div>
+                        <DropdownMenuSeparator />
+                        {item.children.map((child) =>
+                          child.disabled || !child.href ? (
+                            <DropdownMenuItem
+                              key={child.name}
+                              disabled
+                              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-sm text-muted-foreground"
+                            >
+                              <span className="truncate">{child.name}</span>
+                              <span className="text-[9px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                Soon
+                              </span>
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              key={child.name}
+                              asChild
+                              className={cn(
+                                "rounded-lg px-2.5 py-2 text-sm data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground",
+                                pathname === child.href && "bg-primary/10 text-primary",
+                              )}
+                            >
+                              <Link href={child.href}>{child.name}</Link>
+                            </DropdownMenuItem>
+                          ),
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </li>
+                )
+              }
 
               return (
                 <li key={item.name}>
                   <button
+                    title={item.name}
                     onClick={() => setOpenMenus((prev) => (prev.includes(item.name) ? prev.filter((i) => i !== item.name) : [...prev, item.name]))}
                     className={cn(
-                      "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors",
-                      "hover:bg-accent hover:text-white",
-                      isActive && "text-red-500 border-l-2 border-red-500 bg-red-50",
+                      "group w-full min-h-10 flex items-center justify-between px-2.5 py-2 text-sm rounded-xl transition-colors",
+                      "hover:bg-primary/10 hover:text-primary",
+                      isActive && "text-primary bg-primary/10 ring-1 ring-primary/20",
                       isCollapsed && "justify-center",
                     )}
                   >
-                    <div className={cn("flex items-center gap-2", isCollapsed && "gap-0")}>
-                      <item.icon className="w-4 h-4" />
-                      {!isCollapsed && <span>{item.name}</span>}
+                    <div className={cn("flex min-w-0 items-center gap-2.5", isCollapsed && "gap-0")}>
+                      <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center">
+                        <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
+                      </span>
+                      {!isCollapsed && (
+                        <span title={item.name} className="truncate text-left leading-5">
+                          {item.name}
+                        </span>
+                      )}
                     </div>
                     {!isCollapsed &&
                       (isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
                   </button>
                   {isOpen && !isCollapsed && (
-                    <ul className="ml-6 mt-1 space-y-1">
+                    <ul className="ml-2 mt-1 space-y-1 border-l border-border/60 pl-3">
                       {item.children.map((child) => (
                         <li key={child.name}>
-                          <Link
-                            href={child.href}
-                            className={cn(
-                              "flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
-                              "hover:bg-accent hover:text-white",
-                              pathname === child.href && "text-red-500 border-l-2 border-red-500 bg-red-50",
-                            )}
-                          >
-                            <span>{child.name}</span>
-                          </Link>
+                          {child.disabled || !child.href ? (
+                            <span
+                              title={child.name}
+                              className={cn(
+                                "flex min-h-9 items-center justify-between gap-2 px-2.5 py-1.5 text-sm rounded-lg",
+                                "text-muted-foreground/80 cursor-not-allowed opacity-80",
+                              )}
+                            >
+                              <span title={child.name} className="truncate leading-5">
+                                {child.name}
+                              </span>
+                              <span className="text-[9px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                Soon
+                              </span>
+                            </span>
+                          ) : (
+                            <Link
+                              href={child.href}
+                              title={child.name}
+                              className={cn(
+                                "group flex min-h-9 items-center gap-2 px-2.5 py-1.5 text-sm rounded-lg transition-all",
+                                "text-foreground/80 hover:bg-primary/10 hover:text-primary",
+                                pathname === child.href &&
+                                  "text-primary bg-primary/20 font-medium shadow-[inset_2px_0_0_hsl(var(--primary))]",
+                              )}
+                            >
+                              <span title={child.name} className="truncate leading-5">
+                                {child.name}
+                              </span>
+                            </Link>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -305,18 +439,52 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
             return (
               <li key={item.name}>
-                <Link
-                  href={item.href || "#"}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
-                    "hover:bg-accent hover:text-white",
-                    pathname === item.href && "text-red-500 border-l-2 border-red-500 bg-red-50",
-                    isCollapsed && "justify-center",
-                  )}
-                >
-                  <item.icon className="w-4 h-4" />
-                  {!isCollapsed && <span>{item.name}</span>}
-                </Link>
+                {item.disabled || !item.href ? (
+                  <span
+                    title={item.name}
+                    className={cn(
+                      "flex min-h-10 items-center justify-between gap-2 px-2.5 py-2 text-sm rounded-xl",
+                      "text-muted-foreground/80 cursor-not-allowed opacity-80",
+                      isCollapsed && "justify-center",
+                    )}
+                  >
+                    <span className={cn("flex min-w-0 items-center gap-2.5", isCollapsed && "gap-0")}>
+                      <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center">
+                        <item.icon className="h-4 w-4 transition-transform duration-200" />
+                      </span>
+                      {!isCollapsed && (
+                        <span title={item.name} className="truncate text-left leading-5">
+                          {item.name}
+                        </span>
+                      )}
+                    </span>
+                    {!isCollapsed && (
+                      <span className="text-[9px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                        Soon
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <Link
+                    href={item.href}
+                    title={item.name}
+                    className={cn(
+                      "group flex min-h-10 items-center gap-2.5 px-2.5 py-2 text-sm rounded-xl transition-colors",
+                      "hover:bg-primary/10 hover:text-primary",
+                      pathname === item.href && "text-primary bg-primary/10 ring-1 ring-primary/20",
+                      isCollapsed && "justify-center",
+                    )}
+                  >
+                    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center">
+                      <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
+                    </span>
+                    {!isCollapsed && (
+                      <span title={item.name} className="truncate text-left leading-5">
+                        {item.name}
+                      </span>
+                    )}
+                  </Link>
+                )}
               </li>
             )
           })}
