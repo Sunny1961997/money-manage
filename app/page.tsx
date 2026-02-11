@@ -10,6 +10,7 @@ import { Footer } from '@/components/landing/footer';
 import { Products } from '@/components/landing/products';
 import { BookCallPopup } from '@/components/landing/book-call-popup';
 import { ScrollToTop } from '@/components/landing/scroll-to-top';
+import { FaqsPreview } from '@/components/landing/faqs-preview';
 
 export default function Home() {
   return (
@@ -37,6 +38,7 @@ export default function Home() {
       {/* <Themes /> */}
       <Specialties />
       <SoftwareFeatures />
+      <FaqsPreview />
       <CTA />
       <Contact />
       <Footer />
