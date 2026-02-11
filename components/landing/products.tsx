@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { ProductCard } from "./product-card";
+import { UserCheck, ShieldAlert, FileText, Scale } from "lucide-react";
 
 export function Products() {
   const products = [
@@ -14,7 +17,7 @@ export function Products() {
         "The record retention and document acquisition",
         "The user accountability and approval procedures"
       ],
-      icon: "👤"
+      icon: UserCheck
     },
     {
       title: "Watchlist Screening",
@@ -25,7 +28,7 @@ export function Products() {
         "Adverse media checks",
         "Evidence retention and history screening"
       ],
-      icon: "🛡️"
+      icon: ShieldAlert
     },
     {
       title: "Regulatory Reporting",
@@ -36,7 +39,7 @@ export function Products() {
         "Changes in regulations",
         "Dashboards for compliance"
       ],
-      icon: "📝"
+      icon: FileText
     },
     {
       title: "Compliance Advisory & Support",
@@ -60,16 +63,21 @@ export function Products() {
         "Continuous screening and periodic rescreening",
         "Exportable audit evidence and compliance reporting"
       ],
-      icon: "📊"
+      icon: Scale
     }
   ];
 
   return (
-    <section id="products" className="py-20 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">Our Solution</h2>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+    <section id="services" className="relative py-16 sm:py-20 bg-white scroll-mt-24 overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-slate-50 to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] [mask-image:radial-gradient(ellipse_at_center,white,transparent)]" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center mb-10 sm:mb-14">
+          <h2 className="text-4xl sm:text-5xl font-extrabold mb-4 text-slate-900 tracking-tight leading-tight">Our <span className="text-primary">Services</span></h2>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
             Comprehensive AML solutions designed to keep your organization compliant, secure, and efficient.
           </p>
         </div>
@@ -81,10 +89,11 @@ export function Products() {
         </div>
 
         <div className="text-center mt-12">
-          <Link href="/products">
-            <button className="bg-primary text-white px-8 py-3 rounded-full font-semibold hover:bg-primary/90 transition">
-              View All Products
-            </button>
+          <Link
+            href="/products"
+            className="inline-flex items-center justify-center bg-primary text-white px-8 py-3 rounded-full font-semibold hover:bg-primary/90 transition-all hover:scale-105 shadow-md hover:shadow-lg"
+          >
+            View All Products
           </Link>
         </div>
       </div>
