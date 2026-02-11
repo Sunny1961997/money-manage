@@ -19,9 +19,9 @@ import {MarmeladRegular} from "./fonts/Marmelad-Regular"
 //   doc.addFont("Marmelad-Regular.ttf", "Marmelad", "normal")
 // }
 const getRiskLevel = (score: number) => {
-  if (score >= 90) return { label: "True Match", color: [34, 197, 94] as [number, number, number] } // Green
+  if (score >= 90) return { label: "True Match", color: [239, 68, 68] as [number, number, number] } // Red
   if (score >= 40) return { label: "Potential Match", color: [245, 158, 11] as [number, number, number] } // Orange
-  return { label: "No Match", color: [239, 68, 68] as [number, number, number] } // Red
+  return { label: "No Match", color: [34, 197, 94] as [number, number, number] } // Green
 }
 
 export async function generateScreeningSessionPDF({
@@ -34,7 +34,11 @@ export async function generateScreeningSessionPDF({
   detailsById,
   total_search,
   user_id,
+  user_name,
   user_company,
+  savedCandidateKeys,
+  relevantCount,
+  irrelevantCount,
 }: {
   searchedFor: string
   customerType: string
@@ -45,7 +49,11 @@ export async function generateScreeningSessionPDF({
   detailsById: Record<string, any>
   total_search?: number
   user_id?: string
+  user_name?: string
   user_company?: string
+  savedCandidateKeys?: string[]
+  relevantCount?: number
+  irrelevantCount?: number
 }) {
   const doc = new jsPDF({ 
     unit: "mm", 
@@ -76,12 +84,19 @@ export async function generateScreeningSessionPDF({
   }
 
   const includeInEvidence = (source: string, c: any) => {
+    // If savedCandidateKeys is provided, only include saved candidates
+    if (savedCandidateKeys && savedCandidateKeys.length > 0) {
+      const key = `${source}:${c?.id}`
+      return savedCandidateKeys.includes(key)
+    }
+    // Fallback: include if decision is relevant or confidence >= 80
     const conf = Number(c?.confidence) || 0
     const d = decisionForSource(source)
-    return d === "relevant" || conf >= 80
+    const dNorm = typeof d === "string" ? d.toLowerCase() : ""
+    return dNorm === "relevant"
   }
 
-  // Pre-filter sources/candidates for the PDF
+  // Pre-filter sources/candidates for Evidence only
   const bestBySourceFiltered = (bestBySource || [])
     .map((src: any) => ({
       ...src,
@@ -89,7 +104,7 @@ export async function generateScreeningSessionPDF({
     }))
     .filter((src: any) => (src.data || []).length > 0)
 
-  // Use original list for Match Summary
+  // Use original full list for Match Summary
   const bestBySourceForPdf = bestBySource
 
   // --- HEADER ---
@@ -157,112 +172,168 @@ export async function generateScreeningSessionPDF({
   // --- TITLE ---
   let y = 50
   doc.setTextColor(40, 40, 40)
-  doc.setFontSize(22)
+  doc.setFontSize(18)
   doc.setFont("times", "bold")
-  doc.text("Screening Result Report", margin, y)
-  y += 7
-  doc.setFontSize(11)
+  const titleText = `Screening Result Report: `
+  const titleWidth = doc.getTextWidth(titleText)
+  doc.text(titleText, margin, y)
   doc.setFont("times", "normal")
-  doc.setTextColor(100, 100, 100)
-  doc.text(`Screening summary and supporting evidence for ${customerType}`, margin, y)
-  y += 5
+  doc.setFontSize(16)
+  doc.setTextColor(60, 60, 60)
+  const nameLines = doc.splitTextToSize(searchedFor, contentWidth - titleWidth - 2)
+  doc.text(nameLines, margin + titleWidth, y)
+  y += (nameLines.length > 1 ? nameLines.length * 6 : 7)
   doc.setDrawColor(220, 220, 220)
   doc.line(margin, y, pageWidth - margin, y)
   y += 3
 
-  // --- CASE SUMMARY & OUTCOME (Two Columns) ---
+  // --- CASE SUMMARY & OUTCOME (Two Tables Side by Side) ---
   const colWidth = (contentWidth - 6) / 2
-  
-  // Calculate dynamic heights for boxes to prevent overlap
-  const summaryNameLines = doc.splitTextToSize(searchedFor, colWidth - 40)
-  // Base 16mm + name height + (4 other items * 6mm) + 5mm padding
-  const summaryHeight = 16 + (summaryNameLines.length * 5) + 24 + 5
+
+  const hasPep = bestBySourceForPdf.some(src => (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1')));
+
+  const computedIrrelevant = (total_search ?? 0) - (relevantCount ?? 0)
+
+  // Summary table (left)
+  autoTable(doc, {
+    startY: y,
+    head: [["Summary", "Value"]],
+    body: [
+      ["Subject Type", customerType == "individual" ? "Individual" : (customerType == "entity" ? "Entity" : "Vessel")],
+      ["Total Result", total_search?.toString() || "0"],
+      ["Relevant", String(relevantCount ?? 0)],
+      ["Irrelevant", String(computedIrrelevant)],
+    ],
+    theme: "striped",
+    headStyles: {
+      fillColor: [93, 50, 145],
+      textColor: [255, 255, 255],
+      fontSize: 10,
+      fontStyle: 'bold',
+    },
+    bodyStyles: { fontSize: 9 },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 30 },
+      1: { cellWidth: 'auto' },
+    },
+    margin: { left: margin, right: margin + colWidth + 6 },
+    styles: {
+      lineColor: [200, 200, 200],
+      lineWidth: 0.1,
+    },
+    didParseCell: (data) => {
+      // Make header span both columns visually
+      if (data.section === 'head' && data.column.index === 1) {
+        data.cell.text = []
+      }
+    },
+  })
+
+  const summaryFinalY = (doc as any).lastAutoTable.finalY
 
   // Outcome prep
   const annotations = Object.values(sourceAnnotationChoice).filter(Boolean)
   let finalDecision = "Pending Review"
   if (annotations.length > 0) {
-    finalDecision = annotations[0] 
+    finalDecision = annotations[0]
   }
-  const decisionText = doc.splitTextToSize(finalDecision, colWidth - 52)
-  // Base 18mm + decision height + 4mm gap + conf(6) + result(6) + 5mm padding
-  const outcomeHeight = 18 + (decisionText.length * 5) + 4 + 12 + 5
-
-  const boxHeight = Math.max(49, summaryHeight, outcomeHeight)
-  
-  // Left Box: Case Summary
-  doc.setDrawColor(200, 200, 200)
-  doc.roundedRect(margin, y, colWidth, boxHeight, 3, 3)
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(12)
-  doc.setTextColor(0, 0, 0)
-  doc.text("Summary", margin + 5, y + 8)
-
-  const hasPep = bestBySourceForPdf.some(src => (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1')));
-  
-  doc.setFontSize(9)
-  doc.setFont("helvetica", "normal")
-  let summaryY = y + 16
-  const summaryItems = [
-    ["Subject Name:", summaryNameLines], // Use split lines
-    ["Subject Type:", customerType == "individual" ? "Individual" : (customerType == "entity" ? "Entity" : "Vessel")],
-    ["Total Search:", total_search?.toString() || "0"],
-    ["Screening Type:", "Automated Name Search"],
-    ["PEP Identified:", hasPep ? "YES" : "No"]
-  ]
-  summaryItems.forEach(([label, val]) => {
-    doc.setFont("helvetica", "bold"); doc.text(label as string, margin + 5, summaryY)
-    
-    // Highlight PEP YES in red if found
-    if (label === "PEP Identified:" && val === "YES") {
-        doc.setTextColor(220, 38, 38); // Red
-        doc.setFont("helvetica", "bold"); doc.text(val as string, margin + 35, summaryY)
-        doc.setTextColor(0, 0, 0); // Reset
-    } else {
-        doc.setFont("helvetica", "normal"); doc.text(val as string | string[], margin + 35, summaryY)
-    }
-
-    if (Array.isArray(val)) {
-        summaryY += (val.length * 5) + 1
-    } else {
-        summaryY += 6
-    }
-  })
-
-  // Right Box: Outcome
   const maxConf = Math.max(...bestBySourceForPdf.map(s => s.best_confidence || 0))
   const risk = getRiskLevel(maxConf)
-  
-  // Use calculated boxHeight for matching height
-  doc.roundedRect(margin + colWidth + 6, y, colWidth, boxHeight, 3, 3)
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(12)
-  doc.setTextColor(0, 0, 0)
-  doc.text("Outcome", margin + colWidth + 11, y + 8)
 
-  doc.setTextColor(0, 0, 0)
-  doc.setFontSize(9)
-  let outcomeY = y + 18
-  
-  // Final Decision first (from first annotation)
-  doc.setFont("helvetica", "bold"); doc.text("Final Decision:", margin + colWidth + 11, outcomeY)
-  doc.setFont("helvetica", "normal")
-  doc.text(decisionText, margin + colWidth + 48, outcomeY)
-  outcomeY += (decisionText.length * 5) + 4
-  
-  // Confidence Score
-  doc.setFont("helvetica", "bold"); doc.text("Confidence Score:", margin + colWidth + 11, outcomeY)
-  doc.setFont("helvetica", "normal"); doc.text(`${(maxConf / 100).toFixed(2)}`, margin + colWidth + 48, outcomeY)
-  outcomeY += 6
-  
-  // Result with color
-  doc.setFont("helvetica", "bold"); doc.text("Result:", margin + colWidth + 11, outcomeY)
-  doc.setTextColor(...risk.color)
-  doc.setFont("helvetica", "bold"); doc.text(risk.label, margin + colWidth + 48, outcomeY)
-  doc.setTextColor(0, 0, 0)
+  // Outcome table (right)
+  autoTable(doc, {
+    startY: y,
+    head: [["Outcome", "Value"]],
+    body: [
+      ["Final Decision", finalDecision],
+      ["Result", risk.label],
+      ["PEP Status", hasPep ? "YES" : "No"],
+      ["Screening Type", "Automated"],
+    ],
+    theme: "striped",
+    headStyles: {
+      fillColor: [93, 50, 145],
+      textColor: [255, 255, 255],
+      fontSize: 10,
+      fontStyle: 'bold',
+    },
+    bodyStyles: { fontSize: 9 },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 30 },
+      1: { cellWidth: 'auto' },
+    },
+    margin: { left: margin + colWidth + 6, right: margin },
+    styles: {
+      lineColor: [200, 200, 200],
+      lineWidth: 0.1,
+    },
+    didParseCell: (data) => {
+      if (data.section === 'head' && data.column.index === 1) {
+        data.cell.text = []
+      }
+      // Color the Result value
+      if (data.section === 'body' && data.row.index === 1 && data.column.index === 1) {
+        data.cell.styles.textColor = risk.color
+        data.cell.styles.fontStyle = 'bold'
+      }
+      // Color PEP YES in red
+      if (data.section === 'body' && data.row.index === 2 && data.column.index === 1 && hasPep) {
+        data.cell.styles.textColor = [220, 38, 38]
+        data.cell.styles.fontStyle = 'bold'
+      }
+    },
+  })
+
+  const outcomeFinalY = (doc as any).lastAutoTable.finalY
+  y = Math.max(summaryFinalY, outcomeFinalY) + 10
 
 
-  y += boxHeight + 10
+
+    // --- Report History ---
+  // Check if there's enough space for report HIstory (estimated ~35mm needed)
+  if (y > 235) {
+    doc.addPage()
+    y = 30
+  }
+
+  doc.setFontSize(13)
+  doc.setFont("times", "bold")
+  doc.setTextColor(40, 40, 40)
+  doc.text("Report History", margin, y)
+  y += 5
+
+  const reportHistoryHeader = [["User", "Action", "Date"]];
+
+  const reportHistoryBody = [
+    [user_name || "N/A", "Performed screening against relevant source lists", new Date().toLocaleString()],
+  ];
+
+  autoTable(doc, {
+    startY: y,
+    head: reportHistoryHeader, 
+    body: reportHistoryBody,
+    theme: "striped", 
+    headStyles: { 
+      fillColor: [93, 50, 145], 
+      textColor: [255, 255, 255],
+      fontSize: 10,
+      fontStyle: 'bold' 
+    },
+    bodyStyles: { fontSize: 9 },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 80 },
+      1: { cellWidth: 'auto' }
+    },
+    margin: { left: margin, right: margin },
+    styles: { 
+      lineColor: [200, 200, 200],
+      lineWidth: 0.1
+    }
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 10
+
+
 
   // --- AUDIT TRAIL ---
   // Check if there's enough space for audit trail (estimated ~35mm needed)
@@ -324,11 +395,11 @@ export async function generateScreeningSessionPDF({
   const belongsTo = {
     global: (s: string) => {
       const n = normalizeSource(s)
-      return n.includes("un") || n.includes("unsc") || n.includes("unscr") || n.includes("ofac") || n.includes("sdn") || n.includes("eu") || n.includes("europe") || n.includes("uk") || n.includes("united kingdom")
+      return n.includes("uae") || n.includes("united arab emirates") || n.includes("un") || n.includes("unsc") || n.includes("unscr") || n.includes("ofac") || n.includes("sdn") || n.includes("eu") || n.includes("europe") || n.includes("uk") || n.includes("united kingdom")
     },
     regional: (s: string) => {
       const n = normalizeSource(s)
-      return n.includes("canada") || n.includes("uae") || n.includes("united arab emirates")
+      return n.includes("canada")
     },
     pep: (s: string) => {
       const n = normalizeSource(s)
@@ -340,6 +411,9 @@ export async function generateScreeningSessionPDF({
     const raw = src?.source || ""
     const n = normalizeSource(raw)
 
+    if (n.includes("uae") || n.includes("united arab emirates")) {
+      return "United Arab Emirates Local Terrorist and Sanctions List"
+    }
     if ((n.includes("un"))) {
       return "United Nations Security Council Consolidated Sanctions List (UNSCR)"
     }
@@ -354,9 +428,6 @@ export async function generateScreeningSessionPDF({
     }
     if (n.includes("canada")) {
       return "Government of Canada Consolidated Sanctions List"
-    }
-    if (n.includes("uae") || n.includes("united arab emirates")) {
-      return "United Arab Emirates Local Terrorist and Sanctions List"
     }
     if (n.includes("opensanctions-regulatory") || n.includes("opensanctions_regulatory")) {
       return "OpenSanctions - Regulatory"
@@ -389,13 +460,28 @@ export async function generateScreeningSessionPDF({
     return [
       sourceHasPep ? `${displaySource} (PEP)` : displaySource,
       hits,
-      hits > 0 ? `${src.best_confidence}/100` : "-",
+      hits > 0 ? `${src.best_confidence/100}` : "-",
       hits > 0 ? status : "Clear",
       isWhitelisted ? `WL: Yes | ${notes}` : notes,
     ]
   }
 
-  const globalRows = (bestBySourceForPdf || []).filter((s: any) => belongsTo.global(s.source) && !belongsTo.pep(s.source)).map(buildRow)
+  const globalRows = (bestBySourceForPdf || [])
+    .filter((s: any) => belongsTo.global(s.source) && !belongsTo.pep(s.source))
+    .sort((a: any, b: any) => {
+      const na = normalizeSource(a.source)
+      const nb = normalizeSource(b.source)
+      const order = (n: string) => {
+        if (n.includes("uae") || n.includes("united arab emirates")) return 0
+        if (n.includes("un") && !n.includes("united kingdom")) return 1
+        if (n.includes("ofac") || n.includes("sdn")) return 2
+        if (n.includes("eu") || n.includes("europe")) return 3
+        if (n.includes("uk") || n.includes("united kingdom")) return 4
+        return 5
+      }
+      return order(na) - order(nb)
+    })
+    .map(buildRow)
   const regionalRows = (bestBySourceForPdf || []).filter((s: any) => belongsTo.regional(s.source)).map(buildRow)
   const pepRows = (bestBySourceForPdf || [])
     .filter((s: any) => belongsTo.pep(s.source))
@@ -449,7 +535,7 @@ export async function generateScreeningSessionPDF({
     startY: y,
     head: [["Source List", "Matches", "Highest Match", "Status", "Notes"]],
     body: tableData,
-    headStyles: { fillColor: [110, 70, 255] },
+    headStyles: { fillColor: [93, 50, 145] },
     margin: { left: margin, right: margin },
     theme: "striped",
     styles: { 
@@ -484,7 +570,7 @@ export async function generateScreeningSessionPDF({
     },
   })
 
-  y = (doc as any).lastAutoTable.finalY + 5
+  y = (doc as any).lastAutoTable.finalY + 8
 
   // --- DETAILED RESULTS ---
   // Only add new page if there's not enough space for at least one evidence box
@@ -498,6 +584,41 @@ export async function generateScreeningSessionPDF({
   doc.setTextColor(40, 40, 40)
   doc.text("Evidence", margin, y)
   y += 8
+
+  // if (bestBySourceFiltered.length === 0) {
+  //   doc.setFontSize(10)
+  //   doc.setFont("times", "italic")
+  //   doc.setTextColor(120, 120, 120)
+  //   doc.text("No results have been selected. Please save at least one result to include evidence in this report.", margin, y)
+  //   y += 10
+  // }
+  if (bestBySourceFiltered.length === 0) {
+  autoTable(doc, {
+    startY: y,
+    // head: [['Evidence Results']],
+    body: [[
+      'No results have been selected.'
+    ]],
+    styles: {
+      font: 'times',
+      fontStyle: 'italic',
+      fontSize: 10,
+      textColor: [120, 120, 120],
+      halign: 'center',
+      valign: 'middle',
+    },
+    headStyles: {
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    theme: 'grid',
+    columnStyles: {
+      0: { cellWidth: 'auto' },
+    },
+  })
+
+  y = (doc as any).lastAutoTable.finalY + 10
+}
 
   bestBySourceFiltered.forEach(src => {
     const candidates = (src.data || []).filter(Boolean)
@@ -567,15 +688,44 @@ export async function generateScreeningSessionPDF({
     })
   })
 
-  // --- FOOTER ---
+  // --- FOOTER + DISCLAIMER ---
   const pageCount = doc.getNumberOfPages()
-  for (let i = 1; i <= pageCount; i++) {
+  const pageHeight = doc.internal.pageSize.getHeight()
+
+  // Add disclaimer on the last page, ensuring it doesn't overlap content
+  doc.setPage(pageCount)
+
+  // If current content is too close to the bottom, add a new page for the disclaimer
+  const lastContentY = y
+  const disclaimerNeededY = pageHeight - 30
+  if (lastContentY > disclaimerNeededY) {
+    doc.addPage()
+  }
+
+  const totalPages = doc.getNumberOfPages()
+
+  // Draw disclaimer on last page
+  doc.setPage(totalPages)
+  doc.setDrawColor(200, 200, 200)
+  doc.line(margin, pageHeight - 22, pageWidth - margin, pageHeight - 22)
+  doc.setFontSize(8)
+  doc.setFont("times", "italic")
+  doc.setTextColor(120, 120, 120)
+  doc.text(
+    "Disclaimer: This is an automatically generated report. No signature is required. The information contained herein is based on automated screening results and should be reviewed in accordance with applicable compliance policies.",
+    margin,
+    pageHeight - 18,
+    { maxWidth: contentWidth }
+  )
+
+  // Add page numbers on all pages
+  for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i)
     doc.setFontSize(8)
     doc.setTextColor(150, 150, 150)
-    doc.text(`Confidential - AML Meter Report`, margin, 285)
-    doc.text(`Generated: ${new Date().toLocaleString()} | Page ${i} of ${pageCount}`, pageWidth - margin, 285, { align: "right" })
+    doc.text(`Confidential - AML Meter Report`, margin, pageHeight - 5)
+    doc.text(`Generated: ${new Date().toLocaleString()} | Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 5, { align: "right" })
   }
 
-  doc.save(`${searchedFor.replace(/\s+/g, '_')}.pdf`)
+  doc.save(`${searchedFor.replace(/\s+/g, '_')}_AML_METER.pdf`)
 }

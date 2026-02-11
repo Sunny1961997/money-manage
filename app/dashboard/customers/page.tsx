@@ -80,7 +80,7 @@ export default function CustomersPage() {
           {/* Toolbar */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <Select defaultValue="all">
+              {/* <Select defaultValue="all">
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="All Users" />
                 </SelectTrigger>
@@ -97,7 +97,7 @@ export default function CustomersPage() {
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
                 Download All
-              </Button>
+              </Button> */}
             </div>
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -174,6 +174,8 @@ export default function CustomersPage() {
                                   const isCorporate = data.customer_type === "corporate"
                                   const corp = data.corporate_detail
                                   const indiv = data.individual_detail;
+                                  const user_customer = data.user_customer
+                                  const user_role = data.user_role
                                   // Aggregate partners/UBOs from multiple possible API keys and flatten
                                   const possiblePersonsArrays = [
                                     data.corporate_detail?.related_persons,
@@ -204,7 +206,7 @@ export default function CustomersPage() {
                                         <Button 
                                           variant="outline" 
                                           size="sm"
-                                          onClick={() => generateCustomerPDF(data)}
+                                          onClick={() => generateCustomerPDF({...data, user_customer})}
                                         >
                                           Download
                                         </Button>
