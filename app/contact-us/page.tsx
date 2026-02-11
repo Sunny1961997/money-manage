@@ -1,6 +1,7 @@
 'use client';
 
 import { Header } from "@/components/landing/header";
+import { Footer } from "@/components/landing/footer";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";// Assuming hook location based on components/ui/toaster
 
@@ -91,8 +92,8 @@ export default function ContactUs() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <div className="max-w-4xl mx-auto px-4 py-16">
+      <Header mode="solid" />
+      <div className="max-w-4xl mx-auto px-4 pt-28 pb-16 sm:pt-32">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Contact Us For Demo</h1>
           <p className="text-lg text-muted-foreground">
@@ -184,6 +185,7 @@ export default function ContactUs() {
           </form>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
