@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Loader2 } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 type EntityDetails = Record<string, any>
 
@@ -13,7 +13,7 @@ export default function EntityDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const id = params?.id as string
-  
+
   const [entityData, setEntityData] = React.useState<EntityDetails | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -22,19 +22,19 @@ export default function EntityDetailsPage() {
     const fetchEntityDetails = async () => {
       setLoading(true)
       setError(null)
-      
+
       try {
         const res = await fetch(`/api/sanction-entities/${id}`, {
           method: "GET",
           credentials: "include"
         })
-        
+
         const result = await res.json()
-        
+
         if (!res.ok) {
           throw new Error(result.error || "Failed to load entity details")
         }
-        
+
         // Handle nested data structure
         const data = result?.data || result?.data?.data || result
         setEntityData(data)
@@ -55,11 +55,11 @@ export default function EntityDetailsPage() {
     if (value === null || value === undefined) {
       return <span className="text-muted-foreground">-</span>
     }
-    
+
     if (typeof value === 'boolean') {
       return value ? "Yes" : "No"
     }
-    
+
     if (Array.isArray(value)) {
       if (value.length === 0) {
         return <span className="text-muted-foreground">Empty</span>
@@ -140,10 +140,7 @@ export default function EntityDetailsPage() {
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={() => router.back()}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
+        
         <div>
           <h1 className="text-3xl font-bold">
             {entityData.name || "Entity Details"}
@@ -158,14 +155,16 @@ export default function EntityDetailsPage() {
         <CardHeader>
           <CardTitle>Entity Information</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[calc(100vh-300px)]">
-            <div className="space-y-4">
+
+        <CardContent className="overflow-hidden">
+          <ScrollArea className="h-[calc(100vh-300px)] w-full">
+            {/* Viewport content */}
+            <div className="space-y-4 min-w-[900px] pr-4">
               {Object.entries(entityData)
-                .filter(([key, v]) => 
-                  key !== 'source' && 
-                  v !== null && 
-                  v !== "" && 
+                .filter(([key, v]) =>
+                  !['source', 'source_record_id', 'source_reference', 'record_hash'].includes(key) &&
+                  v !== null &&
+                  v !== "" &&
                   !(Array.isArray(v) && v.length === 0)
                 )
                 .map(([key, value]) => (
@@ -173,21 +172,28 @@ export default function EntityDetailsPage() {
                     <h4 className="text-sm font-bold capitalize text-primary mb-2">
                       {key.replace(/_/g, ' ')}
                     </h4>
-                    <div className="text-sm text-foreground">
+                    <div className="text-sm text-foreground whitespace-nowrap">
                       {renderDetailValue(value)}
                     </div>
                   </div>
                 ))}
-              
+
               {Object.keys(entityData).filter(k => {
                 const v = entityData[k]
-                return k !== 'source' && v !== null && v !== "" && !(Array.isArray(v) && v.length === 0)
+                return (
+                  !['source', 'source_record_id', 'source_reference', 'record_hash'].includes(k) &&
+                  v !== null &&
+                  v !== "" &&
+                  !(Array.isArray(v) && v.length === 0)
+                )
               }).length === 0 && (
-                <div className="text-center text-muted-foreground py-8">
-                  No additional details available for this record.
-                </div>
-              )}
+                  <div className="text-center text-muted-foreground py-8">
+                    No additional details available for this record.
+                  </div>
+                )}
             </div>
+
+            <ScrollBar orientation="horizontal" />
           </ScrollArea>
         </CardContent>
       </Card>

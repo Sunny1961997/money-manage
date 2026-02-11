@@ -12,7 +12,7 @@ type Candidate = {
     gender?: string | null
 }
 
-type SourceDecision = "relevant" | "irrelevant" | "no_sp" | null
+type SourceDecision = "relevant" | "irrelevant" | "Relevant" | "Irrelevant" | "no_sp" | string | null
 
 function safeString(v: any) {
     if (v === null || v === undefined) return ""
@@ -81,10 +81,12 @@ function resultLabel(conf: number) {
 }
 
 function decisionLabel(decision: SourceDecision): string {
-    if (decision === "relevant") return "Relevant"
-    if (decision === "irrelevant") return "Irrelevant"
-    if (decision === "no_sp") return "Not any S.P."
-    return "Not selected"
+    if (!decision) return "Not selected"
+    const d = decision.toLowerCase()
+    if (d === "relevant") return "Relevant"
+    if (d === "irrelevant") return "Irrelevant"
+    if (d === "no_sp") return "Not any S.P."
+    return decision
 }
 
 function annotationLabel(annotationChoice: string, annotationText: string): string {
