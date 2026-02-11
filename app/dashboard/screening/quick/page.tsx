@@ -165,8 +165,15 @@ export default function QuickScreeningPage() {
 
       if (!res.ok) {
         const msg = payload?.message || payload?.error || "Search failed"
-        throw new Error(msg)
+        // throw new Error(msg)
+        toast({ title: "Search failed", description: msg})
       }
+      if(payload?.status == false) {
+        const msg = payload?.message || "Search failed"
+        toast({ title: "Search failed", description: msg})
+        return
+      }
+      console.log("Search payload:", payload);
 
       sessionStorage.setItem("screening_results", JSON.stringify(payload))
       window.location.href = "/dashboard/screening/quick/results"

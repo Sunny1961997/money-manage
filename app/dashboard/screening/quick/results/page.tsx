@@ -36,8 +36,9 @@ type ScreeningResponse = {
     user_id?: number | string
     data?: {
         user_id?: number | string
+        user_company?: string
         searched_for?: string
-        customer_type?: string
+        subject_type?: string
         total_candidates?: number
         best_by_source?: BestBySourceItem[]
         total_search?: number
@@ -83,11 +84,12 @@ const ANNOTATION_OPTIONS = [
     // { value: "No Annotation", label: "Select Annotation" },
     { value: "True Match", label: "True Match" },
     { value: "Potential Match", label: "Potential Match" },
+    { value: "No Match", label: "No Match" },
+    { value: "Potential Name Match", label: "Potential Name Match" },
     { value: "Insufficient Data", label: "Insufficient Data" },
-    { value: "False Positive", label: "False Positive" },
-    { value: "Escalation Required", label: "Escalation Required" },
-    { value: "Name matched", label: "Name matched" },
-    { value: "Other", label: "Other (type below)" },
+    // { value: "Escalation Required", label: "Escalation Required" },
+    // { value: "Name matched", label: "Name matched" },
+    // { value: "Other", label: "Other (type below)" },
 ] as const
 
 type EntityDetailsResponse = {
@@ -97,6 +99,10 @@ type EntityDetailsResponse = {
 export default function QuickScreeningResultsPage() {
     const [payload, setPayload] = React.useState<ScreeningResponse | null>(null)
     const [detailsById, setDetailsById] = React.useState<Record<string, any>>({})
+    const [savedByCandidate, setSavedByCandidate] = React.useState<
+        Record<string, { decision: SourceDecision; annotationChoice: string; annotationText: string }>
+    >({})
+    const [savedTypedByCandidate, setSavedTypedByCandidate] = React.useState<Record<string, string>>({})
 
     React.useEffect(() => {
         const raw = sessionStorage.getItem("screening_results")
@@ -105,14 +111,16 @@ export default function QuickScreeningResultsPage() {
             const parsed = JSON.parse(raw)
             console.log("Full payload:", parsed)
             console.log("User ID from payload:", parsed?.data?.user_id)
+            console.log("User ID from company name:", parsed?.data?.user_company)
             setPayload(parsed)
         } catch {
             setPayload(null)
         }
     }, [])
     const userId = String(payload?.data?.user_id || payload?.user_id || "N/A")
+    const userCompany = String(payload?.data?.user_company || "N/A")
     const searchedFor = payload?.data?.searched_for || "-"
-    const customerType = payload?.data?.customer_type || "individual"
+    const customerType = payload?.data?.subject_type || "individual"
     const bestBySource = payload?.data?.best_by_source || [];
     const totalSearch = payload?.data?.total_found || 0;
 
@@ -183,19 +191,30 @@ export default function QuickScreeningResultsPage() {
         }
     }
 
+    const saveTypedForCandidate = (source: string, candidateId: number) => {
+        const key = `${source}:${candidateId}`
+        // snapshot current typed input for this source into this candidate
+        setSavedTypedByCandidate((prev) => ({ ...prev, [key]: sourceAnnotationText[source] || "" }))
+    }
+
     const handleDownloadSessionPDF = async () => {
         await generateScreeningSessionPDF({
             searchedFor,
             customerType,
             bestBySource,
-            sourceDecision,
-            sourceAnnotationChoice,
-            sourceAnnotationText,
+            sourceDecision: sourceDecision as any,
+            sourceAnnotationChoice: sourceAnnotationChoice,
+            sourceAnnotationText: {
+                ...sourceAnnotationText,
+                ...savedTypedByCandidate,
+            },
             detailsById,
             total_search: totalSearch,
-            user_id: userId
+            user_id: userId,
+            user_company: userCompany,
         })
     }
+
     const getConfidenceColor = (percentage: number) => {
         if (percentage >= 80) return 'bg-green-100 text-green-800 border-green-200';
         if (percentage >= 50) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -275,9 +294,12 @@ export default function QuickScreeningResultsPage() {
                     <ul className="space-y-4">
                         {bestBySource.map((src) => (
                             (src.data || []).map((c) => {
-                                if (!c) return null;
+                                if (!c) return null
+                                const candidateKey = `${src.source}:${c.id}`
+                                const savedTyped = savedTypedByCandidate[candidateKey]
+
                                 return (
-                                    <li key={`${src.source}:${c.id}`} className="border rounded p-4 flex flex-col gap-2 shadow-lg">
+                                    <li key={candidateKey} className="border rounded p-4 flex flex-col gap-2 shadow-lg">
                                         <div className="flex items-center justify-between p-2">
                                             <div>
                                                 <a
@@ -307,45 +329,56 @@ export default function QuickScreeningResultsPage() {
                                             <div className="p-2">
                                                 <Label className="text-xls">Decision:</Label>
                                                 <RadioGroup
-                                                    className="flex gap-4 mt-1"
+                                                    className="flex gap-4 mt-3"
                                                     value={sourceDecision[src.source] || ''}
                                                     onValueChange={(val) => setSourceDecision((prev) => ({ ...prev, [src.source]: val as SourceDecision }))}
                                                 >
-                                                    <RadioGroupItem value="relevant" id={`decision-relevant-${src.source}`} />
+                                                    <RadioGroupItem value="Relevant" id={`decision-relevant-${src.source}`} />
                                                     <Label htmlFor={`decision-relevant-${src.source}`}>Relevant</Label>
-                                                    <RadioGroupItem value="irrelevant" id={`decision-irrelevant-${src.source}`} />
+                                                    <RadioGroupItem value="Irrelevant" id={`decision-irrelevant-${src.source}`} />
                                                     <Label htmlFor={`decision-irrelevant-${src.source}`}>Irrelevant</Label>
-                                                    {/* <RadioGroupItem value="no_sp" id={`decision-nosp-${src.source}`} />
-                                                    <Label htmlFor={`decision-nosp-${src.source}`}>No SP</Label> */}
                                                 </RadioGroup>
                                             </div>
-                                            <div className="p-2">
-                                                <Label className="mb-2">Annotation:</Label>
-                                                <Select
-                                                    value={sourceAnnotationChoice[src.source] || ''}
-                                                    onValueChange={(val) => setSourceAnnotationChoice((prev) => ({ ...prev, [src.source]: val }))}
-                                                >
-                                                    <SelectTrigger className="w-40">
-                                                        <SelectValue placeholder="No Annotation" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {ANNOTATION_OPTIONS.map(opt => (
-                                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                {sourceAnnotationChoice[src.source] === 'Other' && (
+                                            <div className="p-3">
+                                                <Label className="mb-2 block">Annotation:</Label>
+                                                <div className="flex flex-col gap-3">
+                                                    {/* Top Row: Select and Save Action */}
+                                                    <div className="flex flex-wrap items-center gap-3">
+                                                        <Select
+                                                            value={sourceAnnotationChoice[src.source] || ''}
+                                                            onValueChange={(val) => setSourceAnnotationChoice((prev) => ({ ...prev, [src.source]: val }))}
+                                                        >
+                                                            <SelectTrigger className="w-56">
+                                                                <SelectValue placeholder="No Annotation" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {ANNOTATION_OPTIONS.map(opt => (
+                                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+
+                                                        {/* <Button type="button" variant="outline" onClick={() => saveTypedForCandidate(src.source, c.id)}>
+                                                            Save
+                                                        </Button>
+
+                                                        {savedTyped !== undefined && (
+                                                            <span className="text-xs text-muted-foreground">Typed note saved</span>
+                                                        )} */}
+                                                    </div>
+
+                                                    {/* Bottom Row: Typing field now spanning full width or specific width */}
                                                     <Input
-                                                        className="mt-2 w-60"
+                                                        className="w-full max-w-lg" // Changed from w-80 to span more naturally
                                                         value={sourceAnnotationText[src.source] || ''}
                                                         onChange={e => setSourceAnnotationText((prev) => ({ ...prev, [src.source]: e.target.value }))}
-                                                        placeholder="Type your annotation..."
+                                                        placeholder="Type your annotation details here..."
                                                     />
-                                                )}
+                                                </div>
                                             </div>
                                         </div>
                                     </li>
-                                );
+                                )
                             })
                         ))}
                     </ul>
