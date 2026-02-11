@@ -54,7 +54,7 @@ export function CTA() {
             className="text-4xl sm:text-6xl font-black mb-6 text-white tracking-tight leading-[1.05] max-w-4xl"
           >
             Advanced AML <br className="hidden sm:block" />
-            <span className="text-purple-200">Screening Tool</span>
+            <span className="text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.18)]">Screening Tool</span>
           </motion.h2>
 
           <motion.p

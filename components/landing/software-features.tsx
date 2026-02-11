@@ -92,12 +92,13 @@ function FeatureCard({
 
 export function SoftwareFeatures() {
   return (
-    <section id="features" className="relative py-16 sm:py-20 bg-white scroll-mt-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="value-proposition" className="relative py-16 sm:py-20 bg-white scroll-mt-24 overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent via-slate-50/35 to-slate-50/70" />
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="text-center mb-10 sm:mb-14">
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-            Our <span className="text-primary">Features</span>
+            Our <span className="text-primary">Value Proposition</span>
           </h2>
           <p className="text-lg text-slate-600 max-w-3xl mx-auto">
             Comprehensive compliance and intelligence tools designed to protect your business
