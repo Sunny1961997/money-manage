@@ -16,18 +16,18 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12 mb-12">
 
           {/* Column 1: Brand Info */}
-          <div className="lg:col-span-4">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="lg:col-span-5">
+            <Link href="/" className="inline-flex items-center gap-3 mb-6">
               <img
                 src="/aml_meter_2.png"
                 alt="AML Meter"
                 className="h-16 w-auto object-contain brightness-0 invert"
               />
-            </div>
+            </Link>
 
-            <h3 className="text-white font-extrabold mb-3 text-xl tracking-tight">Simplifying Risk & Compliance</h3>
-            <p className="text-white/70 text-[15px] mb-8 leading-relaxed max-w-sm">
-              Protecting your organization from financial fraud and misconduct with cutting-edge AML solutions.
+            <h3 className="text-white font-extrabold mb-3 text-xl tracking-tight">AML Compliance Made Easy for DNFBPs</h3>
+            <p className="text-white/70 text-[15px] mb-8 leading-relaxed max-w-sm text-justify">
+              Helping DNFBPs streamline KYC, CDD/EDD, sanctions screening, and regulatory reporting with practical, audit-ready AML workflows.
             </p>
 
             <div className="flex items-center gap-3 text-white/80 text-sm group hover:text-white transition-colors">
@@ -41,7 +41,7 @@ export function Footer() {
           </div>
 
           {/* Column 2: Useful Links */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <p className="font-bold text-white mb-5 text-sm uppercase tracking-wider">Useful Links</p>
             <ul className="space-y-3.5 text-[15px] text-white/70">
               <li><Link href="/#" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Quick Link</Link></li>
@@ -53,21 +53,10 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Legal */}
-          <div className="lg:col-span-2">
-            <p className="font-bold text-white mb-5 text-sm uppercase tracking-wider">Legal</p>
-            <ul className="space-y-3.5 text-[15px] text-white/70">
-              <li><Link href="/legal/copyright" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Copyright</Link></li>
-              <li><Link href="/legal/privacy" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Privacy Policy</Link></li>
-              <li><Link href="/legal/disclaimer" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Legal Disclaimer</Link></li>
-              <li><Link href="/legal/terms" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Terms and Conditions</Link></li>
-            </ul>
-          </div>
-
           {/* Column 5: Socials */}
-          <div className="lg:col-span-4">
+          <div className="md:col-span-2 lg:col-span-4">
             <p className="font-bold text-white mb-5 text-sm uppercase tracking-wider">Connect With Us</p>
-            <p className="text-white/70 text-sm mb-6 leading-relaxed">
+            <p className="text-white/70 text-sm mb-6 leading-relaxed max-w-md text-justify">
               Stay connected for updates on financial crime research, regulatory trends, and compliance best practices.
             </p>
 
@@ -92,6 +81,7 @@ export function Footer() {
               © 2026 AML Meter Inc. All rights reserved
             </p>
             <div className="flex items-center gap-6 text-sm text-white/60">
+              <Link href="/legal/copyright" className="hover:text-white transition-colors">Copyright</Link>
               <Link href="/legal/privacy" className="hover:text-white transition-colors">Privacy</Link>
               <Link href="/legal/terms" className="hover:text-white transition-colors">Terms</Link>
               <Link href="/legal/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link>
