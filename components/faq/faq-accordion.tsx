@@ -144,8 +144,12 @@ export function FAQAccordion({
                 const isOpen = openId === faq.id;
                 const Icon = faq.icon ?? BadgeHelp;
                 const buttonId = `${faq.id}-button`;
+                const shouldCenterSingleCard = columns === 3 && rowFaqs.length === 1;
                 return (
-                  <div key={faq.id} className="w-full h-full">
+                  <div
+                    key={faq.id}
+                    className={cn("w-full h-full", shouldCenterSingleCard && "lg:col-start-2")}
+                  >
                     <div
                       className={cn(
                         "h-full rounded-[1.35rem] p-[1px] transition-all",

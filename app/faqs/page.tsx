@@ -55,7 +55,7 @@ export default function FaqsPage() {
                 autoCloseOnRowLeave
               />
 
-              <div className="mt-8 flex items-center text-sm text-slate-500">
+              <div className="mt-8 flex items-center justify-center text-center text-sm text-slate-500">
                 Need more details? Contact our compliance team for tailored guidance.
               </div>
             </section>
