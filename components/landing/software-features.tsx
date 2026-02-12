@@ -1,31 +1,32 @@
 'use client';
 
-import { ArrowRight, ShieldCheck, Activity, Target, Share2, LucideIcon } from 'lucide-react';
+import { ArrowRight, Workflow, ShieldCheck, SlidersHorizontal, Building2, LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const coreCompliance = [
+const valuePropositions = [
   {
-    title: 'AML Screening',
-    description: 'Screen for sanctions, PEP/RCAs, and adverse media.',
+    title: 'Integrated AML Compliance in One Platform',
+    description:
+      'AML Meter combines customer onboarding, CDD documentation, name screening, and risk assessment into a single structured system built for practical compliance.',
+    icon: Workflow
+  },
+  {
+    title: 'Built for Regulatory Defensibility',
+    description:
+      'From onboarding data capture to screening disposition and risk scoring, every decision is documented, traceable, and inspection-ready.',
     icon: ShieldCheck
   },
   {
-    title: 'AML Monitoring',
-    description: 'Detect criminal patterns in real-time and post-event.',
-    icon: Activity
+    title: 'Risk-Based Approach Made Simple',
+    description:
+      'Configurable risk scoring and standardized workflows help firms implement a true risk-based AML framework without overengineering or manual spreadsheets.',
+    icon: SlidersHorizontal
   },
   {
-    title: 'AML Risk Scoring',
-    description: 'Identify high-risk customers.',
-    icon: Target
-  }
-];
-
-const intelligenceSharing = [
-  {
-    title: 'AML Bridge',
-    description: 'Send and receive intelligence. Launch collaborative investigations.',
-    icon: Share2
+    title: 'Designed for SMEs and DNFBPs',
+    description:
+      'Designed for SMEs and DNFBPs, AML Meter delivers professional AML controls without the cost, infrastructure burden, or technical complexity of large banking systems.',
+    icon: Building2
   }
 ];
 
@@ -51,42 +52,38 @@ const itemVariants = {
   }
 };
 
-function FeatureCard({
+function LadderStepCard({
   title,
   description,
   icon: Icon,
-  variant = 'default'
+  isLast
 }: {
   title: string;
   description: string;
   icon: LucideIcon;
-  variant?: 'default' | 'tinted';
+  isLast: boolean;
 }) {
   return (
-    <motion.div
+    <motion.article
       variants={itemVariants}
-      className={[
-        'relative h-full min-h-[180px] rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 bg-white border',
-        variant === 'tinted'
-          ? 'border-primary/20 bg-primary/[0.02] shadow-sm'
-          : 'border-slate-100 shadow-sm',
-        'hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 hover:border-primary/30 group'
-      ].join(' ')}
+      className="group relative h-full min-h-[220px] rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 hover:border-primary/30"
     >
       <div>
-        <div className="w-12 h-12 bg-primary/5 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-          <Icon className="w-6 h-6 text-primary" />
+        <div className="mb-4">
+          <div className="w-11 h-11 bg-primary/5 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+            <Icon className="w-5 h-5 text-primary" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors duration-300 leading-snug">{title}</h3>
         </div>
-        <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors duration-300 mb-3">{title}</h3>
         <p className="text-slate-600 leading-relaxed text-sm text-left">{description}</p>
       </div>
 
-      <div className="flex justify-end mt-4">
-        <div className="flex items-center justify-center w-9 h-9 rounded-full bg-slate-100 text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors duration-300 transform group-hover:translate-x-1">
+      {!isLast && (
+        <div className="hidden xl:flex absolute -right-[15px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] items-center justify-center rounded-full border border-primary/40 bg-white text-primary shadow-sm transition-colors duration-300 group-hover:bg-primary group-hover:text-white group-hover:border-primary">
           <ArrowRight className="w-4 h-4" />
         </div>
-      </div>
-    </motion.div>
+      )}
+    </motion.article>
   );
 }
 
@@ -98,76 +95,39 @@ export function SoftwareFeatures() {
         {/* Header Section */}
         <div className="text-center mb-10 sm:mb-14">
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-            Our <span className="text-primary">Value Proposition</span>
+            Our <span className="text-primary">Value Propositions</span>
           </h2>
           <p className="text-lg text-slate-600 max-w-3xl mx-auto text-center">
-            Comprehensive compliance and intelligence tools designed to protect your business
+            Practical AML capabilities built for defensible compliance outcomes
           </p>
         </div>
 
-        {/* Layout mimicking the screenshot */}
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
           variants={containerVariants}
-          className="grid grid-cols-1 lg:grid-cols-4 gap-8"
+          className="bg-slate-50/50 border border-slate-100 rounded-[2.5rem] p-5 md:p-6 h-full relative overflow-hidden group/bento"
         >
-
-          {/* Core Compliance Group (Spans 3/4) */}
-          <div className="lg:col-span-3">
-            {/* Dashed Border Container */}
-            <div className="bg-slate-50/50 border border-slate-100 rounded-[2.5rem] p-5 md:p-6 h-full relative overflow-hidden group/bento flex flex-col">
-              {/* Label overlapping the border */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/20 via-primary/5 to-transparent opacity-0 group-hover/bento:opacity-100 transition-opacity duration-500" />
-
-              <div className="flex items-center gap-3 mb-6">
-                <h3 className="text-sm font-bold text-primary uppercase tracking-widest bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10 whitespace-nowrap">
-                  Core Compliance
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
-                {coreCompliance.map((item, index) => (
-                  <FeatureCard
-                    key={index}
-                    title={item.title}
-                    description={item.description}
-                    icon={item.icon}
-                    variant="default"
-                  />
-                ))}
-              </div>
-            </div>
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/20 via-primary/5 to-transparent opacity-0 group-hover/bento:opacity-100 transition-opacity duration-500" />
+          <div className="hidden xl:block absolute left-10 right-10 top-[7.2rem] h-px bg-gradient-to-r from-transparent via-slate-300/80 to-transparent" />
+          <div className="mb-6 md:mb-7">
+            <h3 className="inline-flex items-center rounded-full border border-primary/10 bg-primary/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary">
+              Compliance Confidence Ladder
+            </h3>
           </div>
 
-          {/* Intelligence Sharing Group (Spans 1/4) */}
-          <div className="lg:col-span-1">
-            {/* Dashed Border Container */}
-            <div className="bg-slate-50/50 border border-slate-100 rounded-[2.5rem] p-5 md:p-6 h-full relative overflow-hidden group/bento flex flex-col">
-              {/* Label overlapping the border */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/20 via-primary/5 to-transparent opacity-0 group-hover/bento:opacity-100 transition-opacity duration-500" />
-
-              <div className="flex items-center gap-3 mb-6">
-                <h3 className="text-sm font-bold text-primary uppercase tracking-widest bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10 whitespace-nowrap">
-                  Intelligence Sharing
-                </h3>
-              </div>
-
-              <div className="flex-grow">
-                {intelligenceSharing.map((item, index) => (
-                  <FeatureCard
-                    key={index}
-                    title={item.title}
-                    description={item.description}
-                    icon={item.icon}
-                    variant="tinted"
-                  />
-                ))}
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {valuePropositions.map((item, index) => (
+              <LadderStepCard
+                key={index}
+                title={item.title}
+                description={item.description}
+                icon={item.icon}
+                isLast={index === valuePropositions.length - 1}
+              />
+            ))}
           </div>
-
         </motion.div>
       </div>
     </section>

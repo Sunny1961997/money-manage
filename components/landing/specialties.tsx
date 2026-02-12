@@ -1,49 +1,67 @@
 'use client';
 
-import { Shield, Search, BarChart3, Brain, FileCheck, UserCheck, Workflow, Plug, ChevronRight } from 'lucide-react';
+import {
+  SearchCheck,
+  Target,
+  Workflow,
+  ShieldCheck,
+  SlidersHorizontal,
+  History,
+  FileText,
+  UsersRound,
+  ChevronRight,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
 const specialties = [
   {
-    icon: Shield,
-    title: 'Real-Time Transaction Monitoring',
-    description: 'Detect and respond to suspicious activities as they occur with advanced monitoring systems that reduce financial crime risks.'
+    icon: SearchCheck,
+    title: 'Name & Watchlist Screening',
+    description:
+      'Customer and entity screening against global sanctions lists, PEP databases, regulatory lists, and adverse media using structured similarity matching logic.',
   },
   {
-    icon: Search,
-    title: 'Customer & Entity Screening',
-    description: 'Comprehensive checks against watchlists, sanctions lists, PEPs, and adverse media to identify high-risk individuals and organizations.'
-  },
-  {
-    icon: BarChart3,
-    title: 'Risk Assessment & Scoring',
-    description: 'Dynamic customer and transaction risk profiling with comprehensive tools to prioritize compliance efforts in high-risk areas.'
-  },
-  {
-    icon: Brain,
-    title: 'AI-Powered Detection',
-    description: 'Machine learning algorithms that minimize false positives and adapt to new financial crime typologies for enhanced accuracy.'
+    icon: Target,
+    title: 'Intelligent Match Scoring',
+    description:
+      'Confidence rating and Fuzzy logic-based similarity scoring to help analysts distinguish between exact matches, potential matches, and false positives.',
   },
   {
     icon: Workflow,
-    title: 'Case Management & Workflow',
-    description: 'Automated alert triage, investigation workflows, and centralized reporting to streamline compliance operations.'
+    title: 'Structured Screening Disposition Workflow',
+    description:
+      'Standardized disposition options with decision documentation to ensure defensible compliance outcomes and audit traceability.',
   },
   {
-    icon: UserCheck,
-    title: 'KYC & Customer Due Diligence',
-    description: 'Identity verification and continuous customer monitoring throughout their lifecycle with perpetual KYC capabilities.'
+    icon: ShieldCheck,
+    title: 'Risk Assessment & Profiling',
+    description:
+      'Customer risk categorization based on configurable risk factors such as geography, industry, legal structure, and exposure indicators.',
   },
   {
-    icon: FileCheck,
-    title: 'Regulatory Reporting',
-    description: 'Automated generation of Suspicious Activity Reports (SARs) and compliance documentation to ensure regulatory adherence.'
+    icon: SlidersHorizontal,
+    title: 'Dynamic Risk Scoring Engine',
+    description:
+      'Weighted risk scoring model allowing institutions to customize scoring thresholds based on internal compliance policies.',
   },
   {
-    icon: Plug,
-    title: 'Seamless Integration',
-    description: 'API-driven architecture for effortless integration with existing banking systems and compliance tools for a holistic approach.'
+    icon: History,
+    title: 'Audit Trail & Activity Logs',
+    description:
+      'Complete record of screening actions, user decisions, timestamps, and modifications to support regulatory inspections.',
+  },
+  {
+    icon: FileText,
+    title: 'Regulatory-Ready Reports',
+    description:
+      'System-generated screening and risk assessment reports suitable for regulator submission or internal compliance review.',
+  },
+  {
+    icon: UsersRound,
+    title: 'Configurable Access & Role Management',
+    description:
+      'Role-based user controls with defined permissions to maintain governance and segregation of duties.',
   },
 ];
 
