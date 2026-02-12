@@ -71,8 +71,8 @@ export function Features() {
                 <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-primary/15 to-transparent blur-2xl opacity-30 group-hover:opacity-50 transition-opacity duration-500" />
                 <div className="relative rounded-[2.5rem] overflow-hidden border border-slate-200/80 bg-white shadow-2xl backdrop-blur-sm group-hover:shadow-primary/20 transition-all duration-500">
                   <img
-                    src="/AML Dashboard Screen 1.png"
-                    alt="AML Controls Dashboard"
+                    src="/aml-controls-structured-approach.png"
+                    alt="AML Control framework covering onboarding, due diligence, sanctions and PEP screening, risk assessment, and record-keeping"
                     className="w-full h-auto object-cover transform group-hover:scale-[1.02] transition-transform duration-700"
                   />
                 </div>

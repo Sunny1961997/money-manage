@@ -5,7 +5,7 @@ import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
-const previewImages = ["/AML Dashboard Screen 1.png", "/AML Dashboard Screen 2.png"];
+const previewImages = ["/aml-meter-dashboard-stats.png", "/aml-meter-stats.png"];
 
 export function Hero() {
   const prefersReducedMotion = useReducedMotion();
@@ -17,7 +17,7 @@ export function Hero() {
   });
 
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-  const opacity = useTransform(scrollYProgress, [0.5, 0.9], [1, 0]);
+  const opacity = useTransform(scrollYProgress, [0.7, 1], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
 
   useEffect(() => {
@@ -98,7 +98,7 @@ export function Hero() {
             animate={{ opacity: 1, y: 0, rotateX: 0 }}
             transition={{ duration: 0.8, delay: 0.4, type: "spring" }}
             style={{ y, opacity, scale }}
-            className="relative mt-12 w-full max-w-7xl mx-auto perspective-1000 will-change-transform transform-gpu"
+            className="relative mt-12 w-full max-w-7xl mx-auto perspective-1000"
           >
             <div
               className="absolute -inset-8 bg-gradient-to-r from-primary/40 to-indigo-600/40 rounded-xl blur-3xl opacity-100 -z-10 group-hover:opacity-100 transition-opacity duration-500"
@@ -121,8 +121,8 @@ export function Hero() {
                       src={previewImages[activePreview]}
                       alt="AML Compliance Dashboard preview"
                       fill
-                      sizes="(min-width: 1024px) 960px, 100vw"
-                      // className="h-20 w-auto object-contain" 
+                      sizes="(min-width: 1536px) 1280px, (min-width: 1280px) 1180px, (min-width: 1024px) 1024px, 100vw"
+                      quality={95}
                       className="object-cover object-top"
                       priority={activePreview === 0}
                     />
