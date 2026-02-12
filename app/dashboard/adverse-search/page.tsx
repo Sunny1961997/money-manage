@@ -1,8 +1,15 @@
+"use client"
+
+import { ComingSoon } from "@/components/coming-soon"
+import { Newspaper } from "lucide-react"
+
 export default function AdverseSearchPage() {
   return (
-    <div className="p-8 flex-1 justify-center items-center">
-      <h1>Adverse Search</h1>
-      <p>Coming Soon...</p>
-    </div>
-  );
+    <ComingSoon
+      title="Adverse Media Search"
+      description="Advanced AI-driven media monitoring to identify negative news and potential risks associated with entities in real-time."
+      icon={Newspaper}
+      statusText="Scanning Global Databases..."
+    />
+  )
 }
