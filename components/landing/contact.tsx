@@ -125,9 +125,10 @@ export function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-lg text-slate-600 max-w-2xl mx-auto"
+            className="text-lg text-slate-600 max-w-2xl mx-auto text-justify"
           >
-            Have questions about our AML solutions? Our team is here to help you navigate compliance with ease.
+            Have questions about AML Meter solutions? Our team is ready to help you navigate
+            compliance requirements with clarity and confidence.
           </motion.p>
         </div>
 
@@ -229,7 +230,7 @@ export function Contact() {
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-lg font-bold text-slate-900">{item.title}</p>
-                      <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line font-medium opacity-90">
+                      <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line font-medium opacity-90 text-justify">
                         {item.details}
                       </p>
                     </div>
@@ -248,7 +249,7 @@ export function Contact() {
                   <div className="relative z-10 space-y-6">
                     <div className="space-y-2">
                       <p className="text-xl font-bold">Need Immediate Help?</p>
-                      <p className="text-slate-400 text-sm leading-relaxed">
+                      <p className="text-slate-400 text-sm leading-relaxed text-justify">
                         Our support team is available during business hours for urgent inquiries.
                       </p>
                     </div>

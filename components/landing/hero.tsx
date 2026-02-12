@@ -64,11 +64,11 @@ export function Hero() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] as const, delay: 0.2 }}
-            className="text-base sm:text-lg text-white/90 max-w-3xl mx-auto leading-relaxed"
+            className="text-base sm:text-lg text-white/90 max-w-3xl mx-auto leading-relaxed text-justify"
           >
             AML Meter is an all-in-one customer onboarding, screening, and adverse media monitoring platform built
-            for UAE-regulated firms. Specially designed with <span className="text-white font-semibold">DNFBPs</span>
-            in mind, which helps institutions adopt a risk-based approach, document every decision, and stay audit-ready,
+            for UAE-regulated firms. Specially designed with <span className="text-white font-semibold">DNFBPs</span>{" "}
+            in mind, helping institutions adopt a risk-based approach, document every decision, and stay audit-ready,
             without overcomplicating compliance.
           </motion.p>
 

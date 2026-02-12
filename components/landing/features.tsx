@@ -83,10 +83,10 @@ export function Features() {
                   AML Controls for Regulated Businesses: <span className="text-primary">A Structured Approach</span>
                 </h2>
                 <div className="space-y-5">
-                  <p className="text-lg text-slate-700 leading-relaxed">
+                  <p className="text-lg text-slate-700 leading-relaxed text-justify">
                     <span className="font-bold text-slate-900">AML Meter</span> is a compliance technology platform developed to help regulated entities implement anti-money laundering and financial crime controls.
                   </p>
-                  <p className="text-base text-slate-600 leading-relaxed">
+                  <p className="text-base text-slate-600 leading-relaxed text-justify">
                     The platform transforms AML policies into system-driven, actionable processes in critical regulatory focal areas, such as customer onboarding, due diligence, sanctions and PEP screening, risk assessment, and record-keeping.
                   </p>
                 </div>
@@ -105,14 +105,14 @@ export function Features() {
                   Specifically Built for <br className="hidden xl:block" />
                   <span className="text-primary">AML-Regulated Environments</span>
                 </h2>
-                <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
+                <p className="text-lg text-slate-600 leading-relaxed max-w-xl text-justify">
                   Professionals with direct experience in AML compliance operations have developed AML Meter by putting their years of expertise into one platform.
                 </p>
               </motion.div>
 
               <motion.div variants={itemVariants} className="space-y-10">
                 <div className="space-y-6">
-                  <p className="text-base sm:text-lg text-slate-900 leading-relaxed font-bold">
+                  <p className="text-base sm:text-lg text-slate-900 leading-relaxed font-bold text-justify">
                     It encompasses a practitioner-led design that guarantees:
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -133,7 +133,7 @@ export function Features() {
                 </div>
 
                 <div className="bg-primary/5 p-7 rounded-2xl rounded-tl-none border border-primary/10 border-l-[6px] border-l-primary shadow-sm relative overflow-hidden lg:max-w-[95%]">
-                  <p className="relative z-10 text-slate-700 text-sm md:text-base leading-relaxed italic font-medium">
+                  <p className="relative z-10 text-slate-700 text-sm md:text-base leading-relaxed italic font-medium text-justify">
                     "The platform prioritizes the consistency of application, governance, and control efficacy over non-essential functionality or broad feature sets."
                   </p>
                 </div>
@@ -150,9 +150,9 @@ export function Features() {
                     viewport={{ once: true }}
                     className="text-4xl md:text-5xl font-extrabold tracking-tight"
                   >
-                    About <span className="text-white/80">AML Meter Management</span>
+                    About AML Meter Management
                   </motion.h2>
-                  <p className="text-lg md:text-xl text-white/90 max-w-4xl mx-auto leading-relaxed">
+                  <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-7 md:leading-8 text-justify">
                     Over 25 years of combined global experience in AML/CFT, sanctions compliance, and risk frameworks.
                     Based in the UAE, we provide structured support and advisory for regulated entities.
                   </p>
@@ -171,7 +171,7 @@ export function Features() {
                           <item.icon className="w-8 h-8 text-white" />
                         </div>
                         <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-                        <p className="text-sm text-white/80 leading-relaxed">{item.description}</p>
+                        <p className="text-sm text-white/80 leading-relaxed text-justify">{item.description}</p>
                       </motion.div>
                     ))}
                   </div>

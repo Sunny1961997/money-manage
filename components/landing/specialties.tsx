@@ -107,15 +107,15 @@ export function Specialties() {
           >
             Our Features
           </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] as const, delay: 0.2 }}
-            className="text-lg text-white/80 max-w-3xl mx-auto leading-relaxed"
-          >
-            Cutting-edge technology and intelligent automation to protect your organization from financial crime while ensuring regulatory compliance.
-          </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] as const, delay: 0.2 }}
+              className="text-lg text-white/80 max-w-3xl mx-auto leading-relaxed text-justify"
+            >
+              Cutting-edge technology and intelligent automation to protect your organization from financial crime while ensuring regulatory compliance.
+            </motion.p>
         </div>
 
         <div className="mt-10 sm:mt-14">
@@ -148,7 +148,7 @@ export function Specialties() {
                         <h3 className="text-lg sm:text-xl font-semibold text-white">{specialty.title}</h3>
                         <ChevronRight className="ml-auto w-4 h-4 text-white/50 transition-transform duration-300 group-hover:translate-x-1" />
                       </div>
-                      <p className="text-sm sm:text-base text-white/75 leading-relaxed">
+                      <p className="text-sm sm:text-base text-white/75 leading-relaxed text-justify">
                         {specialty.description}
                       </p>
                     </div>

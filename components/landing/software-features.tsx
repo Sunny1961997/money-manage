@@ -78,7 +78,7 @@ function FeatureCard({
           <Icon className="w-6 h-6 text-primary" />
         </div>
         <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors duration-300 mb-3">{title}</h3>
-        <p className="text-slate-600 leading-relaxed text-sm">{description}</p>
+        <p className="text-slate-600 leading-relaxed text-sm text-left">{description}</p>
       </div>
 
       <div className="flex justify-end mt-4">
@@ -100,7 +100,7 @@ export function SoftwareFeatures() {
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             Our <span className="text-primary">Value Proposition</span>
           </h2>
-          <p className="text-lg text-slate-600 max-w-3xl mx-auto">
+          <p className="text-lg text-slate-600 max-w-3xl mx-auto text-center">
             Comprehensive compliance and intelligence tools designed to protect your business
           </p>
         </div>

@@ -40,7 +40,7 @@ export default function FaqsPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] as const, delay: 0.1 }}
-              className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed"
+              className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed text-center"
             >
               Clear answers for UAE DNFBPs and regulated entities adopting a risk-based compliance approach.
             </motion.p>
