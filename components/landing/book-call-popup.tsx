@@ -166,7 +166,7 @@ export function BookCallPopup() {
           <div className="px-5 py-5 sm:px-7 sm:py-7">
             <div className="mb-4 space-y-1.5 text-center md:hidden">
               <h2 className="text-2xl font-extrabold text-slate-900">Book a Strategic Call</h2>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 text-center">
                 Schedule a free consultation with our compliance experts.
               </p>
             </div>

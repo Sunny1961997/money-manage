@@ -28,7 +28,7 @@ export function ProductCard({ product }: { product: ProductProps }) {
                 </div>
 
                 <h3 className="text-2xl font-bold mb-4 text-slate-900 group-hover:text-primary transition-colors duration-300 tracking-tight">{product.title}</h3>
-                <p className="text-slate-600 mb-8 leading-relaxed font-medium opacity-80">{product.description}</p>
+                <p className="text-slate-600 mb-8 leading-relaxed font-medium opacity-80 text-justify">{product.description}</p>
 
                 <div className="space-y-4">
                     {product.primary_characteristics && (

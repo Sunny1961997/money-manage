@@ -1,49 +1,67 @@
 'use client';
 
-import { Shield, Search, BarChart3, Brain, FileCheck, UserCheck, Workflow, Plug, ChevronRight } from 'lucide-react';
+import {
+  SearchCheck,
+  Target,
+  Workflow,
+  ShieldCheck,
+  SlidersHorizontal,
+  History,
+  FileText,
+  UsersRound,
+  ChevronRight,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
 const specialties = [
   {
-    icon: Shield,
-    title: 'Real-Time Transaction Monitoring',
-    description: 'Detect and respond to suspicious activities as they occur with advanced monitoring systems that reduce financial crime risks.'
+    icon: SearchCheck,
+    title: 'Name & Watchlist Screening',
+    description:
+      'Customer and entity screening against global sanctions lists, PEP databases, regulatory lists, and adverse media using structured similarity matching logic.',
   },
   {
-    icon: Search,
-    title: 'Customer & Entity Screening',
-    description: 'Comprehensive checks against watchlists, sanctions lists, PEPs, and adverse media to identify high-risk individuals and organizations.'
-  },
-  {
-    icon: BarChart3,
-    title: 'Risk Assessment & Scoring',
-    description: 'Dynamic customer and transaction risk profiling with comprehensive tools to prioritize compliance efforts in high-risk areas.'
-  },
-  {
-    icon: Brain,
-    title: 'AI-Powered Detection',
-    description: 'Machine learning algorithms that minimize false positives and adapt to new financial crime typologies for enhanced accuracy.'
+    icon: Target,
+    title: 'Intelligent Match Scoring',
+    description:
+      'Confidence rating and Fuzzy logic-based similarity scoring to help analysts distinguish between exact matches, potential matches, and false positives.',
   },
   {
     icon: Workflow,
-    title: 'Case Management & Workflow',
-    description: 'Automated alert triage, investigation workflows, and centralized reporting to streamline compliance operations.'
+    title: 'Structured Screening Disposition Workflow',
+    description:
+      'Standardized disposition options with decision documentation to ensure defensible compliance outcomes and audit traceability.',
   },
   {
-    icon: UserCheck,
-    title: 'KYC & Customer Due Diligence',
-    description: 'Identity verification and continuous customer monitoring throughout their lifecycle with perpetual KYC capabilities.'
+    icon: ShieldCheck,
+    title: 'Risk Assessment & Profiling',
+    description:
+      'Customer risk categorization based on configurable risk factors such as geography, industry, legal structure, and exposure indicators.',
   },
   {
-    icon: FileCheck,
-    title: 'Regulatory Reporting',
-    description: 'Automated generation of Suspicious Activity Reports (SARs) and compliance documentation to ensure regulatory adherence.'
+    icon: SlidersHorizontal,
+    title: 'Dynamic Risk Scoring Engine',
+    description:
+      'Weighted risk scoring model allowing institutions to customize scoring thresholds based on internal compliance policies.',
   },
   {
-    icon: Plug,
-    title: 'Seamless Integration',
-    description: 'API-driven architecture for effortless integration with existing banking systems and compliance tools for a holistic approach.'
+    icon: History,
+    title: 'Audit Trail & Activity Logs',
+    description:
+      'Complete record of screening actions, user decisions, timestamps, and modifications to support regulatory inspections.',
+  },
+  {
+    icon: FileText,
+    title: 'Regulatory-Ready Reports',
+    description:
+      'System-generated screening and risk assessment reports suitable for regulator submission or internal compliance review.',
+  },
+  {
+    icon: UsersRound,
+    title: 'Configurable Access & Role Management',
+    description:
+      'Role-based user controls with defined permissions to maintain governance and segregation of duties.',
   },
 ];
 
@@ -107,15 +125,15 @@ export function Specialties() {
           >
             Our Features
           </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] as const, delay: 0.2 }}
-            className="text-lg text-white/80 max-w-3xl mx-auto leading-relaxed"
-          >
-            Cutting-edge technology and intelligent automation to protect your organization from financial crime while ensuring regulatory compliance.
-          </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] as const, delay: 0.2 }}
+              className="text-lg text-white/80 max-w-3xl mx-auto leading-relaxed text-justify"
+            >
+              Cutting-edge technology and intelligent automation to protect your organization from financial crime while ensuring regulatory compliance.
+            </motion.p>
         </div>
 
         <div className="mt-10 sm:mt-14">
@@ -148,7 +166,7 @@ export function Specialties() {
                         <h3 className="text-lg sm:text-xl font-semibold text-white">{specialty.title}</h3>
                         <ChevronRight className="ml-auto w-4 h-4 text-white/50 transition-transform duration-300 group-hover:translate-x-1" />
                       </div>
-                      <p className="text-sm sm:text-base text-white/75 leading-relaxed">
+                      <p className="text-sm sm:text-base text-white/75 leading-relaxed text-justify">
                         {specialty.description}
                       </p>
                     </div>

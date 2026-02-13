@@ -96,8 +96,10 @@ export default function ContactUs() {
       <div className="max-w-4xl mx-auto px-4 pt-28 pb-16 sm:pt-32">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Contact Us For Demo</h1>
-          <p className="text-lg text-muted-foreground">
-            Interested in seeing how AML Meter can help your organization? Fill out the form below and we'll get back to you soon.
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-justify">
+            Interested in seeing how AML Meter can help your organization?
+            <br />
+            Fill out the form below and we'll get back to you soon.
           </p>
         </div>
         

@@ -77,7 +77,7 @@ export function Products() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-10 sm:mb-14">
           <h2 className="text-4xl sm:text-5xl font-extrabold mb-4 text-slate-900 tracking-tight leading-tight">Our <span className="text-primary">Services</span></h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-slate-600 max-w-xl mx-auto leading-relaxed text-justify">
             Comprehensive AML solutions designed to keep your organization compliant, secure, and efficient.
           </p>
         </div>

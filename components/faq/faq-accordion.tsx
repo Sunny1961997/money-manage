@@ -111,7 +111,7 @@ export function FAQAccordion({
                     className="overflow-hidden"
                   >
                     <div className="pt-4">
-                      <div className="rounded-2xl border border-[#5b2bd8]/30 bg-white px-4 py-3 text-sm text-slate-600 leading-relaxed">
+                      <div className="rounded-2xl border border-[#5b2bd8]/30 bg-white px-4 py-3 text-sm text-slate-600 leading-relaxed text-justify">
                         {faq.answer}
                       </div>
                     </div>
@@ -144,8 +144,12 @@ export function FAQAccordion({
                 const isOpen = openId === faq.id;
                 const Icon = faq.icon ?? BadgeHelp;
                 const buttonId = `${faq.id}-button`;
+                const shouldCenterSingleCard = columns === 3 && rowFaqs.length === 1;
                 return (
-                  <div key={faq.id} className="w-full h-full">
+                  <div
+                    key={faq.id}
+                    className={cn("w-full h-full", shouldCenterSingleCard && "lg:col-start-2")}
+                  >
                     <div
                       className={cn(
                         "h-full rounded-[1.35rem] p-[1px] transition-all",
@@ -210,7 +214,7 @@ export function FAQAccordion({
                   {rowFaqs.map((faq) => {
                     if (faq.id !== rowOpenId) return null;
                     return (
-                      <p key={faq.id} className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                      <p key={faq.id} className="text-sm sm:text-base text-slate-600 leading-relaxed text-justify">
                         {faq.answer}
                       </p>
                     );
