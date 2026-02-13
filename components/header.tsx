@@ -67,10 +67,13 @@ export function Header() {
     try {
       await logout()
       clearAuth()
-      // Redirect to login page after cookie is cleared
-      router.push("/login")
+      // Force a hard redirect to clear all client state
+      window.location.href = "/"
     } catch (error: any) {
       setError(error?.message || "Logout failed")
+      // Even if logout API fails, clear local state and redirect
+      clearAuth()
+      window.location.href = "/"
     } finally {
       setLoading(false)
     }

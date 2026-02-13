@@ -74,17 +74,15 @@ export async function verifyAuth() {
 /**
  * LOGOUT
  */
-export async function logout(): Promise<void> {
-  const response = await fetch(`${BASE_URL}/api/auth/logout`, {
+export async function logout() {
+  const res = await fetch("/api/auth/logout", {
     method: "POST",
     credentials: "include",
   })
-
-  const data: LogoutResponse = await response.json()
-
-  if (!response.ok || !data.status) {
-    throw new Error(data.message || "Logout failed")
+  if (!res.ok) {
+    throw new Error("Logout failed")
   }
+  return res.json()
 }
 
 
