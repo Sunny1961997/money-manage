@@ -77,7 +77,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: 'Outfit', sans-serif;
   --font-heading: 'Outfit', sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   --color-background: var(--background);

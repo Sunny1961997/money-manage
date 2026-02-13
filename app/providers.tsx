@@ -95,20 +95,19 @@ const font = Outfit({
 // })
 
 // --- BODY FONT ---
-const bodyFont = Inter({
-  subsets: ["latin"],
-  display: "swap",
-})
-
+// const bodyFont = Inter({
+//   subsets: ["latin"],
+//   display: "swap",
+// })
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <div className={font.className}>
-      <style jsx global>{`
+      {/* <style jsx global>{`
         p, ul, ol, blockquote, input, textarea, select, td {
           font-family: ${bodyFont.style.fontFamily}, sans-serif;
         }
-      `}</style>
+      `}</style> */}
       {children}
       <Toaster />
     </div>
