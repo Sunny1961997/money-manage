@@ -84,15 +84,18 @@ export async function generateScreeningSessionPDF({
   }
 
   const includeInEvidence = (source: string, c: any) => {
+    // Check per-candidate key first for decision
+    const candidateKey = `${source}:${c?.id}`
+    
     // If savedCandidateKeys is provided, only include saved candidates
     if (savedCandidateKeys && savedCandidateKeys.length > 0) {
-      const key = `${source}:${c?.id}`
-      return savedCandidateKeys.includes(key)
+      if (!savedCandidateKeys.includes(candidateKey)) return false
     }
-    // Fallback: include if decision is relevant or confidence >= 80
-    const conf = Number(c?.confidence) || 0
-    const d = decisionForSource(source)
-    const dNorm = typeof d === "string" ? d.toLowerCase() : ""
+
+    // Check per-candidate decision first, then fall back to per-source
+    const perCandidateDecision = (sourceDecision as any)[candidateKey]
+    const d = perCandidateDecision || decisionForSource(source)
+    const dNorm = typeof d === "string" ? d.toLowerCase().trim() : ""
     return dNorm === "relevant"
   }
 
@@ -593,32 +596,32 @@ export async function generateScreeningSessionPDF({
   //   y += 10
   // }
   if (bestBySourceFiltered.length === 0) {
-  autoTable(doc, {
-    startY: y,
-    // head: [['Evidence Results']],
-    body: [[
-      'No results have been selected.'
-    ]],
-    styles: {
-      font: 'times',
-      fontStyle: 'italic',
-      fontSize: 10,
-      textColor: [120, 120, 120],
-      halign: 'center',
-      valign: 'middle',
-    },
-    headStyles: {
-      fontStyle: 'bold',
-      halign: 'center',
-    },
-    theme: 'grid',
-    columnStyles: {
-      0: { cellWidth: 'auto' },
-    },
-  })
+    autoTable(doc, {
+      startY: y,
+      // head: [['Evidence Results']],
+      body: [[
+        'No results have been selected.'
+      ]],
+      styles: {
+        font: 'times',
+        fontStyle: 'italic',
+        fontSize: 10,
+        textColor: [120, 120, 120],
+        halign: 'center',
+        valign: 'middle',
+      },
+      headStyles: {
+        fontStyle: 'bold',
+        halign: 'center',
+      },
+      theme: 'grid',
+      columnStyles: {
+        0: { cellWidth: 'auto' },
+      },
+    })
 
-  y = (doc as any).lastAutoTable.finalY + 10
-}
+    y = (doc as any).lastAutoTable.finalY + 10
+  }
 
   bestBySourceFiltered.forEach(src => {
     const candidates = (src.data || []).filter(Boolean)

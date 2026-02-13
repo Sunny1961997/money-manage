@@ -222,7 +222,10 @@ export default function QuickScreeningResultsPage() {
 
         Object.entries(savedByCandidate).forEach(([key, v]) => {
             const source = key.split(":")[0]
-            if (v.decision) pdfDecision[source] = v.decision
+            if (v.decision) {
+                pdfDecision[source] = v.decision
+                pdfDecision[key] = v.decision  // per-candidate decision
+            }
             if (v.annotationChoice) pdfChoice[source] = v.annotationChoice
             if (v.annotationText) pdfText[source] = v.annotationText
             pdfText[key] = v.annotationText
@@ -309,22 +312,28 @@ export default function QuickScreeningResultsPage() {
 
     return (
         <div className="max-w-6xl mx-auto space-y-6 p-6">
-            <div className="flex items-center justify-between gap-4">
-                <div className="border p-4 rounded rounded-bottom-xlsx pr-30">
-                    <div className="flex items-center justify-start text-left">
-                        <div className="text-2xl font-bold text-foreground">Subject:&nbsp;</div>
-                        <div className="text-2xl font-semibold">{searchedFor}</div>
+            <div className="flex items-center justify-between gap-6">
+                <div className="border p-4 rounded-lg flex-1 min-w-0">
+                    <div className="flex items-baseline justify-start text-left gap-2">
+                        <span className="text-2xl font-bold text-foreground shrink-0">Subject:</span>
+                        {/* Added truncate and overflow-hidden to handle long names gracefully */}
+                        <span className="text-2xl font-semibold truncate" title={searchedFor}>
+                            {searchedFor}
+                        </span>
                     </div>
-                    {/* <div className="text-sm text-muted-foreground mt-1">
-                        Found results in {bestBySource.filter(src => (src.data || []).filter(Boolean).length > 0).length} out of {bestBySource.length} sources
-                    </div> */}
                 </div>
-                <div className="flex gap-2">
+
+                <div className="flex gap-2 shrink-0">
                     <Button variant="outline" onClick={handleDownloadSessionPDF}>
                         <Download className="w-4 h-4 mr-2" />
                         Download Full Report
                     </Button>
-                    <Button variant="outline" onClick={() => (window.location.href = "/dashboard/screening/quick")}>New Search</Button>
+                    <Button 
+                        variant="outline" 
+                        onClick={() => (window.location.href = "/dashboard/screening/quick")}
+                    >
+                        New Search
+                    </Button>
                 </div>
             </div>
 
