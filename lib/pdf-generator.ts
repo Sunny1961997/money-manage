@@ -290,7 +290,7 @@ export async function generateCustomerPDF(data: any) {
           ? (data as any).products.map((p: any) => p?.name || p?.product_name || p).join(", ")
           : "-",
       ],
-      ["Target Customers", corp?.target_customers || "-"],
+      // ["Target Customers", corp?.target_customers || "-"],
       ["Delivery Channel", corp?.delivery_channel || "-"],
       ["Mode of Payment", corp?.payment_mode || "-"],
       [
@@ -389,7 +389,8 @@ export async function generateCustomerPDF(data: any) {
       ["Risk Assessment Performed", "Yes"],
     ])
 
-    yPos = sectionTitle("Onboarding Decision", yPos)
+    yPos = ensureSpace(yPos, 65)
+    yPos = sectionTitle("Onboarding Decision", yPos, 60)
     yPos = oneColKV(yPos, [
       ["Decision", data.onboarding_decision || "Approved"],
       ["Decision Date", toDate(data.onboarding_decision_date || data.updated_at || data.created_at)],

@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
 interface User {
   id: number
@@ -16,29 +17,40 @@ interface AuthStore {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
+  navPosition: "sidebar" | "topbar"
   setUser: (user: User) => void
   clearAuth: () => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
+  setNavPosition: (pos: "sidebar" | "topbar") => void
 }
 
-export const useAuthStore = create<AuthStore>((set) => ({
-  user: null,
-  isAuthenticated: false,
-  isLoading: false,
-  error: null,
-  setUser: (user) =>
-    set({
-      user,
-      isAuthenticated: true,
-      error: null,
-    }),
-  clearAuth: () =>
-    set({
+export const useAuthStore = create<AuthStore>()(
+  persist(
+    (set) => ({
       user: null,
       isAuthenticated: false,
+      isLoading: false,
       error: null,
+      navPosition: "sidebar",
+      setUser: (user) =>
+        set({
+          user,
+          isAuthenticated: true,
+          error: null,
+        }),
+      clearAuth: () =>
+        set({
+          user: null,
+          isAuthenticated: false,
+          error: null,
+        }),
+      setLoading: (loading) => set({ isLoading: loading }),
+      setError: (error) => set({ error }),
+      setNavPosition: (pos) => set({ navPosition: pos }),
     }),
-  setLoading: (loading) => set({ isLoading: loading }),
-  setError: (error) => set({ error }),
-}))
+    {
+      name: "auth-storage",
+    }
+  )
+)

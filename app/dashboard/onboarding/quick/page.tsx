@@ -230,7 +230,7 @@ export default function QuickOnboardingPage() {
       <div className="mb-8">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-semibold mb-2">Choose Entry Type</h2>
-          <p className="text-sm text-blue-600">
+          <p className="text-sm text-purple-600">
             Selected: <span className="font-medium">{entryType === "single" ? "Single" : "Batch"}</span>
           </p>
         </div>
@@ -239,12 +239,12 @@ export default function QuickOnboardingPage() {
           <button
             onClick={() => setEntryType("single")}
             className={cn(
-              "p-6 rounded-lg border-2 transition-all text-left hover:border-blue-300",
-              entryType === "single" ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
+              "p-6 rounded-lg border-2 transition-all text-left hover:border-purple-300",
+              entryType === "single" ? "border-purple-500 bg-purple-50" : "border-gray-200 bg-white",
             )}
           >
             <div className="flex items-start gap-3">
-              <div className={cn("p-2 rounded-full", entryType === "single" ? "bg-blue-500" : "bg-gray-300")}>
+              <div className={cn("p-2 rounded-full", entryType === "single" ? "bg-purple-500" : "bg-gray-300")}>
                 <User className={cn("w-5 h-5", entryType === "single" ? "text-white" : "text-gray-600")} />
               </div>
               <div>
@@ -256,17 +256,23 @@ export default function QuickOnboardingPage() {
 
           <button
             onClick={() => setEntryType("batch")}
+            disabled={true} // Set this to your boolean logic, e.g., isSubmitting
             className={cn(
-              "p-6 rounded-lg border-2 transition-all text-left hover:border-blue-300",
-              entryType === "batch" ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white",
+              "p-6 rounded-lg border-2 transition-all text-left",
+              // Active Styles
+              entryType === "batch" ? "border-purple-500 bg-purple-50" : "border-gray-200 bg-white",
+              // Hover Styles (only if not disabled)
+              "enabled:hover:border-purple-300",
+              // Disabled Styles
+              "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
             )}
           >
             <div className="flex items-start gap-3">
-              <div className={cn("p-2 rounded-full", entryType === "batch" ? "bg-blue-500" : "bg-gray-300")}>
+              <div className={cn("p-2 rounded-full", entryType === "batch" ? "bg-purple-500" : "bg-gray-300")}>
                 <Users className={cn("w-5 h-5", entryType === "batch" ? "text-white" : "text-gray-600")} />
               </div>
               <div>
-                <div className="font-semibold text-base mb-1">Individual Batch Entry</div>
+                <div className="font-semibold text-base mb-1">Individual Batch Entry (Coming Soon)</div>
                 <div className="text-sm text-muted-foreground">Onboard batch entries of customers or entities.</div>
               </div>
             </div>
@@ -279,7 +285,7 @@ export default function QuickOnboardingPage() {
         <div className="space-y-6">
           <form onSubmit={handleSubmit} className="bg-white rounded-lg border p-6">
             <div className="flex items-center gap-2 mb-4">
-              <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">Individual</span>
+              <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">Individual</span>
               <h3 className="text-lg font-semibold">New Individual Registration</h3>
             </div>
 
@@ -307,16 +313,16 @@ export default function QuickOnboardingPage() {
               {isIdCardExpanded && (
                 <div className="mt-4 p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
                   <div
-                    className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center bg-white cursor-pointer hover:bg-blue-50/30 transition-colors"
+                    className="border-2 border-dashed border-purple-300 rounded-lg p-6 text-center bg-white cursor-pointer hover:bg-purple-50/30 transition-colors"
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={handleIdCardDrop}
                     onClick={() => document.getElementById("idCardUpload")?.click()}
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Upload className="w-5 h-5 text-blue-600" />
+                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                        <Upload className="w-5 h-5 text-purple-600" />
                       </div>
-                      <p className="text-sm font-medium text-blue-700">Upload ID Card</p>
+                      <p className="text-sm font-medium text-purple-700">Upload ID Card</p>
                       <p className="text-xs text-muted-foreground">
                         {idCardFile ? idCardFile.name : "Drag & drop files here, or click to select"}
                       </p>
@@ -330,9 +336,9 @@ export default function QuickOnboardingPage() {
                     />
                   </div>
 
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <div className="mt-4 p-3 bg-purple-50 rounded-lg">
                     <div className="flex items-start gap-2 mb-2">
-                      <Info className="w-4 h-4 text-blue-600 mt-0.5" />
+                      <Info className="w-4 h-4 text-purple-600 mt-0.5" />
                       <h5 className="text-sm font-semibold text-gray-900">File Requirements</h5>
                     </div>
                     <ul className="text-xs text-gray-600 space-y-1 ml-6">
@@ -374,8 +380,8 @@ export default function QuickOnboardingPage() {
 
             {/* Personal Information */}
             <div className="mb-6">
-              <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg">
-                <User className="w-4 h-4 text-blue-600" />
+              <div className="flex items-center gap-2 mb-4 p-3 bg-purple-50 rounded-lg">
+                <User className="w-4 h-4 text-purple-600" />
                 <h4 className="font-semibold text-sm">Personal Information</h4>
               </div>
 
@@ -592,16 +598,16 @@ export default function QuickOnboardingPage() {
               </div>
 
               <div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50/30 cursor-pointer"
+                className="border-2 border-dashed border-purple-300 rounded-lg p-8 text-center bg-purple-50/30 cursor-pointer"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
                 onClick={() => document.getElementById("fileUpload")?.click()}
               >
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Upload className="w-6 h-6 text-blue-600" />
+                  <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                    <Upload className="w-6 h-6 text-purple-600" />
                   </div>
-                  <p className="text-sm font-medium text-blue-700">Add Documents</p>
+                  <p className="text-sm font-medium text-purple-700">Add Documents</p>
                   <p className="text-xs text-muted-foreground">
                     {selectedFile ? selectedFile.name : "Drag & drop files here, or click to select"}
                   </p>
@@ -656,7 +662,7 @@ export default function QuickOnboardingPage() {
               </div> */}
             </div>
 
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={submitting}>
+            <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={submitting}>
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
@@ -675,15 +681,15 @@ export default function QuickOnboardingPage() {
               <h3 className="text-lg font-semibold">Batch Onboarding</h3>
             </div>
 
-            <Button className="bg-blue-600 hover:bg-blue-700 mb-6">
+            <Button className="bg-purple-600 hover:bg-purple-700 mb-6">
               <Download className="w-4 h-4 mr-2" />
               Download Excel Template
             </Button>
 
             {/* Instructions */}
-            <div className="mb-6 p-4 border border-blue-200 rounded-lg bg-blue-50">
+            <div className="mb-6 p-4 border border-purple-200 rounded-lg bg-purple-50">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-5 h-5 bg-blue-600 rounded flex items-center justify-center">
+                <div className="w-5 h-5 bg-purple-600 rounded flex items-center justify-center">
                   <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -792,7 +798,7 @@ export default function QuickOnboardingPage() {
             >
               <p className="text-sm text-gray-600">
                 Drag & drop a .xlsx file here, or{" "}
-                <label htmlFor="batchFileUpload" className="text-blue-600 cursor-pointer hover:underline">
+                <label htmlFor="batchFileUpload" className="text-purple-600 cursor-pointer hover:underline">
                   click to select
                 </label>
               </p>
@@ -801,7 +807,7 @@ export default function QuickOnboardingPage() {
             </div>
 
             <div className="mt-6 flex justify-end">
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-purple-600 hover:bg-purple-700">
                 <Upload className="w-4 h-4 mr-2" />
                 Process Batch
               </Button>

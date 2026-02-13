@@ -21,7 +21,7 @@ import {MarmeladRegular} from "./fonts/Marmelad-Regular"
 const getRiskLevel = (score: number) => {
   if (score >= 90) return { label: "True Match", color: [239, 68, 68] as [number, number, number] } // Red
   if (score >= 40) return { label: "Potential Match", color: [245, 158, 11] as [number, number, number] } // Orange
-  return { label: "No Match", color: [34, 197, 94] as [number, number, number] } // Green
+  return { label: "False Positive", color: [34, 197, 94] as [number, number, number] } // Green
 }
 
 export async function generateScreeningSessionPDF({
@@ -174,7 +174,7 @@ export async function generateScreeningSessionPDF({
   doc.setTextColor(40, 40, 40)
   doc.setFontSize(18)
   doc.setFont("times", "bold")
-  const titleText = `Screening Result Report: `
+  const titleText = `Subject: `
   const titleWidth = doc.getTextWidth(titleText)
   doc.text(titleText, margin, y)
   doc.setFont("times", "normal")

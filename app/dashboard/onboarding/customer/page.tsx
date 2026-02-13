@@ -169,7 +169,7 @@ export default function CustomerOnboardingPage() {
         <div className="grid grid-cols-2 gap-4 max-w-3xl mx-auto">
           <button
             onClick={() => setCustomerType("individual")}
-            className={`p-6 rounded-lg border-2 transition-all ${customerType === "individual" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+            className={`p-6 rounded-lg border-2 transition-all ${customerType === "individual" ? "border-purple-500 bg-purple-50" : "border-gray-200 hover:border-purple-300"
               }`}
           >
             <User className="w-6 h-6 mb-2" />
@@ -179,7 +179,7 @@ export default function CustomerOnboardingPage() {
 
           <button
             onClick={() => setCustomerType("corporate")}
-            className={`p-6 rounded-lg border-2 transition-all ${customerType === "corporate" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+            className={`p-6 rounded-lg border-2 transition-all ${customerType === "corporate" ? "border-purple-500 bg-purple-50" : "border-purple-200 hover:border-purple-300"
               }`}
           >
             <Building2 className="w-6 h-6 mb-2" />
@@ -418,41 +418,41 @@ function IndividualForm({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
-        <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Individual</span>
+        <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Individual</span>
         <h3 className="text-lg font-semibold">New Individual Registration</h3>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="sticky top-0 z-20 bg-white/95 backdrop-blur py-3 border-b mb-4">
           <TabsList className="w-full h-auto flex flex-wrap justify-start gap-2 bg-transparent p-0">
-            <TabsTrigger value="personal" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="personal" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Personal Information
             </TabsTrigger>
-            <TabsTrigger value="address" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="address" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Address Information
             </TabsTrigger>
-            <TabsTrigger value="contact" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="contact" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Contact Information
             </TabsTrigger>
-            <TabsTrigger value="gender-pep" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="gender-pep" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Gender and PEP Status
             </TabsTrigger>
-            <TabsTrigger value="occupation" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="occupation" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Occupation and Income
             </TabsTrigger>
-            <TabsTrigger value="financial" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="financial" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Financial Details
             </TabsTrigger>
-            <TabsTrigger value="transactions" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="transactions" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Transactions and ID Details
             </TabsTrigger>
-            <TabsTrigger value="identification" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="identification" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Identification Details
             </TabsTrigger>
-            <TabsTrigger value="additional-info" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="additional-info" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Additional Information
             </TabsTrigger>
-            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Upload Documents
             </TabsTrigger>
           </TabsList>
@@ -461,9 +461,9 @@ function IndividualForm({
         <form className="space-y-6 pb-0" onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}>
           <TabsContent value="personal" className="mt-0">
             {/* Personal Information */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-blue-600" />
+                <User className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Personal Information</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -498,9 +498,9 @@ function IndividualForm({
 
           <TabsContent value="address" className="mt-0">
             {/* Address Information */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <MapPin className="w-5 h-5 text-blue-600" />
+                <MapPin className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Address Information</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -538,9 +538,9 @@ function IndividualForm({
 
           <TabsContent value="contact" className="mt-0">
             {/* Contact Information */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <Phone className="w-5 h-5 text-blue-600" />
+                <Phone className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Contact Information</h4>
               </div>
               <div className="grid grid-cols-3 gap-4">
@@ -568,9 +568,9 @@ function IndividualForm({
 
           <TabsContent value="gender-pep" className="mt-0">
             {/* Gender and PEP Status */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-blue-600" />
+                <User className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Gender and PEP Status</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -610,9 +610,9 @@ function IndividualForm({
 
           <TabsContent value="occupation" className="mt-0">
             {/* Occupation and Income */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <Briefcase className="w-5 h-5 text-blue-600" />
+                <Briefcase className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Occupation and Income</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -642,9 +642,9 @@ function IndividualForm({
 
           <TabsContent value="financial" className="mt-0">
             {/* Financial Details */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign className="w-5 h-5 text-blue-600" />
+                <DollarSign className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Financial Details</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -674,9 +674,9 @@ function IndividualForm({
 
           <TabsContent value="transactions" className="mt-0">
             {/* Transactions and ID Details */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-blue-600" />
+                <FileText className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Transactions and ID Details</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -725,9 +725,9 @@ function IndividualForm({
 
           <TabsContent value="identification" className="mt-0">
             {/* Identification Details */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <IdCard className="w-5 h-5 text-blue-600" />
+                <IdCard className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Identification Details</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -773,9 +773,9 @@ function IndividualForm({
 
           <TabsContent value="additional-info" className="mt-0">
             {/* Additional Information */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-blue-600" />
+                <FileText className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Additional Information</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -814,7 +814,7 @@ function IndividualForm({
                 </div>
                 <div className="col-span-2 space-y-2">
                   <Label>Is Customer Facing any adverse event? *</Label>
-                  <p className="text-xs text-blue-600 mb-2">We don't Check adverse news feed</p>
+                  <p className="text-xs text-purple-600 mb-2">We don't Check adverse news feed</p>
                   <RadioGroup value={adverseNews ? "yes" : "no"} onValueChange={handleBooleanRadio(setAdverseNews)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="adverse-yes" />
@@ -846,17 +846,17 @@ function IndividualForm({
 
           <TabsContent value="documents" className="mt-0">
             {/* Upload Documents */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <Upload className="w-5 h-5 text-blue-600" />
+                <Upload className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Upload Documents</h4>
               </div>
               <div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
+                className="border-2 border-dashed border-purple-300 rounded-lg p-8 text-center cursor-pointer"
                 onClick={openFilePicker}
               >
-                <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                <p className="text-sm text-blue-600 mb-1">Add Documents</p>
+                <Upload className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                <p className="text-sm text-purple-600 mb-1">Add Documents</p>
                 <p className="text-xs text-muted-foreground">Max 5 files, each up to 2MB (Images, PDFs, Docs)</p>
                 <input
                   ref={fileInputRef}
@@ -878,7 +878,7 @@ function IndividualForm({
           </TabsContent>
 
           <div className="sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t mt-6">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">Submit Registration</Button>
+            <Button className="w-full bg-purple-600 hover:bg-purple-700" type="submit">Submit Registration</Button>
           </div>
         </form>
       </Tabs>
@@ -953,13 +953,13 @@ function CorporateForm({
     { value: "Shams", label: "Shams" },
     { value: "DMCC", label: "DMCC" },
     { value: "MOEDED", label: "MOEDED" },
-    // { value: "FZCO", label: "FZCO" },
-    // { value: "Private Limited", label: "Private Limited" },
+    { value: "Foreign Entity", label: "Foreign Entity" },
+    { value: "Freezone Company", label: "Freezone Company" },
     // { value: "Public Limited", label: "Public Limited" },
   ]
   const business_activities = [
     { value: "Accounting/Auditing Firm", label: "Accounting/Auditing Firm" },
-    { value: "Bank/Financial Institute", label: "Bank/Financial Institute" },
+    // { value: "Bank/Financial Institute", label: "Bank/Financial Institute" },
     { value: "DPMS - Retail Store", label: "DPMS - Retail Store" },
     { value: "DPMS - Bullion Wholesale", label: "DPMS - Bullion Wholesale" },
     { value: "DPMS - Mining, Refining", label: "DPMS - Mining, Refining" },
@@ -1038,6 +1038,7 @@ function CorporateForm({
   const [entityType, setEntityType] = useState("")
   const [countriesOfOperation, setCountriesOfOperation] = useState<string[]>([])
   const [businessActivity, setBusinessActivity] = useState("")
+  const [businessActivityOther, setBusinessActivityOther] = useState("")
   const [productSource, setProductSource] = useState("")
   const [paymentMode, setPaymentMode] = useState("")
   const [deliveryChannel, setDeliveryChannel] = useState("")
@@ -1045,7 +1046,10 @@ function CorporateForm({
   const [corpRemarks, setCorpRemarks] = useState("")
   const [hasSisterConcern, setHasSisterConcern] = useState(false)
   const [productTypesCorp, setProductTypesCorp] = useState<string[]>([])
+  const [customProducts, setCustomProducts] = useState<string[]>([])
+  const [customProductInput, setCustomProductInput] = useState("")
   const [accountHoldingBankName, setAccountHoldingBankName] = useState("")
+  const [purposeOfRelation, setPurposeOfRelation] = useState("")
 
   // Tab state for corporate
   const [activeTabCorp, setActiveTabCorp] = useState("company")
@@ -1072,28 +1076,41 @@ function CorporateForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // Validation - check required fields
-    const requiredFields = {
+    const requiredFields: Record<string, string> = {
+      // Company Information
       'Company Name': companyName,
       'Company Address': companyAddress,
       'City': city,
       'Country of Incorporation': companyCountry,
-      'PO Box No': poBox,
+      // 'PO Box No': poBox,
       'Customer Type': corporateCustomerType,
+      // Contact Information
+      // 'Country Code (Office)': officeCountryCode,
+      // 'Contact Office No': officeNo,
       'Country Code (Mobile)': mobileCountryCode,
       'Contact Mobile No': mobileNo,
       'Email': email,
+      // Identity Information
       'Trade License/CR No': tradeLicenseNo,
       'Trade License/CR Issued At': tradeLicenseIssuedAt,
       'Trade License/COI Issued By': tradeLicenseIssuedBy,
       'Trade License/CR Issued Date': licenseIssueDate,
+      'Trade License/CR Expiry Date': licenseExpiryDate,
+      // 'VAT Registration Number': vatRegistrationNo,
+      'Tenancy Contract Expiry Date': tenancyContractExpiryDate,
+      // Business Information
       'Entity Type': entityType,
       'Countries of Operation': countriesOfOperation.length > 0 ? 'filled' : '',
-      'Business Activity': businessActivity,
-      'Account Holding Bank Name': accountHoldingBankName,
+      'Business Activity': businessActivity === 'Other' ? businessActivityOther : businessActivity,
+      // 'Account Holding Bank Name': accountHoldingBankName,
+      'Purpose of Relation': purposeOfRelation,
+      // Product Details
       'Product Type': productTypesCorp.length > 0 ? 'filled' : '',
       'Product Source': productSource,
       'Payment Mode': paymentMode,
       'Delivery Channel': deliveryChannel,
+      'Expected No of Transactions': expectedNoOfTransactions,
+      'Expected Volume': expectedVolume,
     }
 
     const emptyFields = Object.entries(requiredFields)
@@ -1175,10 +1192,11 @@ function CorporateForm({
         vat_registration_no: vatRegistrationNo,
         tenancy_contract_expiry_date: tenancyContractExpiryDate,
         entity_type: entityType,
-        business_activity: businessActivity,
+        business_activity: businessActivity === 'Other' ? businessActivityOther : businessActivity,
         is_entity_dealting_with_import_export: isImportExport,
         has_sister_concern: hasSisterConcern,
         account_holding_bank_name: accountHoldingBankName,
+        purpose_of_relation: purposeOfRelation,
         product_source: productSource,
         payment_mode: paymentMode,
         delivery_channel: deliveryChannel,
@@ -1252,38 +1270,38 @@ function CorporateForm({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
-        <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Corporate</span>
+        <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Corporate</span>
         <h3 className="text-lg font-semibold">New Corporate Registration</h3>
       </div>
 
       <Tabs value={activeTabCorp} onValueChange={setActiveTabCorp} className="w-full">
         <div className="sticky top-0 z-20 bg-white/95 backdrop-blur py-3 border-b mb-4">
           <TabsList className="w-full h-auto flex flex-wrap justify-start gap-2 bg-transparent p-0">
-            <TabsTrigger value="company" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="company" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Company Information
             </TabsTrigger>
-            <TabsTrigger value="contact" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="contact" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Contact Information
             </TabsTrigger>
-            <TabsTrigger value="identity" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="identity" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Identity Information
             </TabsTrigger>
-            <TabsTrigger value="operations" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="operations" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Business Information
             </TabsTrigger>
-            <TabsTrigger value="product" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="product" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Product Details
             </TabsTrigger>
-            <TabsTrigger value="aml" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              AML Compliance
+            <TabsTrigger value="aml" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+              AML Compliance Questionnaire
             </TabsTrigger>
-            <TabsTrigger value="related" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="related" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Partner/Representative
             </TabsTrigger>
-            <TabsTrigger value="additional" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="additional" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Additional Information
             </TabsTrigger>
-            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-purple-100 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               Upload Documents
             </TabsTrigger>
           </TabsList>
@@ -1292,9 +1310,9 @@ function CorporateForm({
         <form className="space-y-6 pb-0" onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}>
           <TabsContent value="company" className="mt-0">
             {/* Company Information */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <Building2 className="w-5 h-5 text-blue-600" />
+                <Building2 className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Company Information</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -1321,7 +1339,7 @@ function CorporateForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>PO Box No *</Label>
+                  <Label>PO Box No </Label>
                   <Input placeholder="Enter the PO Box No" value={poBox} onChange={e => setPoBox(e.target.value)} />
                 </div>
                 <div className="space-y-2">
@@ -1340,15 +1358,15 @@ function CorporateForm({
 
           <TabsContent value="contact" className="mt-0">
             {/* Contact Information */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <Phone className="w-5 h-5 text-blue-600" />
+                <Phone className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Contact Information</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">
-                    <Label>Country Code</Label>
+                    <Label>Country Code </Label>
                     <Combobox
                       options={countryCodes}
                       value={officeCountryCode}
@@ -1358,7 +1376,7 @@ function CorporateForm({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Contact Office No</Label>
+                    <Label>Contact Office No </Label>
                     <Input placeholder="Enter the Contact Office No" value={officeNo} onChange={e => setOfficeNo(e.target.value)} />
                   </div>
                 </div>
@@ -1388,9 +1406,9 @@ function CorporateForm({
 
           <TabsContent value="identity" className="mt-0">
             {/* Identity Information */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <IdCard className="w-5 h-5 text-blue-600" />
+                <IdCard className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Identity Information</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -1401,7 +1419,10 @@ function CorporateForm({
                 <div className="space-y-2">
                   <Label>Trade License/CR Issued At *</Label>
                   <Combobox
-                    options={countries}
+                    options={[
+                      ...countries,
+                      { value: "Outside UAE", label: "Outside UAE" },
+                    ]}
                     value={tradeLicenseIssuedAt}
                     onValueChange={handleSingleSelect(setTradeLicenseIssuedAt)}
                     placeholder="Select a country"
@@ -1423,15 +1444,15 @@ function CorporateForm({
                   <Input type="date" placeholder="mm/dd/yyyy" value={licenseIssueDate} onChange={e => setLicenseIssueDate(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Trade License/CR Expiry Date</Label>
+                  <Label>Trade License/CR Expiry Date *</Label>
                   <Input type="date" placeholder="mm/dd/yyyy" value={licenseExpiryDate} onChange={e => setLicenseExpiryDate(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>VAT Registration Number</Label>
+                  <Label>VAT Registration Number </Label>
                   <Input placeholder="Enter VAT Registration Number" value={vatRegistrationNo} onChange={e => setVatRegistrationNo(e.target.value)} />
                 </div>
                 <div className="col-span-2 space-y-2">
-                  <Label>Tenancy Contract Expiry Date</Label>
+                  <Label>Tenancy Contract Expiry Date *</Label>
                   <Input type="date" placeholder="mm/dd/yyyy" value={tenancyContractExpiryDate} onChange={e => setTenancyContractExpiryDate(e.target.value)} />
                 </div>
               </div>
@@ -1440,9 +1461,9 @@ function CorporateForm({
 
           <TabsContent value="operations" className="mt-0">
             {/* Business Information */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <Globe className="w-5 h-5 text-blue-600" />
+                <Globe className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Business Information</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -1476,6 +1497,14 @@ function CorporateForm({
                     placeholder="Select business activity"
                     searchPlaceholder="Search business activity..."
                   />
+                  {businessActivity === "Other" && (
+                    <Input
+                      className="mt-2"
+                      placeholder="Please specify business activity"
+                      value={businessActivityOther}
+                      onChange={e => setBusinessActivityOther(e.target.value)}
+                    />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Is entity dealing with Import/Export? *</Label>
@@ -1491,7 +1520,7 @@ function CorporateForm({
                   </RadioGroup>
                 </div>
                 <div className="col-span-2 space-y-2">
-                  <Label>Any other sister concern/branch? *</Label>
+                  <Label>Any other sister concern/branch?</Label>
                   <RadioGroup value={hasSisterConcern ? "yes" : "no"} onValueChange={(v) => setHasSisterConcern(v === "yes")} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="sister-yes" />
@@ -1503,9 +1532,36 @@ function CorporateForm({
                     </div>
                   </RadioGroup>
                 </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Account Holding Bank Name *</Label>
-                  <Input placeholder="Enter bank name (max 50 characters)" value={accountHoldingBankName} onChange={e => setAccountHoldingBankName(e.target.value)} />
+                <div className="col-span-2 grid grid-cols-2 gap-4">
+                  {/* Left Column: Bank Name */}
+                  <div className="space-y-2">
+                    <Label>Account Holding Bank Name</Label>
+                    <Input
+                      placeholder="Enter bank name (max 50 characters)"
+                      value={accountHoldingBankName}
+                      onChange={e => setAccountHoldingBankName(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Right Column: Purpose of Relation */}
+                  <div className="space-y-2">
+                    <Label>Purpose of Relationship *</Label>
+                    <Combobox
+                      options={[
+                        { value: "Buy", label: "Buy" },
+                        { value: "Sell", label: "Sell" },
+                        { value: "Buy and Sell", label: "Buy and Sell" },
+                        { value: "Investment", label: "Investment" },
+                        { value: "Trading", label: "Trading" },
+                        { value: "Manufacturing", label: "Manufacturing" },
+                        { value: "Other", label: "Other" },
+                      ]}
+                      value={purposeOfRelation}
+                      onValueChange={handleSingleSelect(setPurposeOfRelation)}
+                      placeholder="Select purpose of relation"
+                      searchPlaceholder="Search purpose..."
+                    />
+                  </div>
                 </div>
               </div>
             </Card>
@@ -1513,9 +1569,9 @@ function CorporateForm({
 
           <TabsContent value="product" className="mt-0">
             {/* Product Details */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-blue-600" />
+                <FileText className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Product Details</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -1561,15 +1617,15 @@ function CorporateForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Expected No of Transactions</Label>
+                  <Label>Expected No of Transactions *</Label>
                   <Input type="number" placeholder="0" value={expectedNoOfTransactions} onChange={e => setExpectedNoOfTransactions(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Expected Volume</Label>
+                  <Label>Expected Volume *</Label>
                   <Input type="number" placeholder="0" value={expectedVolume} onChange={e => setExpectedVolume(e.target.value)} />
                 </div>
                 <div className="col-span-2 space-y-2">
-                  <Label>Deal with Goods? *</Label>
+                  <Label>Deal with Dual-used Goods? *</Label>
                   <RadioGroup value={dealWithGoods ? "yes" : "no"} onValueChange={(v) => setDealWithGoods(v === "yes")} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="goods-yes" />
@@ -1587,25 +1643,12 @@ function CorporateForm({
 
           <TabsContent value="aml" className="mt-0">
             {/* AML Compliance Questionnaire */}
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <FileCheck className="w-5 h-5 text-blue-600" />
+            <Card className="p-6 bg-purple-50/30">
+              {/* <div className="flex items-center gap-2 mb-4">
+                <FileCheck className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">AML Compliance Questionnaire</h4>
-              </div>
+              </div> */}
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>KYC documents collected with form *</Label>
-                  <RadioGroup value={kycCollected ? "yes" : "no"} onValueChange={(v) => setKycCollected(v === "yes")} className="flex gap-6 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="kyc-yes" />
-                      <Label htmlFor="kyc-yes">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="kyc-no" />
-                      <Label htmlFor="kyc-no">No</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
                 <div className="space-y-2">
                   <Label>Is entity registered in GOAML *</Label>
                   <RadioGroup value={isRegisteredGoAML ? "yes" : "no"} onValueChange={(v) => setIsRegisteredGoAML(v === "yes")} className="flex gap-6 mt-2">
@@ -1620,8 +1663,21 @@ function CorporateForm({
                   </RadioGroup>
                 </div>
                 <div className="space-y-2">
+                  <Label>KYC documents collected with form *</Label>
+                  <RadioGroup value={kycCollected ? "yes" : "no"} onValueChange={(v) => setKycCollected(v === "yes")} className="flex gap-6 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="kyc-yes" />
+                      <Label htmlFor="kyc-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="kyc-no" />
+                      <Label htmlFor="kyc-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="space-y-2 d-none hidden">
                   <Label>Is Entity Having Material Match *</Label>
-                  <p className="text-xs text-blue-600 mb-2">We don't Check adverse news feed</p>
+                  <p className="text-xs text-purple-600 mb-2">We don't Check adverse news feed</p>
                   <RadioGroup value={isAdverseNews ? "yes" : "no"} onValueChange={(v) => setIsAdverseNews(v === "yes")} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="material-yes" />
@@ -1669,9 +1725,9 @@ function CorporateForm({
 
           <TabsContent value="related" className="mt-0">
             {/* Partner/Representative/Authorized Person Details */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <UsersIcon className="w-5 h-5 text-blue-600" />
+                <UsersIcon className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Partner/Representative/Authorized Person Details</h4>
               </div>
               {ubos.map((ubo, index) => (
@@ -1780,17 +1836,17 @@ function CorporateForm({
 
           <TabsContent value="documents" className="mt-0">
             {/* Upload Documents */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <Upload className="w-5 h-5 text-blue-600" />
+                <Upload className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Upload Documents</h4>
               </div>
               <div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
+                className="border-2 border-dashed border-purple-300 rounded-lg p-8 text-center cursor-pointer"
                 onClick={openCorpFilePicker}
               >
-                <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                <p className="text-sm text-blue-600 mb-1">Add Documents</p>
+                <Upload className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                <p className="text-sm text-purple-600 mb-1">Add Documents</p>
                 <p className="text-xs text-muted-foreground">Max 5 files, each up to 5MB (Images, PDFs, Docs)</p>
                 <input
                   ref={corpFileInputRef}
@@ -1813,9 +1869,9 @@ function CorporateForm({
 
           <TabsContent value="additional" className="mt-0">
             {/* Additional Information */}
-            <Card className="p-6 bg-blue-50/30">
+            <Card className="p-6 bg-purple-50/30">
               <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-blue-600" />
+                <FileText className="w-5 h-5 text-purple-600" />
                 <h4 className="font-semibold">Additional Information</h4>
               </div>
               <div className="space-y-4">
@@ -1838,7 +1894,7 @@ function CorporateForm({
           </TabsContent>
 
           <div className="sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t mt-6">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">Submit Registration</Button>
+            <Button className="w-full bg-purple-600 hover:bg-purple-700" type="submit">Submit Registration</Button>
           </div>
         </form>
       </Tabs>

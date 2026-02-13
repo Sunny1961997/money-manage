@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, KeyRound, LayoutDashboard, LogOut } from "lucide-react"
+import { Bell, KeyRound, LayoutDashboard, LogOut, PanelLeft, PanelTop } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { usePathname, useRouter } from "next/navigation"
@@ -44,7 +44,7 @@ function getHeaderMeta(pathname: string) {
 export function Header() {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, clearAuth, isLoading, setLoading, setError } = useAuthStore()
+  const { user, clearAuth, isLoading, setLoading, setError, navPosition, setNavPosition } = useAuthStore()
   const { section, title } = getHeaderMeta(pathname ?? "/dashboard")
 
   const currentDate = new Intl.DateTimeFormat(undefined, {
@@ -76,7 +76,7 @@ export function Header() {
   }
 
   return (
-    <header className="h-16 border-b border-border bg-background px-4 sm:px-6">
+    <header className="h-22 border-b border-border bg-background px-4 sm:px-6">
       <div className="h-full flex items-center justify-between gap-4">
         <div className="min-w-0 flex items-center gap-3">
           {/* <Button variant="outline" size="sm" className="bg-red-50 text-red-600 border-red-200">
@@ -148,6 +148,17 @@ export function Header() {
               >
                 <KeyRound className="w-4 h-4 mr-2 text-inherit transition-transform duration-200 group-data-[highlighted]:translate-x-0.5" />
                 Change Password
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="group rounded-lg px-3 py-2 data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground"
+                onClick={() => setNavPosition(navPosition === "sidebar" ? "topbar" : "sidebar")}
+              >
+                {navPosition === "sidebar" ? (
+                  <PanelTop className="w-4 h-4 mr-2 text-inherit transition-transform duration-200 group-data-[highlighted]:translate-x-0.5" />
+                ) : (
+                  <PanelLeft className="w-4 h-4 mr-2 text-inherit transition-transform duration-200 group-data-[highlighted]:translate-x-0.5" />
+                )}
+                {navPosition === "sidebar" ? "Switch to Top Navbar" : "Switch to Sidebar"}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="group rounded-lg px-3 py-2 data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground"
