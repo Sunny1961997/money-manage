@@ -62,7 +62,7 @@ const companyAdminNavigation: NavItem[] = [
       { name: "Name and PEP Screening", href: "/dashboard/screening/quick" },
     ],
   },
-  { name: "Adverse Media Check", icon: Newspaper, disabled: true },
+  { name: "Adverse Media Check", icon: Newspaper, href: "/dashboard/adverse-search" },
   {
     name: "Regulatory Reporting",
     icon: FileSpreadsheet,
@@ -74,7 +74,7 @@ const companyAdminNavigation: NavItem[] = [
     icon: LifeBuoy,
     children: [
       { name: "Raise a Ticket", href: "/dashboard/tickets" },
-      { name: "Automated Bot", disabled: true },
+      { name: "Automated Bot", href: "/dashboard/support/bot" },
     ],
   },
 ]
@@ -104,7 +104,7 @@ const authorNavigation: NavItem[] = [
     icon: LifeBuoy,
     children: [
       { name: "Raise a Ticket", href: "/dashboard/tickets" },
-      { name: "Automated Bot", disabled: true },
+      { name: "Automated Bot", href: "/dashboard/support/bot" },
     ],
   },
 ]
@@ -137,7 +137,7 @@ const mlroNavigation: NavItem[] = [
       { name: "Name and PEP Screening", href: "/dashboard/screening/quick" },
     ],
   },
-  { name: "Adverse Media Check", icon: Newspaper, disabled: true },
+  { name: "Adverse Media Check", icon: Newspaper, href: "/dashboard/adverse-search" },
   {
     name: "Regulatory Reporting",
     icon: FileSpreadsheet,
@@ -149,7 +149,7 @@ const mlroNavigation: NavItem[] = [
     icon: LifeBuoy,
     children: [
       { name: "Raise a Ticket", href: "/dashboard/tickets" },
-      { name: "Automated Bot", disabled: true },
+      { name: "Automated Bot", href: "/dashboard/support/bot" },
     ],
   },
 ]
@@ -192,7 +192,7 @@ const flaNavigation: NavItem[] = [
     icon: LifeBuoy,
     children: [
       { name: "Raise a Ticket", href: "/dashboard/tickets" },
-      { name: "Automated Bot", disabled: true },
+      { name: "Automated Bot", href: "/dashboard/support/bot" },
     ],
   },
 ]
@@ -244,10 +244,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
       <aside className="fixed top-0 left-0 h-screen w-52 border-r border-border bg-sidebar flex flex-col">
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <img 
-              src="/aml_meter.png" 
-              alt="AML Meter" 
-              className="h-8 w-auto object-contain" 
+            <img
+              src="/aml_meter.png"
+              alt="AML Meter"
+              className="h-8 w-auto object-contain"
             />
           </div>
         </div>
@@ -259,34 +259,34 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     <aside
       className={cn(
         "fixed top-0 left-0 h-screen z-40 border-r border-border bg-sidebar flex flex-col transition-all duration-300",
-        isCollapsed ? "w-16" : "w-52"
+        isCollapsed ? "w-16" : "w-72"
       )}
       style={{ minHeight: '100vh' }}
     >
       {/* Top section with logo and collapse button */}
       <div
         className={cn(
-          "border-b border-border",
+          "border-b border-border h-[88px] shrink-0",
           isCollapsed ? "flex flex-col items-center gap-2 px-2 py-3" : "flex items-center justify-between p-4"
         )}
       >
         {!isCollapsed ? (
           <div className="flex items-center gap-3">
             <Link href="/dashboard/profile">
-              <img 
-                src="/aml_meter_2.png" 
-                alt="AML Meter" 
-                className="h-14 w-auto object-contain" 
+              <img
+                src="/aml_meter_2.png"
+                alt="AML Meter"
+                className="h-14 w-auto object-contain"
               />
             </Link>
           </div>
         ) : (
           <div className="flex justify-center">
             <Link href="/dashboard" className="flex h-9 w-9 items-center justify-center">
-              <img 
-                src="/aml_meter_2.png" 
-                alt="AM" 
-                className="w-full h-full object-contain" 
+              <img
+                src="/aml_meter_2.png"
+                alt="AM"
+                className="w-full h-full object-contain"
               />
             </Link>
           </div>
@@ -386,7 +386,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                         <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
                       </span>
                       {!isCollapsed && (
-                        <span title={item.name} className="truncate text-left leading-5">
+                        <span title={item.name} className="text-left leading-5">
                           {item.name}
                         </span>
                       )}
@@ -406,7 +406,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                 "text-muted-foreground/80 cursor-not-allowed opacity-80",
                               )}
                             >
-                              <span title={child.name} className="truncate leading-5">
+                              <span title={child.name} className="leading-5">
                                 {child.name}
                               </span>
                               <span className="text-[9px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
@@ -421,10 +421,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                 "group flex min-h-9 items-center gap-2 px-2.5 py-1.5 text-sm rounded-lg transition-all",
                                 "text-foreground/80 hover:bg-primary/10 hover:text-primary",
                                 pathname === child.href &&
-                                  "text-primary bg-primary/20 font-medium shadow-[inset_2px_0_0_hsl(var(--primary))]",
+                                "text-primary bg-primary/20 font-medium shadow-[inset_2px_0_0_hsl(var(--primary))]",
                               )}
                             >
-                              <span title={child.name} className="truncate leading-5">
+                              <span title={child.name} className="leading-5">
                                 {child.name}
                               </span>
                             </Link>
@@ -453,7 +453,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                         <item.icon className="h-4 w-4 transition-transform duration-200" />
                       </span>
                       {!isCollapsed && (
-                        <span title={item.name} className="truncate text-left leading-5">
+                        <span title={item.name} className="text-left leading-5">
                           {item.name}
                         </span>
                       )}
@@ -479,7 +479,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                       <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
                     </span>
                     {!isCollapsed && (
-                      <span title={item.name} className="truncate text-left leading-5">
+                      <span title={item.name} className="text-left leading-5">
                         {item.name}
                       </span>
                     )}

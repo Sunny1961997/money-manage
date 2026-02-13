@@ -4,11 +4,11 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/lib/store"
 import { verifyAuth } from "@/lib/auth"
-import { DashboardLayout } from "@/components/dashboard-layout"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { TopNavbar } from "@/components/top-navbar"
 import { cn } from "@/lib/utils"
+import DashboardLayout from "@/components/dashboard-layout"
 
 export default function DashboardLayoutWrapper({
   children,
@@ -53,7 +53,7 @@ export default function DashboardLayoutWrapper({
 
       <div className={cn(
         "flex flex-col min-h-screen transition-all duration-300",
-        isSidebar ? (isCollapsed ? "ml-16" : "ml-52") : "ml-0"
+        isSidebar ? (isCollapsed ? "ml-16" : "ml-72") : "ml-0"
       )}>
         <Header />
         {!isSidebar && <TopNavbar />}

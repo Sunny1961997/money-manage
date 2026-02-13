@@ -62,10 +62,10 @@ export function CTA() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="text-purple-50 text-base sm:text-xl mb-10 max-w-3xl leading-relaxed font-medium text-balance"
+            className="text-purple-50 text-base sm:text-lg mb-6 max-w-xl leading-6 sm:leading-7 font-medium text-justify"
           >
             Our comprehensive AML compliance solution provides real-time screening against global sanctions databases,
-            ensuring your business regulators for highest standards of compliance.
+            ensuring your business meets the highest standards of compliance.
           </motion.p>
 
           <motion.div

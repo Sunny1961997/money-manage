@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, KeyRound, LayoutDashboard, LogOut, PanelLeft, PanelTop } from "lucide-react"
+import { Bell, KeyRound, LayoutDashboard, LogOut, PanelLeft, Settings, PanelTop } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { usePathname, useRouter } from "next/navigation"
@@ -18,8 +18,8 @@ function toTitleCase(value: string) {
 function getHeaderMeta(pathname: string) {
   const segments = pathname.split("/").filter(Boolean)
   const dashboardIndex = segments.indexOf("dashboard")
-  const pageSegment =
-    dashboardIndex >= 0 && dashboardIndex + 1 < segments.length ? segments[dashboardIndex + 1] : "overview"
+  const pathAfterDashboard = segments.slice(dashboardIndex + 1).join("/")
+  const pageSegment = pathAfterDashboard || "overview"
 
   const routeTitleMap: Record<string, string> = {
     "account-stats": "Account Statistics",
@@ -31,6 +31,7 @@ function getHeaderMeta(pathname: string) {
     admin: "Admin Dashboard",
     "goaml-reporting": "GOAML Reporting",
     "adverse-search": "Adverse Search",
+    "support/bot": "Support Bot",
     "screening-logs": "Audit Trails",
     "change-password": "Change Password",
   }
@@ -76,7 +77,7 @@ export function Header() {
   }
 
   return (
-    <header className="h-22 border-b border-border bg-background px-4 sm:px-6">
+    <header className="h-[88px] border-b border-border bg-background px-4 sm:px-6">
       <div className="h-full flex items-center justify-between gap-4">
         <div className="min-w-0 flex items-center gap-3">
           {/* <Button variant="outline" size="sm" className="bg-red-50 text-red-600 border-red-200">
@@ -138,10 +139,13 @@ export function Header() {
                 </div>
               </div>
               <DropdownMenuSeparator />
-              {/* <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
-                <Settings className="w-4 h-4 mr-2" />
+              <DropdownMenuItem
+                className="group rounded-lg px-3 py-2 data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground"
+                onClick={() => router.push('/dashboard/settings')}
+              >
+                <Settings className="w-4 h-4 mr-2 text-inherit transition-transform duration-200 group-data-[highlighted]:translate-x-0.5" />
                 Settings
-              </DropdownMenuItem> */}
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="group rounded-lg px-3 py-2 data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground"
                 onClick={() => router.push('/dashboard/change-password')}

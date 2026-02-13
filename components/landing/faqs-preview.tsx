@@ -20,7 +20,7 @@ export function FaqsPreview() {
           <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
             AML Meter <span className="text-primary">FAQs</span>
           </h2>
-          <p className="mt-2.5 text-slate-600 max-w-xl mx-auto">
+          <p className="mt-2 text-slate-600 max-w-lg mx-auto text-center leading-7">
             Clear answers for UAE DNFBPs and regulated entities adopting a risk-based compliance approach.
           </p>
         </motion.div>

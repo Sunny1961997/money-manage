@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { useState } from "react"
 
-export function DashboardLayout({ children }: { children: ReactNode }) {
+export default function DashboardLayout({ children }: { children: ReactNode }) {
   // Track sidebar collapsed state in parent to adjust margin
   const [isCollapsed, setIsCollapsed] = useState(false)
 
@@ -17,7 +17,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           // Adjust margin-left based on sidebar width
           isCollapsed
             ? "ml-16 flex flex-col min-h-screen transition-all duration-300"
-            : "ml-52 flex flex-col min-h-screen transition-all duration-300"
+            : "ml-72 flex flex-col min-h-screen transition-all duration-300"
         }
       >
         <Header />
