@@ -1,4 +1,5 @@
 import jsPDF from "jspdf"
+import { registerGlobalFonts, PDF_FONT_PRIMARY, PDF_FONT_ITALIC } from "./pdf-utils"
 
 type Candidate = {
     id: number
@@ -36,18 +37,18 @@ function addSectionHeader(doc: jsPDF, title: string, y: number, margin: number) 
     doc.rect(margin, y - 5, doc.internal.pageSize.getWidth() - margin * 2, 10, "F")
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(12)
-    doc.setFont("helvetica", "bold")
+    doc.setFont(PDF_FONT_PRIMARY, "bold")
     doc.text(title, margin + 3, y + 1)
     doc.setTextColor(0, 0, 0)
-    doc.setFont("helvetica", "normal")
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     return y + 12
 }
 
 function addLabelValue(doc: jsPDF, label: string, value: string, x: number, y: number, labelWidth = 50) {
-    doc.setFont("helvetica", "bold")
+    doc.setFont(PDF_FONT_PRIMARY, "bold")
     doc.setFontSize(10)
     doc.text(label + ":", x, y)
-    doc.setFont("helvetica", "normal")
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     doc.text(value, x + labelWidth, y)
     return y + 7
 }
@@ -111,6 +112,7 @@ export async function generateScreeningPDF(
     const conf = confidenceNum(candidate.confidence)
 
     const doc = new jsPDF({ unit: "mm", format: "a4" })
+    registerGlobalFonts(doc)
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
     const margin = 20
@@ -122,10 +124,10 @@ export async function generateScreeningPDF(
         doc.rect(0, 0, pageWidth, 15, "F")
         doc.setTextColor(255, 255, 255)
         doc.setFontSize(10)
-        doc.setFont("helvetica", "bold")
+        doc.setFont(PDF_FONT_PRIMARY, "bold")
         doc.text("AML Screening Report", margin, 10)
         doc.setFontSize(8)
-        doc.setFont("helvetica", "normal")
+        doc.setFont(PDF_FONT_PRIMARY, "normal")
         doc.text(`Page ${pageNum}`, pageWidth - margin - 20, 10, { align: "right" })
         doc.setTextColor(0, 0, 0)
     }
@@ -133,6 +135,7 @@ export async function generateScreeningPDF(
     // Footer function for all pages
     const addPageFooter = () => {
         doc.setFontSize(8)
+        doc.setFont(PDF_FONT_ITALIC, "normal")
         doc.setTextColor(128, 128, 128)
         doc.text(
             `Generated: ${new Date().toLocaleString()} | Confidential Report`,
@@ -145,30 +148,30 @@ export async function generateScreeningPDF(
 
     // ==================== PAGE 1: COVER PAGE ====================
     let pageNum = 1
-    
+
     // Blue header banner
     doc.setFillColor(59, 130, 246)
     doc.rect(0, 0, pageWidth, 60, "F")
-    
+
     // Title
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(28)
-    doc.setFont("helvetica", "bold")
+    doc.setFont(PDF_FONT_PRIMARY, "bold")
     doc.text("SCREENING REPORT", pageWidth / 2, 30, { align: "center" })
-    
+
     doc.setFontSize(12)
-    doc.setFont("helvetica", "normal")
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     doc.text("Compliance & Due Diligence Analysis", pageWidth / 2, 45, { align: "center" })
-    
+
     doc.setTextColor(0, 0, 0)
-    
+
     // Summary box
     let y = 80
     doc.setFillColor(245, 247, 250)
     doc.rect(margin, y, maxWidth, 60, "F")
     doc.setDrawColor(200, 200, 200)
     doc.rect(margin, y, maxWidth, 60, "S")
-    
+
     y += 10
     doc.setFontSize(11)
     y = addLabelValue(doc, "Searched For", searchedFor, margin + 10, y, 45)
@@ -177,17 +180,17 @@ export async function generateScreeningPDF(
     y = addLabelValue(doc, "Confidence Score", `${conf.toFixed(2)}%`, margin + 10, y, 45)
     y = addLabelValue(doc, "Result", resultLabel(conf), margin + 10, y, 45)
     y = addLabelValue(doc, "Generated Date", new Date().toLocaleDateString(), margin + 10, y, 45)
-    
+
     addPageFooter()
 
     // ==================== PAGE 2: EXECUTIVE SUMMARY ====================
     doc.addPage()
     pageNum++
     addPageHeader(pageNum)
-    
+
     y = 25
     y = addSectionHeader(doc, "EXECUTIVE SUMMARY", y, margin)
-    
+
     doc.setFontSize(10)
     y = addWrappedText(
         doc,
@@ -196,54 +199,54 @@ export async function generateScreeningPDF(
         y,
         maxWidth
     )
-    
+
     y += 10
     y = addDivider(doc, y, margin)
     y += 5
-    
+
     // Key Findings
-    doc.setFont("helvetica", "bold")
+    doc.setFont(PDF_FONT_PRIMARY, "bold")
     doc.setFontSize(12)
     doc.text("Key Findings", margin, y)
-    doc.setFont("helvetica", "normal")
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     doc.setFontSize(10)
     y += 10
-    
+
     y = addLabelValue(doc, "Search Query", searchedFor, margin, y, 60)
     y = addLabelValue(doc, "Matched Candidate", candidate.name, margin, y, 60)
     y = addLabelValue(doc, "Data Source", candidate.source, margin, y, 60)
     y = addLabelValue(doc, "Subject Type", candidate.subject_type || "N/A", margin, y, 60)
     y = addLabelValue(doc, "Confidence Level", `${conf.toFixed(2)}%`, margin, y, 60)
     y = addLabelValue(doc, "Match Classification", resultLabel(conf), margin, y, 60)
-    
+
     y += 5
     y = addDivider(doc, y, margin)
     y += 5
-    
+
     // Confidence interpretation
-    doc.setFont("helvetica", "bold")
+    doc.setFont(PDF_FONT_PRIMARY, "bold")
     doc.setFontSize(12)
     doc.text("Confidence Score Interpretation", margin, y)
-    doc.setFont("helvetica", "normal")
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     doc.setFontSize(10)
     y += 10
-    
+
     doc.text("• 90-100%: High Confidence Match - Strong indication of identity match", margin + 5, y)
     y += 7
     doc.text("• 31-89%: Partial Match - Requires further investigation", margin + 5, y)
     y += 7
     doc.text("• 0-30%: Low Confidence - Likely false positive", margin + 5, y)
-    
+
     addPageFooter()
 
     // ==================== PAGE 3: DETAILED RESULT ====================
     doc.addPage()
     pageNum++
     addPageHeader(pageNum)
-    
+
     y = 25
     y = addSectionHeader(doc, "SCREENING RESULT", y, margin)
-    
+
     // Result badge with color
     const resultText = resultLabel(conf)
     let badgeColor: [number, number, number] = [34, 197, 94] // Green
@@ -252,90 +255,90 @@ export async function generateScreeningPDF(
     } else if (conf > 30) {
         badgeColor = [251, 191, 36] // Yellow/Orange
     }
-    
+
     doc.setFillColor(...badgeColor)
     doc.roundedRect(margin, y, maxWidth, 25, 3, 3, "F")
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(18)
-    doc.setFont("helvetica", "bold")
+    doc.setFont(PDF_FONT_PRIMARY, "bold")
     doc.text(resultText.toUpperCase(), pageWidth / 2, y + 16, { align: "center" })
     doc.setTextColor(0, 0, 0)
-    doc.setFont("helvetica", "normal")
-    
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
+
     y += 35
-    
+
     // Candidate details
     doc.setFillColor(245, 247, 250)
     doc.rect(margin, y, maxWidth, 70, "F")
     doc.setDrawColor(200, 200, 200)
     doc.rect(margin, y, maxWidth, 70, "S")
-    
+
     y += 10
     doc.setFontSize(11)
-    doc.setFont("helvetica", "bold")
+    doc.setFont(PDF_FONT_PRIMARY, "bold")
     doc.text("Candidate Information", margin + 5, y)
-    doc.setFont("helvetica", "normal")
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     y += 10
-    
+
     y = addLabelValue(doc, "Name", candidate.name, margin + 10, y, 50)
     y = addLabelValue(doc, "Confidence Score", `${conf.toFixed(2)}%`, margin + 10, y, 50)
     y = addLabelValue(doc, "Subject Type", candidate.subject_type || "N/A", margin + 10, y, 50)
     y = addLabelValue(doc, "Nationality", candidate.nationality || "N/A", margin + 10, y, 50)
     y = addLabelValue(doc, "Gender", candidate.gender || "N/A", margin + 10, y, 50)
     y = addLabelValue(doc, "Date of Birth", candidate.dob || "N/A", margin + 10, y, 50)
-    
+
     addPageFooter()
 
     // ==================== PAGE 4: DECISION & ANNOTATION ====================
     doc.addPage()
     pageNum++
     addPageHeader(pageNum)
-    
+
     y = 25
     y = addSectionHeader(doc, "DECISION & ANNOTATION", y, margin)
-    
+
     // Decision box
     doc.setFillColor(245, 247, 250)
     doc.rect(margin, y, maxWidth, 30, "F")
     doc.setDrawColor(200, 200, 200)
     doc.rect(margin, y, maxWidth, 30, "S")
-    
+
     y += 10
     doc.setFontSize(11)
     y = addLabelValue(doc, "Analyst Decision", decisionLabel(decision), margin + 10, y, 50)
     y = addLabelValue(doc, "Decision Date", new Date().toLocaleDateString(), margin + 10, y, 50)
-    
+
     y += 15
-    
+
     // Annotation box
     doc.setFillColor(245, 247, 250)
     const annotationHeight = 40
     doc.rect(margin, y, maxWidth, annotationHeight, "F")
     doc.setDrawColor(200, 200, 200)
     doc.rect(margin, y, maxWidth, annotationHeight, "S")
-    
+
     y += 10
-    doc.setFont("helvetica", "bold")
+    doc.setFont(PDF_FONT_PRIMARY, "bold")
     doc.text("Annotation:", margin + 10, y)
-    doc.setFont("helvetica", "normal")
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     y += 7
-    
+
     const annotation = annotationLabel(annotationChoice, annotationText)
     y = addWrappedText(doc, annotation, margin + 10, y, maxWidth - 20, 6)
-    
+
     y += annotationHeight - 15
-    
+
     // Notes section
     y = addDivider(doc, y, margin)
     y += 10
-    
-    doc.setFont("helvetica", "bold")
+
+    doc.setFont(PDF_FONT_PRIMARY, "bold")
     doc.setFontSize(12)
     doc.text("Recommendation", margin, y)
-    doc.setFont("helvetica", "normal")
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     doc.setFontSize(10)
     y += 10
-    
+
     if (conf > 90) {
         y = addWrappedText(
             doc,
@@ -364,21 +367,21 @@ export async function generateScreeningPDF(
             6
         )
     }
-    
+
     addPageFooter()
 
     // ==================== PAGE 5+: DETAILED ENTITY INFORMATION ====================
     doc.addPage()
     pageNum++
     addPageHeader(pageNum)
-    
+
     y = 25
     y = addSectionHeader(doc, "DETAILED ENTITY INFORMATION", y, margin)
-    
+
     doc.setFontSize(10)
-    
+
     const detailKeys = Object.keys(detailData || {})
-    
+
     if (detailKeys.length === 0) {
         doc.text("No additional details available.", margin, y)
     } else {
@@ -390,21 +393,21 @@ export async function generateScreeningPDF(
                 addPageHeader(pageNum)
                 y = 25
             }
-            
+
             const value = safeString(detailData[key])
             const formattedKey = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
-            
-            doc.setFont("helvetica", "bold")
+
+            doc.setFont(PDF_FONT_PRIMARY, "bold")
             doc.text(formattedKey + ":", margin, y)
-            doc.setFont("helvetica", "normal")
-            
+            doc.setFont(PDF_FONT_PRIMARY, "normal")
+
             const wrappedValue = doc.splitTextToSize(value || "N/A", maxWidth - 60)
             doc.text(wrappedValue, margin + 60, y)
-            
+
             y += Math.max(7, wrappedValue.length * 5)
         }
     }
-    
+
     addPageFooter()
 
     const filename = `screening_report_${candidate.source}_${candidate.id}_${new Date().getTime()}.pdf`.replace(/\s+/g, "_")
