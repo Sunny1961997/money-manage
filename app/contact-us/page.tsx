@@ -2,8 +2,12 @@
 
 import { Header } from "@/components/landing/header";
 import { Footer } from "@/components/landing/footer";
-import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";// Assuming hook location based on components/ui/toaster
+import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Combobox } from "@/components/ui/combobox";
 
 export default function ContactUs() {
   const { toast } = useToast();
@@ -16,9 +20,44 @@ export default function ContactUs() {
     phone: '',
     message: ''
   });
+  const [selectedCountryCode, setSelectedCountryCode] = useState("");
+  const [countries, setCountries] = useState<any[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        setCountriesLoading(true);
+        const res = await fetch("/api/countries", { method: "GET", credentials: "include" });
+        const payload = await res.json().catch(async () => ({ message: await res.text() }));
+        if (!res.ok) throw new Error(payload?.message || "Failed to load countries");
+        setCountries(payload?.data?.countries || []);
+      } catch (e) {
+        console.error("Countries load failed:", e);
+      } finally {
+        setCountriesLoading(false);
+      }
+    };
+    fetchCountries();
+  }, []);
+
+  const countryCodes = countries.map(c => {
+    const code = c.phoneCode?.startsWith('+') ? c.phoneCode : `+${c.phoneCode}`;
+    return {
+      value: code,
+      label: `${code} (${c.name})`
+    };
+  }).filter((v, i, a) => a.findIndex(t => t.value === v.value) === i);
+
+  const phonePreview = selectedCountryCode ? `${selectedCountryCode} ${formData.phone}`.trim() : "";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/[^0-9\s-]/g, "");
+    setFormData({ ...formData, phone: val });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,6 +67,7 @@ export default function ContactUs() {
     try {
       const payload = {
         ...formData,
+        phone: phonePreview,
         contact_type: 'Request for Demo',
         is_seen: false
       };
@@ -37,12 +77,12 @@ export default function ContactUs() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      
+
       const data = await res.json();
 
       if (!res.ok) {
         let errorMessage = "Failed to submit request.";
-        
+
         // Safely extract error message
         if (typeof data.message === 'string') {
           errorMessage = data.message;
@@ -50,15 +90,15 @@ export default function ContactUs() {
           // Flatten validation errors: { names: ["Required"] } -> "Required"
           errorMessage = Object.values(data.errors).flat().join(', ');
         } else if (typeof data.message === 'object') {
-           // If backend returns object in message (rare but possible causes of crash)
-           errorMessage = JSON.stringify(data.message);
+          // If backend returns object in message (rare but possible causes of crash)
+          errorMessage = JSON.stringify(data.message);
         }
 
         toast({
-            title: "Submission Failed",
-            // Cast to String to prevent "Object not valid as React child" crash
-            description: String(errorMessage), 
-            // variant: "destructive",
+          title: "Submission Failed",
+          // Cast to String to prevent "Object not valid as React child" crash
+          description: String(errorMessage),
+          // variant: "destructive",
         });
         return;
       }
@@ -68,7 +108,7 @@ export default function ContactUs() {
         description: "We've received your request and will contact you shortly.",
         className: "bg-green-600 text-white border-green-600"
       });
-      
+
       // Reset form
       setFormData({
         first_name: '',
@@ -78,6 +118,7 @@ export default function ContactUs() {
         phone: '',
         message: ''
       });
+      setSelectedCountryCode("");
     } catch (error: any) {
       console.error("Submission error:", error);
       toast({
@@ -96,91 +137,116 @@ export default function ContactUs() {
       <div className="max-w-4xl mx-auto px-4 pt-28 pb-16 sm:pt-32">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Contact Us For Demo</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-justify">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-center">
             Interested in seeing how AML Meter can help your organization?
             <br />
             Fill out the form below and we'll get back to you soon.
           </p>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block mb-2 font-medium text-sm">First Name *</label>
-                <input 
-                  type="text"
+              <div className="space-y-2">
+                <Label htmlFor="first_name">First Name *</Label>
+                <Input
+                  id="first_name"
                   name="first_name"
                   value={formData.first_name}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" 
-                  required 
+                  placeholder="John"
+                  className="h-11"
+                  required
                 />
               </div>
-              <div>
-                <label className="block mb-2 font-medium text-sm">Last Name *</label>
-                <input 
-                  type="text"
+              <div className="space-y-2">
+                <Label htmlFor="last_name">Last Name *</Label>
+                <Input
+                  id="last_name"
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" 
-                  required 
+                  placeholder="Doe"
+                  className="h-11"
+                  required
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block mb-2 font-medium text-sm">Work Email *</label>
-              <input 
+            <div className="space-y-2">
+              <Label htmlFor="email">Work Email *</Label>
+              <Input
+                id="email"
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" 
-                required 
+                placeholder="john@company.com"
+                className="h-11"
+                required
               />
             </div>
 
-            <div>
-              <label className="block mb-2 font-medium text-sm">Company Name *</label>
-              <input 
-                type="text"
+            <div className="space-y-2">
+              <Label htmlFor="company_name">Company Name *</Label>
+              <Input
+                id="company_name"
                 name="company_name"
                 value={formData.company_name}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" 
-                required 
+                placeholder="Company Inc."
+                className="h-11"
+                required
               />
             </div>
 
-            <div>
-              <label className="block mb-2 font-medium text-sm">Phone Number</label>
-              <input 
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" 
-              />
+            <div className="space-y-2">
+              <Label>Phone Number</Label>
+              <div className="grid grid-cols-[50%_1fr] gap-3">
+                <Combobox
+                  options={countryCodes}
+                  value={selectedCountryCode}
+                  onValueChange={(value) => {
+                    if (typeof value === "string") setSelectedCountryCode(value);
+                  }}
+                  placeholder={countriesLoading ? "Loading..." : "Code"}
+                  searchPlaceholder="Search..."
+                  emptyText="No code found."
+                  className="h-11"
+                />
+                <Input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handlePhoneChange}
+                  inputMode="tel"
+                  placeholder="Local number"
+                  className="h-11"
+                />
+              </div>
+              {phonePreview && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Preview: {phonePreview}
+                </p>
+              )}
             </div>
 
-            <div>
-              <label className="block mb-2 font-medium text-sm">Message</label>
-              <textarea 
+            <div className="space-y-2">
+              <Label htmlFor="message">Message</Label>
+              <Textarea
+                id="message"
                 name="message"
                 value={formData.message}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" 
                 rows={5}
                 placeholder="Tell us about your needs..."
               />
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
-              className="w-full bg-primary text-white px-6 py-3 rounded-md font-semibold hover:bg-primary/90 transition disabled:opacity-50"
+              className="w-full bg-primary text-white h-11 rounded-md font-semibold hover:bg-primary/90 transition disabled:opacity-50"
             >
               {loading ? 'Sending...' : 'Submit Request'}
             </button>

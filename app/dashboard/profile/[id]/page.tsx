@@ -127,6 +127,17 @@ export default function EditCompanyPage() {
     e.preventDefault()
     setSaving(true)
     setError(null)
+
+    // Strict email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.email || "")) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid email address with a domain (e.g., user@example.com).",
+      })
+      setSaving(false)
+      return
+    }
     try {
       const res = await fetch(`/api/profile/${companyId}`, {
         method: "PUT",

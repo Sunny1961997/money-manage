@@ -21,6 +21,10 @@ interface ComboboxProps {
   emptyText?: string
   className?: string
   multiple?: boolean
+  contentClassName?: string
+  showCheckIcon?: boolean
+  roundedItems?: boolean
+  matchTriggerWidth?: boolean
 }
 
 export function Combobox({
@@ -32,6 +36,10 @@ export function Combobox({
   emptyText = "No option found.",
   className,
   multiple = false,
+  contentClassName,
+  showCheckIcon = true,
+  roundedItems = false,
+  matchTriggerWidth = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -78,20 +86,28 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent
+        className={cn(
+          matchTriggerWidth ? "w-[var(--radix-popover-trigger-width)] p-0" : "w-full p-0",
+          contentClassName
+        )}
+        align="start"
+      >
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
-            <CommandGroup>
-                {options.map((option, index) => (
-                  <CommandItem
-                    // Combining value and index ensures the key is always unique 
-                    // even if the data contains duplicate values like '+61'
-                    key={`${option.value}-${index}`} 
-                    value={option.label} // Command component uses 'value' for internal search filtering
-                    onSelect={() => handleSelect(option.value)}
-                  >
+            <CommandGroup className={roundedItems ? "p-1" : undefined}>
+              {options.map((option, index) => (
+                <CommandItem
+                  // Combining value and index ensures the key is always unique 
+                  // even if the data contains duplicate values like '+61'
+                  key={`${option.value}-${index}`}
+                  value={option.label} // Command component uses 'value' for internal search filtering
+                  onSelect={() => handleSelect(option.value)}
+                  className={roundedItems ? "rounded-md" : undefined}
+                >
+                  {showCheckIcon && (
                     <Check className={cn(
                       "mr-2 h-4 w-4",
                       isMulti
@@ -102,10 +118,11 @@ export function Combobox({
                           ? "opacity-100"
                           : "opacity-0"
                     )} />
-                    {option.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+                  )}
+                  {option.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
           </CommandList>
         </Command>
       </PopoverContent>
