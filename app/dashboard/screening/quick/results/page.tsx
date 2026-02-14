@@ -125,6 +125,7 @@ export default function QuickScreeningResultsPage() {
     const customerType = payload?.data?.subject_type || "individual"
     const bestBySource = payload?.data?.best_by_source || [];
     const totalSearch = payload?.data?.total_search || 0;
+    const totalFound = payload?.data?.total_found || 0;
 
     const [sourceDecision, setSourceDecision] = React.useState<Record<string, SourceDecision>>({})
     const [sourceAnnotationChoice, setSourceAnnotationChoice] = React.useState<Record<string, string>>({})
@@ -251,6 +252,7 @@ export default function QuickScreeningResultsPage() {
             sourceAnnotationText: pdfText,
             detailsById,
             total_search: totalSearch,
+            total_found: totalFound,
             user_id: userId,
             user_name: userName,
             user_company: userCompany,

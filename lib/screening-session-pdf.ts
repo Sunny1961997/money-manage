@@ -33,6 +33,7 @@ export async function generateScreeningSessionPDF({
   sourceAnnotationText,
   detailsById,
   total_search,
+  total_found,
   user_id,
   user_name,
   user_company,
@@ -48,6 +49,7 @@ export async function generateScreeningSessionPDF({
   sourceAnnotationText: Record<string, string>
   detailsById: Record<string, any>
   total_search?: number
+  total_found?: number
   user_id?: string
   user_name?: string
   user_company?: string
@@ -195,7 +197,7 @@ export async function generateScreeningSessionPDF({
 
   const hasPep = bestBySourceForPdf.some(src => (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1')));
 
-  const computedIrrelevant = (total_search ?? 0) - (relevantCount ?? 0)
+  const computedIrrelevant = (total_found ?? 0) - (relevantCount ?? 0)
 
   // Summary table (left)
   autoTable(doc, {
@@ -203,7 +205,7 @@ export async function generateScreeningSessionPDF({
     head: [["Summary", "Value"]],
     body: [
       ["Subject Type", customerType == "individual" ? "Individual" : (customerType == "entity" ? "Entity" : "Vessel")],
-      ["Total Result", total_search?.toString() || "0"],
+      ["Total Result", total_found?.toString() || "0"],
       ["Relevant", String(relevantCount ?? 0)],
       ["Irrelevant", String(computedIrrelevant)],
     ],
