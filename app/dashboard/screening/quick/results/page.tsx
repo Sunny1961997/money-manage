@@ -227,7 +227,10 @@ export default function QuickScreeningResultsPage() {
                 pdfDecision[source] = v.decision
                 pdfDecision[key] = v.decision  // per-candidate decision
             }
-            if (v.annotationChoice) pdfChoice[source] = v.annotationChoice
+            if (v.annotationChoice) {
+                pdfChoice[source] = v.annotationChoice
+                pdfChoice[key] = v.annotationChoice  // per-candidate result type
+            }
             if (v.annotationText) pdfText[source] = v.annotationText
             pdfText[key] = v.annotationText
         })

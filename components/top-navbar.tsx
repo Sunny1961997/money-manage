@@ -58,7 +58,7 @@ const companyAdminNavigation: NavItem[] = [
       { name: "Name and PEP Screening", href: "/dashboard/screening/quick" },
     ],
   },
-  { name: "Adverse Media Check", icon: Newspaper, disabled: true },
+  { name: "Adverse Media Check", href: "/dashboard/adverse-search", icon: Newspaper },
   {
     name: "Regulatory Reporting",
     icon: FileSpreadsheet,

@@ -236,21 +236,94 @@ export async function generateScreeningSessionPDF({
 
   const summaryFinalY = (doc as any).lastAutoTable.finalY
 
-  // Outcome prep
-  const annotations = Object.values(sourceAnnotationChoice).filter(Boolean)
-  let finalDecision = "Pending Review"
-  if (annotations.length > 0) {
-    finalDecision = annotations[0]
+  // Outcome prep - determine Final Decision and Result from saved candidates
+  // Relevant priority: True Match > Potential Match
+  // Irrelevant priority: No Match > Insufficient Data
+  const relevantPriority: Record<string, number> = {
+    "True Match": 0,
+    "Potential Match": 1,
   }
-  const maxConf = Math.max(...bestBySourceForPdf.map(s => s.best_confidence || 0))
-  const risk = getRiskLevel(maxConf)
+
+  const irrelevantPriority: Record<string, number> = {
+    "No Match": 0,
+    "Insufficient Data": 1,
+  }
+
+  let finalDecision = "N/A"
+  let finalResultType = ""
+
+  // Collect all saved candidate entries that have both decision and result type
+  const savedEntries: Array<{ decision: string; resultType: string }> = []
+
+  if (savedCandidateKeys && savedCandidateKeys.length > 0) {
+    for (const key of savedCandidateKeys) {
+      const perCandidateDecision = (sourceDecision as any)[key]
+      const perCandidateChoice = (sourceAnnotationChoice as any)[key]
+      // Only use per-candidate keyed data — don't fall back to per-source
+      if (perCandidateDecision && perCandidateChoice) {
+        savedEntries.push({ decision: String(perCandidateDecision), resultType: String(perCandidateChoice) })
+      }
+    }
+  }
+
+  // Separate by decision type
+  const relevantEntries = savedEntries.filter(e => e.decision.toLowerCase() === "relevant")
+  const irrelevantEntries = savedEntries.filter(e => e.decision.toLowerCase() === "irrelevant")
+
+  const pickBestRelevant = (entries: Array<{ decision: string; resultType: string }>) => {
+    if (entries.length === 0) return null
+    entries.sort((a, b) => {
+      const pa = relevantPriority[a.resultType] ?? 99
+      const pb = relevantPriority[b.resultType] ?? 99
+      return pa - pb
+    })
+    return entries[0]
+  }
+
+  const pickBestIrrelevant = (entries: Array<{ decision: string; resultType: string }>) => {
+    if (entries.length === 0) return null
+    entries.sort((a, b) => {
+      const pa = irrelevantPriority[a.resultType] ?? 99
+      const pb = irrelevantPriority[b.resultType] ?? 99
+      return pa - pb
+    })
+    return entries[0]
+  }
+
+  const bestRelevant = pickBestRelevant(relevantEntries)
+  const bestIrrelevant = pickBestIrrelevant(irrelevantEntries)
+
+  console.log("Best Relevant Entry:", bestRelevant)
+  console.log("Best Irrelevant Entry:", bestIrrelevant)
+
+  if (bestRelevant) {
+    finalDecision = bestRelevant.resultType || "Relevant"
+    finalResultType = bestRelevant.decision
+  } else if (bestIrrelevant) {
+    finalDecision = bestIrrelevant.resultType || "Irrelevant"
+    finalResultType = bestIrrelevant.decision
+  }
+  console.log("Determined Final Decision:", finalDecision, "with Result Type:", finalResultType)
+
+  // Determine risk from finalDecision (result type)
+  const decisionToRisk = (dec: string): { label: string; color: [number, number, number] } => {
+    const d = dec.toLowerCase()
+    if (d === "true match") return { label: "True Match", color: [239, 68, 68] }
+    if (d === "potential match") return { label: "Potential Match", color: [245, 158, 11] }
+    if (d === "no match") return { label: "No Match", color: [34, 197, 94] }
+    if (d === "insufficient data") return { label: "Insufficient Data", color: [156, 163, 175] }
+    // if (d === "pending review") return { label: "Pending Review", color: [156, 163, 175] }
+    return { label: "N/A", color: [156, 163, 175] }
+  }
+
+  const risk = decisionToRisk(finalDecision)
 
   // Outcome table (right)
   autoTable(doc, {
     startY: y,
     head: [["Outcome", "Value"]],
     body: [
-      ["Final Decision", finalDecision],
+      ["Final Decision", finalResultType],
       ["Result", risk.label],
       ["PEP Status", hasPep ? "YES" : "No"],
       ["Screening Type", "Automated"],
@@ -465,7 +538,7 @@ export async function generateScreeningSessionPDF({
     return [
       sourceHasPep ? `${displaySource} (PEP)` : displaySource,
       hits,
-      hits > 0 ? `${src.best_confidence/100}` : "-",
+      hits > 0 ? `${(src.best_confidence/100).toFixed(2)}` : "-",
       hits > 0 ? status : "Clear",
       isWhitelisted ? `WL: Yes | ${notes}` : notes,
     ]
