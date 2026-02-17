@@ -94,7 +94,7 @@ export default function ViewGoamlReportPage() {
               <Link href={`/dashboard/goaml-reporting/edit/${id}`}>
                 <button className="px-3 py-2 rounded border text-sm">Edit</button>
               </Link>
-              <button className="px-3 py-2 rounded border text-sm text-red-600">Delete</button>
+              {/* <button className="px-3 py-2 rounded border text-sm text-red-600">Delete</button> */}
             </>
           )}
         </div>
@@ -518,7 +518,7 @@ export default function ViewGoamlReportPage() {
       </div>
 
       <div className="mt-6">
-        <Link href="/dashboard/goaml-reporting" className="px-3 py-2 rounded border text-sm">Back to list</Link>
+        <Link href="/dashboard/goaml-reporting" className="px-3 py-2 rounded border text-sm bg-primary text-white hover:bg-primary/70">Back to list</Link>
       </div>
     </div>
   )

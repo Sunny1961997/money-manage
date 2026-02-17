@@ -62,7 +62,7 @@ export default function TicketsPage() {
       if (priorityFilter !== "all") params.append("priority", priorityFilter)
       if (searchQuery) params.append("search", searchQuery)
 
-      const response = await fetch(`/api/tickets?${params.toString()}`)
+      const response = await fetch(`/api/admin/tickets?${params.toString()}`)
       const result = await response.json()
       
       if (result.status) {

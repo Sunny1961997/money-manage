@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Users, Download, Search, Eye, Building2 } from "lucide-react"
+import { Users, Download, Search, Eye, Building2, ChevronLeft, ChevronRight } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useEffect, useState, Fragment } from "react"
 import Link from "next/link"
@@ -20,6 +20,7 @@ export default function CustomersPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [detailsById, setDetailsById] = useState<Record<number, any>>({})
   const { user } = useAuthStore();
+  const [searchTerm, setSearchTerm] = useState("");
   const getRisk = (val: any) => {
   const s = Number(val);
   
@@ -57,7 +58,8 @@ export default function CustomersPage() {
   useEffect(() => {
     async function fetchCustomers() {
       setLoading(true)
-      const res = await fetch(`/api/onboarding/customers?limit=${limit}&offset=${offset}`, { credentials: "include" })
+      console.log(`Fetching customers with limit=${limit}, offset=${offset}, searchTerm="${searchTerm}"`)
+      const res = await fetch(`/api/onboarding/customers?limit=${limit}&offset=${offset}&search=${searchTerm}`, { credentials: "include" })
       const json = await res.json()
       if (json.status && json.data) {
         setCustomers(json.data.items)
@@ -66,7 +68,8 @@ export default function CustomersPage() {
       setLoading(false)
     }
     fetchCustomers()
-  }, [limit, offset])
+  }, [limit, offset, searchTerm])
+  const totalPages = Math.ceil(total / limit)
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -102,9 +105,17 @@ export default function CustomersPage() {
             <div className="flex items-center gap-3">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search users..." className="pl-9 w-80" />
+                <Input 
+                  placeholder="Search users..." 
+                  className="pl-9 w-80" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  />
               </div>
-              <Select defaultValue="10">
+              <Select 
+                defaultValue="10" 
+                value={limit.toString()} 
+                onValueChange={(value) => setLimit(Number(value))}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
@@ -232,7 +243,7 @@ export default function CustomersPage() {
                                               </div>
                                               <div>
                                                 <div className="text-sm text-muted-foreground">Email:</div>
-                                                <div className="mt-1 p-2 border rounded">{isCorporate ? (data.email || "-") : (indiv?.email || "-")}</div>
+                                                <div className="mt-1 p-2 border rounded">{isCorporate ? (data.corporate_detail.email || "-") : (indiv?.email || "-")}</div>
                                               </div>
                                               <div>
                                                 <div className="text-sm text-muted-foreground">Company Address:</div>
@@ -252,11 +263,11 @@ export default function CustomersPage() {
                                               </div>
                                               <div>
                                                 <div className="text-sm text-muted-foreground">Contact Office No:</div>
-                                                <div className="mt-1 p-2 border rounded">{isCorporate ? (data.contact_office_number || "-") : (indiv?.contact_no || "-")}</div>
+                                                <div className="mt-1 p-2 border rounded">{isCorporate ? ((data.corporate_detail.office_country_code || "")  + (data.corporate_detail.office_no || "") || "-") : (indiv?.contact_no || "-")}</div>
                                               </div>
                                               <div>
                                                 <div className="text-sm text-muted-foreground">Contact Mobile No:</div>
-                                                <div className="mt-1 p-2 border rounded">{isCorporate ? (data.contact_mobile_number || "-") : (indiv?.contact_no || "-")}</div>
+                                                <div className="mt-1 p-2 border rounded">{isCorporate ? ((data.corporate_detail.mobile_country_code || "")  + (data.corporate_detail.mobile_no || "") || "-") : (indiv?.contact_no || "-")}</div>
                                               </div>
                                               <div>
                                                 <div className="text-sm text-muted-foreground">Corporate Status:</div>
@@ -309,7 +320,11 @@ export default function CustomersPage() {
                                                 </div>
                                                 <div>
                                                   <div className="text-sm text-muted-foreground">Countries of Operation:</div>
-                                                  <div className="mt-1 p-2 border rounded">{Array.isArray(data.country_operations) && data.country_operations.length > 0 ? data.country_operations.join(", ") : "-"}</div>
+                                                  <div className="mt-1 p-2 border rounded">
+                                                    {Array.isArray(data.country_operations) && data.country_operations.length > 0 
+                                                      ? data.country_operations.map((item: any) => item.country).join(", ") 
+                                                      : "-"}
+                                                  </div>
                                                 </div>
                                                 <div>
                                                   <div className="text-sm text-muted-foreground">Account Holding Bank Name:</div>
@@ -638,19 +653,36 @@ export default function CustomersPage() {
           </div>
 
           {/* Pagination */}
-          <div className="flex justify-between items-center mt-4">
-            <span className="text-sm text-muted-foreground">
-              Showing {offset} to {Math.min(offset + limit - 1, total)} of {total} customers
-            </span>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={offset === 1} onClick={() => setOffset(Math.max(1, offset - limit))}>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" disabled={offset + limit > total} onClick={() => setOffset(offset + limit)}>
-                Next
-              </Button>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between p-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Showing {(offset - 1) * limit + 1} to {Math.min(offset * limit, total)} of {total} entries
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset((p) => Math.max(1, p - 1))}
+                  disabled={offset === 1 || loading}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </Button>
+                <div className="text-sm font-medium">
+                  Page {offset} of {totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset((p) => Math.min(totalPages, p + 1))}
+                  disabled={offset === totalPages || loading}
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

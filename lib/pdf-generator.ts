@@ -40,7 +40,7 @@ export async function generateCustomerPDF(data: any) {
   const margin = 15
   const contentWidth = pageWidth - margin * 2
   const userCompany = data.user_company || data.user_company || "-"
-  const userRole = data.user_role || data.user_role || "-"
+  const userRole = data.user_name || data.user_name || "-"
   console.log("Data: ",  data)
 
   // --- HEADER with Purple Background and Logo ---

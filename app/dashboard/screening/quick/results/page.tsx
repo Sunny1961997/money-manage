@@ -39,6 +39,7 @@ type ScreeningResponse = {
         user_company?: string
         searched_for?: string
         subject_type?: string
+        screening_log_id?: string
         total_candidates?: number
         best_by_source?: BestBySourceItem[]
         total_search?: number
@@ -122,6 +123,7 @@ export default function QuickScreeningResultsPage() {
     const userName = String(payload?.data?.user_name || "N/A")
     const userCompany = String(payload?.data?.user_company || "N/A")
     const searchedFor = payload?.data?.searched_for || "-"
+    const screening_log_id = payload?.data?.screening_log_id || "N/A"
     const customerType = payload?.data?.subject_type || "individual"
     const bestBySource = payload?.data?.best_by_source || [];
     const totalSearch = payload?.data?.total_search || 0;
@@ -262,6 +264,7 @@ export default function QuickScreeningResultsPage() {
             savedCandidateKeys: savedKeys,
             relevantCount: relCount,
             irrelevantCount: irrelCount,
+            screening_log_id: screening_log_id,
         })
     }
 

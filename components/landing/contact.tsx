@@ -84,7 +84,7 @@ export function Contact() {
     {
       icon: Phone,
       title: "Phone Support",
-      details: ["+971 509627076", "+971 562953927", "+971 588961136"].join("\n"),
+      details: ["+971 509627076", "+971 562953927"].join("\n"),
     },
     {
       icon: Mail,

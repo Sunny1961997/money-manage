@@ -20,6 +20,7 @@ const idTypes = [
   { value: "EID", label: "EID" },
   { value: "GCC ID", label: "GCC ID" },
   { value: "Govt. Issued ID", label: "Govt. Issued ID" },
+  { value: "Commercial License", label: "Commercial License" },
 ]
 
 const screeningFuzziness = [
@@ -60,6 +61,45 @@ export default function QuickOnboardingPage() {
   
   const [submitting, setSubmitting] = useState(false)
 
+  // Handler for batch upload
+  const [batchSubmitting, setBatchSubmitting] = useState(false)
+  const handleBatchUpload = async () => {
+    if (!selectedFile || !selectedFile.name.endsWith('.xlsx')) {
+      toast({
+        title: "No file selected",
+        description: "Please select a valid .xlsx file to process batch onboarding.",
+      })
+      return
+    }
+    setBatchSubmitting(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", selectedFile)
+      const res = await fetch("/api/onboarding/bulk-quick-upload", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      })
+      const data = await res.json().catch(async () => ({ message: await res.text() }))
+      if (res.ok) {
+        toast({ title: "Batch upload successful", description: data?.message || "Batch onboarding submitted." })
+        router.push("/dashboard/customers")
+      } else {
+        toast({
+          title: "Batch upload failed",
+          description: data?.message || data?.error || "Unknown error",
+        })
+      }
+    } catch (err: any) {
+      toast({
+        title: "Batch upload failed",
+        description: err?.message || "Network error",
+      })
+    } finally {
+      setBatchSubmitting(false)
+    }
+  }
+
   useEffect(() => {
     async function fetchMeta() {
       try {
@@ -88,6 +128,14 @@ export default function QuickOnboardingPage() {
     }
     fetchMeta()
   }, [])
+  const handleDownloadTemplate = () => {
+    const link = document.createElement("a")
+    link.href = "/Quick Onboarding.xlsx" 
+    link.download = "Quick Onboarding.xlsx"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -256,7 +304,7 @@ export default function QuickOnboardingPage() {
 
           <button
             onClick={() => setEntryType("batch")}
-            disabled={true} // Set this to your boolean logic, e.g., isSubmitting
+            // disabled={true} // Set this to your boolean logic, e.g., isSubmitting
             className={cn(
               "p-6 rounded-lg border-2 transition-all text-left",
               // Active Styles
@@ -627,7 +675,7 @@ export default function QuickOnboardingPage() {
             </div>
 
             {/* Screening Settings */}
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <div className="flex items-center gap-2 mb-4 p-3 bg-indigo-50 rounded-lg">
                 <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -640,7 +688,7 @@ export default function QuickOnboardingPage() {
                 <h4 className="font-semibold text-sm">Screening Settings</h4>
               </div>
 
-              {/* <div>
+              <div>
                 <Label htmlFor="fuzziness" className="flex items-center gap-2">
                   Screening Fuzziness<span className="text-red-500">*</span>
                   <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -659,8 +707,8 @@ export default function QuickOnboardingPage() {
                   placeholder="Select fuzziness level"
                   searchPlaceholder="Search fuzziness..."
                 />
-              </div> */}
-            </div>
+              </div>
+            </div> */}
 
             <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={submitting}>
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -681,7 +729,7 @@ export default function QuickOnboardingPage() {
               <h3 className="text-lg font-semibold">Batch Onboarding</h3>
             </div>
 
-            <Button className="bg-purple-600 hover:bg-purple-700 mb-6">
+            <Button className="bg-purple-600 hover:bg-purple-700 mb-6" onClick={handleDownloadTemplate}>
               <Download className="w-4 h-4 mr-2" />
               Download Excel Template
             </Button>
@@ -717,6 +765,12 @@ export default function QuickOnboardingPage() {
                 <li className="flex gap-2">
                   <span className="text-gray-400">•</span>
                   <span>
+                    <strong>Email:</strong> Required, text (e.g., john.doe@example.com).
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-gray-400">•</span>
+                  <span>
                     <strong>Date of Birth:</strong> Required, format: yyyy-mm-dd (e.g., 1990-01-01).
                   </span>
                 </li>
@@ -735,13 +789,13 @@ export default function QuickOnboardingPage() {
                 <li className="flex gap-2">
                   <span className="text-gray-400">•</span>
                   <span>
-                    <strong>Nationality:</strong> Required, valid country name (e.g., India).
+                    <strong>Nationality:</strong> Required, valid country name (e.g., United States).
                   </span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-gray-400">•</span>
                   <span>
-                    <strong>Country Code:</strong> Required, valid phone country code (e.g., +91).
+                    <strong>Country Code:</strong> Required, valid phone country code (e.g., 91).
                   </span>
                 </li>
                 <li className="flex gap-2">
@@ -775,18 +829,18 @@ export default function QuickOnboardingPage() {
                     <strong>ID Expiry Date:</strong> Required, format: yyyy-mm-dd (e.g., 2033-01-01).
                   </span>
                 </li>
-                <li className="flex gap-2">
+                {/* <li className="flex gap-2">
                   <span className="text-gray-400">•</span>
                   <span>
                     <strong>Fuzzy Level:</strong> Required, must be 0, 1, or 2.
                   </span>
-                </li>
-                <li className="flex gap-2">
+                </li> */}
+                {/* <li className="flex gap-2">
                   <span className="text-gray-400">•</span>
                   <span>
                     Rows with missing Customer Type or Name will be <strong className="text-red-600">skipped</strong>.
                   </span>
-                </li>
+                </li> */}
               </ul>
             </div>
 
@@ -807,9 +861,9 @@ export default function QuickOnboardingPage() {
             </div>
 
             <div className="mt-6 flex justify-end">
-              <Button className="bg-purple-600 hover:bg-purple-700">
+              <Button className="bg-purple-600 hover:bg-purple-700" type="button" onClick={handleBatchUpload} disabled={batchSubmitting}>
                 <Upload className="w-4 h-4 mr-2" />
-                Process Batch
+                {batchSubmitting ? "Processing..." : "Process Batch"}
               </Button>
             </div>
           </div>

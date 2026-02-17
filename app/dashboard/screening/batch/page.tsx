@@ -15,10 +15,8 @@ export default function BatchScreeningPage() {
   const router = useRouter()
 
   const handleDownloadTemplate = () => {
-    // In a real app, this should link to a static asset in /public or similar
-    // For now, let's trigger a download from a public URL or similar
     const link = document.createElement("a")
-    link.href = "/Bulk screening.xlsx" // Ensure this file exists in /public folder
+    link.href = "/Bulk screening.xlsx" 
     link.download = "Bulk screening.xlsx"
     document.body.appendChild(link)
     link.click()

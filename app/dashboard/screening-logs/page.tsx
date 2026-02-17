@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { FileCheck, Search, ChevronLeft, ChevronRight, CheckCircle, XCircle } from "lucide-react"
+import { FileCheck, Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Download, Loader2 } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast";
 
 type ScreeningLog = {
   id: number
@@ -33,6 +34,7 @@ type ScreeningLogsResponse = {
 }
 
 export default function ScreeningLogsPage() {
+  const { toast } = useToast();
   const [logs, setLogs] = useState<ScreeningLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -40,6 +42,7 @@ export default function ScreeningLogsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [limit] = useState(15)
+  const [downloadingLogId, setDownloadingLogId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchLogs()
@@ -76,6 +79,58 @@ export default function ScreeningLogsPage() {
   )
 
   const totalPages = Math.ceil(total / limit)
+
+  const handleDownloadReport = async (logId: number, searchString: string) => {
+    // e.preventDefault()
+    if (downloadingLogId) return
+    setDownloadingLogId(logId)
+    try {
+      const res = await fetch(`/api/screening-reports/${logId}`, {
+        method: "GET",
+        credentials: "include",
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        const msg = errorData?.message || "Report not found for this screening log"
+        toast({
+            title: "Report not found for this screening log",
+            // Cast to String to prevent "Object not valid as React child" crash
+            description: "This log has no file available for download.", 
+            // variant: "destructive",
+        });
+        return
+      }
+
+      const contentType = res.headers.get("content-type") || ""
+
+      if (contentType.includes("application/pdf")) {
+        // Direct PDF binary response
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `${searchString.replace(/\s+/g, "_")}_report.pdf`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      } else {
+        // JSON response — may contain a file_url
+        const data = await res.json()
+        if (data?.data?.file_url) {
+          window.open(data.data.file_url, "_blank")
+        } else {
+          alert("No report file available for this screening log.")
+        }
+      }
+    } catch (err: any) {
+      console.error("Download report error:", err)
+      alert("Failed to download report: " + (err.message || "Unknown error"))
+    } finally {
+      setDownloadingLogId(null)
+    }
+  }
 
   if (loading && logs.length === 0) {
     return (
@@ -166,12 +221,13 @@ export default function ScreeningLogsPage() {
                   <th className="text-left p-4 font-medium text-sm">Search String</th>
                   <th className="text-left p-4 font-medium text-sm">Screening Type</th>
                   <th className="text-left p-4 font-medium text-sm">Match Result</th>
+                  <th className="text-left p-4 font-medium text-sm">Report</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td className="p-4 text-sm text-muted-foreground text-center" colSpan={5}>
+                    <td className="p-4 text-sm text-muted-foreground text-center" colSpan={6}>
                       No screening logs found.
                     </td>
                   </tr>
@@ -205,6 +261,22 @@ export default function ScreeningLogsPage() {
                             <span className="text-sm font-medium">No Match</span>
                           </div>
                         )}
+                      </td>
+                      <td className="p-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1.5 text-primary hover:text-white"
+                          disabled={downloadingLogId === log.id}
+                          onClick={() => handleDownloadReport(log.id, log.search_string)}
+                        >
+                          {downloadingLogId === log.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                          {downloadingLogId === log.id ? "Downloading..." : "Download"}
+                        </Button>
                       </td>
                     </tr>
                   ))

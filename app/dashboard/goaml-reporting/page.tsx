@@ -125,7 +125,7 @@ export default function GoamlReportingPage() {
                           <Link href={`/dashboard/goaml-reporting/edit/${r.id}`}>
                             <button className="px-2 py-1 rounded border text-xs">✏️</button>
                           </Link>
-                          <button className="px-2 py-1 rounded border text-xs">🗑️</button>
+                          {/* <button className="px-2 py-1 rounded border text-xs">🗑️</button> */}
                         </>
                       )}
                       <Link href={`/dashboard/goaml-reporting/${r.id}`} className="px-2 py-1 rounded border text-xs">View</Link>

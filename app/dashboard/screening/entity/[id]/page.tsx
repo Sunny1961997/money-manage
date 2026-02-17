@@ -173,7 +173,8 @@ export default function EntityDetailsPage() {
                       {key.replace(/_/g, ' ')}
                     </h4>
                     <div className="text-sm text-foreground whitespace-nowrap">
-                      {renderDetailValue(value)}
+                      {key === 'is_pep' ? (value ? "Yes" : "No") : renderDetailValue(value)}
+                      {/* {renderDetailValue(value)} */}
                     </div>
                   </div>
                 ))}

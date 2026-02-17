@@ -60,6 +60,7 @@ const companyAdminNavigation: NavItem[] = [
     icon: ScanSearch,
     children: [
       { name: "Name and PEP Screening", href: "/dashboard/screening/quick" },
+      { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   { name: "Adverse Media Check", icon: Newspaper, href: "/dashboard/adverse-search" },
@@ -96,6 +97,7 @@ const authorNavigation: NavItem[] = [
     icon: ScanSearch,
     children: [
       { name: "Name and PEP Screening", href: "/dashboard/screening/quick" },
+      { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   { name: "Audit Trail", href: "/dashboard/screening-logs", icon: History },
@@ -135,6 +137,7 @@ const mlroNavigation: NavItem[] = [
     icon: ScanSearch,
     children: [
       { name: "Name and PEP Screening", href: "/dashboard/screening/quick" },
+      { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   { name: "Adverse Media Check", icon: Newspaper, href: "/dashboard/adverse-search" },
@@ -179,6 +182,7 @@ const flaNavigation: NavItem[] = [
     icon: ScanSearch,
     children: [
       { name: "Name and PEP Screening", href: "/dashboard/screening/quick" },
+      { name: "Batch Screening", href: "/dashboard/screening/batch" },
     ],
   },
   {

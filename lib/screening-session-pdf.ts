@@ -40,6 +40,7 @@ export async function generateScreeningSessionPDF({
   savedCandidateKeys,
   relevantCount,
   irrelevantCount,
+  screening_log_id,
 }: {
   searchedFor: string
   customerType: string
@@ -56,6 +57,7 @@ export async function generateScreeningSessionPDF({
   savedCandidateKeys?: string[]
   relevantCount?: number
   irrelevantCount?: number
+  screening_log_id?: string
 }) {
   const doc = new jsPDF({ 
     unit: "mm", 
@@ -236,7 +238,7 @@ export async function generateScreeningSessionPDF({
 
   const summaryFinalY = (doc as any).lastAutoTable.finalY
 
-  // Outcome prep - determine Final Decision and Result from saved candidates
+    // Outcome prep - determine Final Decision and Result from saved candidates
   // Relevant priority: True Match > Potential Match
   // Irrelevant priority: No Match > Insufficient Data
   const relevantPriority: Record<string, number> = {
@@ -427,12 +429,12 @@ export async function generateScreeningSessionPDF({
   y += 5
 
   const auditHeader = [["Particular", "Description"]];
-
+  console.log("User name:", user_name)
   const auditBody = [
     ["Total Searches Performed", total_search?.toString() || "0"],
     ["Total Results Found", bestBySourceForPdf.reduce((sum, src) => sum + (src.data || []).filter(Boolean).length, 0).toString()],
     ["Search Timestamp", new Date().toLocaleString()],
-    ["User Details", user_id || "N/A"],
+    ["User Details", user_name || "N/A"],
     ["Company Name", user_company || "N/A"],
   ];
 
@@ -805,5 +807,35 @@ export async function generateScreeningSessionPDF({
     doc.text(`Generated: ${new Date().toLocaleString()} | Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 5, { align: "right" })
   }
 
-  doc.save(`${searchedFor.replace(/\s+/g, '_')}_AML_METER.pdf`)
+  const fileName = `${searchedFor.replace(/\s+/g, '_')}_AML_METER.pdf`
+
+  // Get PDF as blob for uploading
+  const pdfBlob = doc.output('blob')
+
+  // Upload to backend via proxy API
+  try {
+    const formData = new FormData()
+    formData.append('file', new File([pdfBlob], fileName, { type: 'application/pdf' }))
+    if (screening_log_id && screening_log_id !== 'N/A') {
+      formData.append('screening_log_id', screening_log_id)
+    }
+
+    const res = await fetch('/api/screening-reports', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    })
+
+    const data = await res.json()
+    if (!res.ok) {
+      console.error('Failed to upload screening report:', data)
+    } else {
+      console.log('Screening report uploaded successfully:', data)
+    }
+  } catch (err) {
+    console.error('Error uploading screening report:', err)
+  }
+
+  // Also download locally
+  doc.save(fileName)
 }
