@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf"
 import autoTable from "jspdf-autotable"
+import { registerGlobalFonts, PDF_FONT_PRIMARY, PDF_FONT_ITALIC } from "./pdf-utils"
 
 interface CustomerData {
   id: number
@@ -32,6 +33,8 @@ export async function generateCustomerPDF(data: any) {
   const corp = data.corporate_detail
   const indiv = data.individual_detail
 
+  registerGlobalFonts(doc)
+
   // Set colors - Updated to match new design
   const primaryColor: [number, number, number] = [93, 50, 145] // Purple
   const headerColor: [number, number, number] = [60, 0, 126] // Dark purple for header
@@ -40,8 +43,8 @@ export async function generateCustomerPDF(data: any) {
   const margin = 15
   const contentWidth = pageWidth - margin * 2
   const userCompany = data.user_company || data.user_company || "-"
-  const userRole = data.user_name || data.user_name || "-"
-  console.log("Data: ",  data)
+  const userRole = data.user_role || data.user_role || "-"
+  console.log("Data: ", data)
 
   // --- HEADER with Purple Background and Logo ---
   doc.setFillColor(...headerColor)
@@ -91,12 +94,12 @@ export async function generateCustomerPDF(data: any) {
   // Add "AML Meter" text in header
   doc.setTextColor(255, 255, 255)
   doc.setFontSize(22)
-  doc.setFont("helvetica", "bold")
+  doc.setFont(PDF_FONT_PRIMARY, "bold")
   doc.text("AML Meter", pageWidth / 2, 16, { align: "center" })
 
   // Document type subtitle
   doc.setFontSize(9)
-  doc.setFont("helvetica", "normal")
+  doc.setFont(PDF_FONT_PRIMARY, "normal")
   doc.text("Customer Due Diligence & KYC Report", pageWidth / 2, 24, { align: "center" })
 
   // ----------------------------
@@ -150,7 +153,7 @@ export async function generateCustomerPDF(data: any) {
     // ensure room for title + at least a couple table rows
     y = ensureSpace(y, minAfter)
 
-    doc.setFont("helvetica", "normal")
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     doc.setFontSize(10)
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
     doc.text(title, margin, y)
@@ -245,6 +248,7 @@ export async function generateCustomerPDF(data: any) {
 
     doc.setFontSize(8.5)
     doc.setTextColor(120, 120, 120)
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     doc.text(
       `Generated Date: ${new Date().toLocaleDateString()} | Reference ID: AMLM-CDD-KYC-CORP-${String(data.id || "0000").padStart(4, "0")}`,
       pageWidth / 2,
@@ -412,6 +416,7 @@ export async function generateCustomerPDF(data: any) {
 
     doc.setFontSize(8.5)
     doc.setTextColor(120, 120, 120)
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     doc.text(
       `Generated Date: ${new Date().toLocaleDateString()} | Reference ID: AMLM-CDD-KYC-${String(data.id || "0000").padStart(4, "0")}`,
       pageWidth / 2,
@@ -460,33 +465,33 @@ export async function generateCustomerPDF(data: any) {
       yPos,
       isCorporate
         ? [
-            ["Business Activity", corp?.business_activity || "-"],
-            ["Purpose", corp?.purpose_of_onboarding || "-"],
-            ["Payment Mode", corp?.payment_mode || "-"],
-            ["Source of Funds", corp?.product_source || "-"],
-            ["Expected No. of Transactions", corp?.expected_no_of_transactions ?? "-"],
-            ["Expected Volume", corp?.expected_volume ?? "-"],
-            [
-              "Product Type",
-              Array.isArray((data as any).products) && (data as any).products.length
-                ? (data as any).products.map((p: any) => p?.name || p?.product_name || p).join(", ")
-                : "-",
-            ],
-          ]
+          ["Business Activity", corp?.business_activity || "-"],
+          ["Purpose", corp?.purpose_of_onboarding || "-"],
+          ["Payment Mode", corp?.payment_mode || "-"],
+          ["Source of Funds", corp?.product_source || "-"],
+          ["Expected No. of Transactions", corp?.expected_no_of_transactions ?? "-"],
+          ["Expected Volume", corp?.expected_volume ?? "-"],
+          [
+            "Product Type",
+            Array.isArray((data as any).products) && (data as any).products.length
+              ? (data as any).products.map((p: any) => p?.name || p?.product_name || p).join(", ")
+              : "-",
+          ],
+        ]
         : [
-            ["Occupation", indiv?.occupation || "-"],
-            ["Purpose", indiv?.purpose_of_onboarding || "-"],
-            ["Payment Mode", indiv?.payment_mode || "-"],
-            ["Source of Income", indiv?.source_of_income || "-"],
-            ["Expected No. of Transactions", indiv?.expected_no_of_transactions ?? "-"],
-            ["Expected Volume", indiv?.expected_volume ?? "-"],
-            [
-              "Product Type",
-              Array.isArray((data as any).products) && (data as any).products.length
-                ? (data as any).products.map((p: any) => p?.name || p?.product_name || p).join(", ")
-                : "-",
-            ],
-          ]
+          ["Occupation", indiv?.occupation || "-"],
+          ["Purpose", indiv?.purpose_of_onboarding || "-"],
+          ["Payment Mode", indiv?.payment_mode || "-"],
+          ["Source of Income", indiv?.source_of_income || "-"],
+          ["Expected No. of Transactions", indiv?.expected_no_of_transactions ?? "-"],
+          ["Expected Volume", indiv?.expected_volume ?? "-"],
+          [
+            "Product Type",
+            Array.isArray((data as any).products) && (data as any).products.length
+              ? (data as any).products.map((p: any) => p?.name || p?.product_name || p).join(", ")
+              : "-",
+          ],
+        ]
     )
 
     yPos = sectionTitle("Risk Assessment Summary", yPos)
@@ -556,12 +561,13 @@ export async function generateCustomerPDF(data: any) {
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i)
 
-    doc.setFont("helvetica", "normal")
+    doc.setFont(PDF_FONT_PRIMARY, "normal")
     doc.setFontSize(7.5)
 
     // Line 1: note (ONLY on last page)
     if (i === totalPages) {
       doc.setTextColor(0, 0, 0)
+      doc.setFont(PDF_FONT_ITALIC, "normal")
       doc.text("**System-generated report. No signature required.**", pageWidth / 2, pageHeight - 21, {
         align: "center",
       })
@@ -569,6 +575,7 @@ export async function generateCustomerPDF(data: any) {
 
     // Line 2: footer (ALL pages)
     doc.setTextColor(0, 0, 0)
+    doc.setFont(PDF_FONT_ITALIC, "normal")
     doc.text("Confidential – For Authorized Use Only | Generated by AML Meter", pageWidth / 2, pageHeight - 10, {
       align: "center",
     })
@@ -584,8 +591,8 @@ function addSectionHeader(doc: jsPDF, title: string, yPos: number, fillColor: [n
   doc.rect(15, yPos - 2, pageWidth - 30, 8, "F")
   doc.setTextColor(255, 255, 255)
   doc.setFontSize(10)
-  doc.setFont("times", "bold")
+  doc.setFont(PDF_FONT_PRIMARY, "bold")
   doc.text(title, 17, yPos + 4)
   doc.setTextColor(0, 0, 0)
-  doc.setFont("times", "normal")
+  doc.setFont(PDF_FONT_PRIMARY, "normal")
 }

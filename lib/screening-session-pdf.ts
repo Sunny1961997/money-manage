@@ -1,7 +1,8 @@
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
-import { YanoneKaffeesatzRegular, YanoneKaffeesatzBold } from "./fonts/yanone-kaffeesatz"
-import {MarmeladRegular} from "./fonts/Marmelad-Regular"
+// import { YanoneKaffeesatzRegular, YanoneKaffeesatzBold } from "./fonts/yanone-kaffeesatz"
+// import {MarmeladRegular} from "./fonts/Marmelad-Regular"
+import { registerGlobalFonts, PDF_FONT_PRIMARY, PDF_FONT_ITALIC } from "./pdf-utils"
 
 // Helper to determine Risk Level based on confidence
 // const getRiskLevel = (score: number) => {
@@ -59,23 +60,24 @@ export async function generateScreeningSessionPDF({
   irrelevantCount?: number
   screening_log_id?: string
 }) {
-  const doc = new jsPDF({ 
-    unit: "mm", 
+  const doc = new jsPDF({
+    unit: "mm",
     format: "a4",
-    compress: true 
+    compress: true
   })
   // addCustomFonts(doc)
+  registerGlobalFonts(doc)
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 15
   const contentWidth = pageWidth - margin * 2
 
   // Helper to decide if a candidate should be included in Evidence
   const decisionForSource = (source: string) => {
-     // normalized lookup to be safe
-     const exact = (sourceDecision as any)[source]
-     if (exact) return exact
-     const key = Object.keys(sourceDecision).find(k => k.toLowerCase().trim() === source.toLowerCase().trim())
-     return key ? sourceDecision[key] : null
+    // normalized lookup to be safe
+    const exact = (sourceDecision as any)[source]
+    if (exact) return exact
+    const key = Object.keys(sourceDecision).find(k => k.toLowerCase().trim() === source.toLowerCase().trim())
+    return key ? sourceDecision[key] : null
   }
 
   // Selected annotation is per-source
@@ -90,7 +92,7 @@ export async function generateScreeningSessionPDF({
   const includeInEvidence = (source: string, c: any) => {
     // Check per-candidate key first for decision
     const candidateKey = `${source}:${c?.id}`
-    
+
     // If savedCandidateKeys is provided, only include saved candidates
     if (savedCandidateKeys && savedCandidateKeys.length > 0) {
       if (!savedCandidateKeys.includes(candidateKey)) return false
@@ -125,12 +127,12 @@ export async function generateScreeningSessionPDF({
     img.crossOrigin = "anonymous"
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
     img.src = `${baseUrl}/aml_meter_transparent.png`
-    
+
     await new Promise((resolve, reject) => {
       img.onload = resolve
       img.onerror = reject
     })
-    
+
     // --- START IMAGE OPTIMIZATION ---
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
@@ -167,24 +169,24 @@ export async function generateScreeningSessionPDF({
   // Add "AML Meter" text in bold between logo and case ID
   doc.setTextColor(255, 255, 255)
   doc.setFontSize(24)
-  // doc.setFont("times", "bold")
-  doc.setFont("times", "bold")
+  // doc.setFont(PDF_FONT_PRIMARY, "bold")
+  doc.setFont(PDF_FONT_PRIMARY, "bold")
   doc.text("AML Meter", pageWidth / 2, 18, { align: "center" })
 
   // Case ID on the right
   doc.setFontSize(10)
-  doc.setFont("times", "normal")
+  doc.setFont(PDF_FONT_PRIMARY, "normal")
   doc.text(`Case ID: AML-CASE-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`, pageWidth - headerPadding, 16, { align: "right" })
 
   // --- TITLE ---
   let y = 50
   doc.setTextColor(40, 40, 40)
   doc.setFontSize(18)
-  doc.setFont("times", "bold")
+  doc.setFont(PDF_FONT_PRIMARY, "bold")
   const titleText = `Subject: `
   const titleWidth = doc.getTextWidth(titleText)
   doc.text(titleText, margin, y)
-  doc.setFont("times", "normal")
+  doc.setFont(PDF_FONT_PRIMARY, "normal")
   doc.setFontSize(16)
   doc.setTextColor(60, 60, 60)
   const nameLines = doc.splitTextToSize(searchedFor, contentWidth - titleWidth - 2)
@@ -372,7 +374,7 @@ export async function generateScreeningSessionPDF({
 
 
 
-    // --- Report History ---
+  // --- Report History ---
   // Check if there's enough space for report HIstory (estimated ~35mm needed)
   if (y > 235) {
     doc.addPage()
@@ -380,7 +382,7 @@ export async function generateScreeningSessionPDF({
   }
 
   doc.setFontSize(13)
-  doc.setFont("times", "bold")
+  doc.setFont(PDF_FONT_PRIMARY, "bold")
   doc.setTextColor(40, 40, 40)
   doc.text("Report History", margin, y)
   y += 5
@@ -393,14 +395,14 @@ export async function generateScreeningSessionPDF({
 
   autoTable(doc, {
     startY: y,
-    head: reportHistoryHeader, 
+    head: reportHistoryHeader,
     body: reportHistoryBody,
-    theme: "striped", 
-    headStyles: { 
-      fillColor: [93, 50, 145], 
+    theme: "striped",
+    headStyles: {
+      fillColor: [93, 50, 145],
       textColor: [255, 255, 255],
       fontSize: 10,
-      fontStyle: 'bold' 
+      fontStyle: 'bold'
     },
     bodyStyles: { fontSize: 9 },
     columnStyles: {
@@ -408,7 +410,7 @@ export async function generateScreeningSessionPDF({
       1: { cellWidth: 'auto' }
     },
     margin: { left: margin, right: margin },
-    styles: { 
+    styles: {
       lineColor: [200, 200, 200],
       lineWidth: 0.1
     }
@@ -426,7 +428,7 @@ export async function generateScreeningSessionPDF({
   }
 
   doc.setFontSize(13)
-  doc.setFont("times", "bold")
+  doc.setFont(PDF_FONT_PRIMARY, "bold")
   doc.setTextColor(40, 40, 40)
   doc.text("Audit Trail", margin, y)
   y += 5
@@ -443,14 +445,14 @@ export async function generateScreeningSessionPDF({
 
   autoTable(doc, {
     startY: y,
-    head: auditHeader, 
+    head: auditHeader,
     body: auditBody,
-    theme: "striped", 
-    headStyles: { 
-      fillColor: [93, 50, 145], 
+    theme: "striped",
+    headStyles: {
+      fillColor: [93, 50, 145],
       textColor: [255, 255, 255],
       fontSize: 10,
-      fontStyle: 'bold' 
+      fontStyle: 'bold'
     },
     bodyStyles: { fontSize: 9 },
     columnStyles: {
@@ -458,7 +460,7 @@ export async function generateScreeningSessionPDF({
       1: { cellWidth: 'auto' }
     },
     margin: { left: margin, right: margin },
-    styles: { 
+    styles: {
       lineColor: [200, 200, 200],
       lineWidth: 0.1
     }
@@ -468,7 +470,7 @@ export async function generateScreeningSessionPDF({
 
   // --- MATCH SUMMARY TABLE ---
   doc.setFontSize(13)
-  doc.setFont("times", "bold")
+  doc.setFont(PDF_FONT_PRIMARY, "bold")
   doc.setTextColor(40, 40, 40)
   doc.text("Match Summary", margin, y)
   y += 5
@@ -543,7 +545,7 @@ export async function generateScreeningSessionPDF({
     return [
       sourceHasPep ? `${displaySource} (PEP)` : displaySource,
       hits,
-      hits > 0 ? `${(src.best_confidence/100).toFixed(2)}` : "-",
+      hits > 0 ? `${(src.best_confidence / 100).toFixed(2)}` : "-",
       hits > 0 ? status : "Clear",
       isWhitelisted ? `WL: Yes | ${notes}` : notes,
     ]
@@ -621,7 +623,7 @@ export async function generateScreeningSessionPDF({
     headStyles: { fillColor: [93, 50, 145] },
     margin: { left: margin, right: margin },
     theme: "striped",
-    styles: { 
+    styles: {
       lineColor: [200, 200, 200],
       lineWidth: 0.1
     },
@@ -649,6 +651,7 @@ export async function generateScreeningSessionPDF({
         else (data.cell as any).text = ""
         data.cell.styles.fontStyle = "italic"
         data.cell.styles.textColor = [80, 80, 80]
+        data.cell.styles.font = PDF_FONT_PRIMARY
       }
     },
   })
@@ -661,16 +664,16 @@ export async function generateScreeningSessionPDF({
     doc.addPage()
     y = 30
   }
-  
+
   doc.setFontSize(13)
-  doc.setFont("times", "bold")
+  doc.setFont(PDF_FONT_PRIMARY, "bold")
   doc.setTextColor(40, 40, 40)
   doc.text("Evidence", margin, y)
   y += 8
 
   // if (bestBySourceFiltered.length === 0) {
   //   doc.setFontSize(10)
-  //   doc.setFont("times", "italic")
+  //   doc.setFont(PDF_FONT_ITALIC, "normal")
   //   doc.setTextColor(120, 120, 120)
   //   doc.text("No results have been selected. Please save at least one result to include evidence in this report.", margin, y)
   //   y += 10
@@ -683,7 +686,7 @@ export async function generateScreeningSessionPDF({
         'No results have been selected.'
       ]],
       styles: {
-        font: 'times',
+        font: PDF_FONT_PRIMARY,
         fontStyle: 'italic',
         fontSize: 10,
         textColor: [120, 120, 120],
@@ -706,7 +709,7 @@ export async function generateScreeningSessionPDF({
   bestBySourceFiltered.forEach(src => {
     const candidates = (src.data || []).filter(Boolean)
     candidates.forEach((c: any) => {
-      
+
       const riskInfo = getRiskLevel(c.confidence)
       // Updated PEP check here as well
       const isPep = c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1';
@@ -714,58 +717,58 @@ export async function generateScreeningSessionPDF({
       // Calculate address lines to determine box height dynamically
       const addr = doc.splitTextToSize(c.address || "N/A", contentWidth - 45)
       const addressLines = Array.isArray(addr) ? addr.length : 1
-      
+
       // Base height + extra space for PEP + address lines (5mm per line)
       const baseHeight = 39 // Base for name, decision, annotation labels
       const pepHeight = isPep ? 6 : 0
       const addressHeight = addressLines * 5
       const boxHeight = baseHeight + pepHeight + addressHeight
-      
+
       // Check if box fits on current page, if not add new page
       if (y + boxHeight > 270) { doc.addPage(); y = 30 }
-      
+
       doc.setDrawColor(200, 200, 200)
       doc.roundedRect(margin, y, contentWidth, boxHeight, 2, 2)
-      
+
       doc.setFontSize(11)
-      doc.setFont("times", "bold")
+      doc.setFont(PDF_FONT_PRIMARY, "bold")
       doc.text(`${src.source} Result Details`, margin + 5, y + 8)
-      
+
       // Hit Badge
       doc.setFillColor(...riskInfo.color)
       doc.roundedRect(margin + contentWidth - 35, y + 4, 30, 6, 2, 2, "F")
       doc.setTextColor(255, 255, 255)
       doc.setFontSize(8)
-      doc.text(`${(c.confidence/100).toFixed(2)} Match`, margin + contentWidth - 20, y + 8.2, { align: "center" })
+      doc.text(`${(c.confidence / 100).toFixed(2)} Match`, margin + contentWidth - 20, y + 8.2, { align: "center" })
 
       doc.setTextColor(0, 0, 0)
       doc.setFontSize(9)
       let detailY = y + 16
-      doc.setFont("times", "bold"); doc.text("Matched Name:", margin + 5, detailY)
-      doc.setFont("times", "normal"); doc.text(c.name || "-", margin + 35, detailY)
+      doc.setFont(PDF_FONT_PRIMARY, "bold"); doc.text("Matched Name:", margin + 5, detailY)
+      doc.setFont(PDF_FONT_PRIMARY, "normal"); doc.text(c.name || "-", margin + 35, detailY)
       detailY += 6
 
       if (isPep) {
-        doc.setFont("times", "bold"); doc.text("PEP Status:", margin + 5, detailY)
+        doc.setFont(PDF_FONT_PRIMARY, "bold"); doc.text("PEP Status:", margin + 5, detailY)
         doc.setTextColor(220, 38, 38)
-        doc.setFont("times", "bold"); doc.text("Politically Exposed Person", margin + 35, detailY)
+        doc.setFont(PDF_FONT_PRIMARY, "bold"); doc.text("Politically Exposed Person", margin + 35, detailY)
         doc.setTextColor(0, 0, 0)
         detailY += 6
       }
 
-      doc.setFont("times", "bold"); doc.text("Decision:", margin + 5, detailY)
-      doc.setFont("times", "normal"); doc.text(decisionForSource(src.source) || "Not Set", margin + 35, detailY)
+      doc.setFont(PDF_FONT_PRIMARY, "bold"); doc.text("Decision:", margin + 5, detailY)
+      doc.setFont(PDF_FONT_PRIMARY, "normal"); doc.text(decisionForSource(src.source) || "Not Set", margin + 35, detailY)
       detailY += 6
 
-      doc.setFont("times", "bold"); doc.text("Annotation:", margin + 5, detailY)
+      doc.setFont(PDF_FONT_PRIMARY, "bold"); doc.text("Annotation:", margin + 5, detailY)
       const chosen = annChoiceForSource(src.source)
       const typed = annTextFor(src.source, Number(c.id))
       const annotationText = [chosen, typed].filter(Boolean).join(" - ")
-      doc.setFont("times", "normal"); doc.text(annotationText || "None", margin + 35, detailY)
+      doc.setFont(PDF_FONT_PRIMARY, "normal"); doc.text(annotationText || "None", margin + 35, detailY)
       detailY += 6
 
-      doc.setFont("times", "bold"); doc.text("Address:", margin + 5, detailY)
-      doc.setFont("times", "normal"); doc.text(addr, margin + 35, detailY)
+      doc.setFont(PDF_FONT_PRIMARY, "bold"); doc.text("Address:", margin + 5, detailY)
+      doc.setFont(PDF_FONT_PRIMARY, "normal"); doc.text(addr, margin + 35, detailY)
 
       y += boxHeight + 10 // Dynamic spacing based on calculated box height
     })
@@ -792,7 +795,7 @@ export async function generateScreeningSessionPDF({
   doc.setDrawColor(200, 200, 200)
   doc.line(margin, pageHeight - 22, pageWidth - margin, pageHeight - 22)
   doc.setFontSize(8)
-  doc.setFont("times", "italic")
+  doc.setFont(PDF_FONT_ITALIC, "normal")
   doc.setTextColor(120, 120, 120)
   doc.text(
     "Disclaimer: This is an automatically generated report. No signature is required. The information contained herein is based on automated screening results and should be reviewed in accordance with applicable compliance policies.",
@@ -805,6 +808,7 @@ export async function generateScreeningSessionPDF({
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i)
     doc.setFontSize(8)
+    doc.setFont(PDF_FONT_ITALIC, "normal")
     doc.setTextColor(150, 150, 150)
     doc.text(`Confidential - AML Meter Report`, margin, pageHeight - 5)
     doc.text(`Generated: ${new Date().toLocaleString()} | Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 5, { align: "right" })
