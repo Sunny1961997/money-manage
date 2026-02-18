@@ -49,6 +49,21 @@ export function Combobox({
     ? (Array.isArray(value) ? value : [])
     : (typeof value === 'string' ? value : "")
 
+  const singleSelectedValue = typeof selectedValues === "string" ? selectedValues.trim() : ""
+  const singleSelectedOption = !isMulti && singleSelectedValue
+    ? options.find((option) => option.value === singleSelectedValue)
+    : undefined
+  const singleDisplayText = singleSelectedOption?.label ?? (singleSelectedValue || placeholder)
+  const hasSingleSelection = Boolean(singleSelectedOption || singleSelectedValue)
+
+  const multiSelectedLabels = isMulti
+    ? options
+        .filter((option) => Array.isArray(selectedValues) && selectedValues.includes(option.value))
+        .map((option) => option.label)
+    : []
+  const multiDisplayText = multiSelectedLabels.length > 0 ? multiSelectedLabels.join(", ") : placeholder
+  const hasMultiSelection = multiSelectedLabels.length > 0
+
   const handleSelect = (currentValue: string) => {
     if (isMulti) {
       let newValues: string[]
@@ -75,14 +90,14 @@ export function Combobox({
           aria-expanded={open}
           className={cn("w-full justify-between", className)}
         >
-          {isMulti
-            ? (selectedValues.length > 0
-                ? options.filter(option => selectedValues.includes(option.value)).map(option => option.label).join(", ")
-                : placeholder)
-            : (selectedValues
-                ? options.find(option => option.value === selectedValues)?.label
-                : placeholder)
-          }
+          <span
+            className={cn(
+              "truncate text-left",
+              isMulti ? !hasMultiSelection && "text-muted-foreground" : !hasSingleSelection && "text-muted-foreground"
+            )}
+          >
+            {isMulti ? multiDisplayText : singleDisplayText}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
