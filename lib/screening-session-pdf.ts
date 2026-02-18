@@ -305,6 +305,9 @@ export async function generateScreeningSessionPDF({
     finalDecision = bestIrrelevant.resultType || "Irrelevant"
     finalResultType = bestIrrelevant.decision
   }
+  else{
+    finalResultType = "Irrelevant"
+  }
   console.log("Determined Final Decision:", finalDecision, "with Result Type:", finalResultType)
 
   // Determine risk from finalDecision (result type)
@@ -315,7 +318,7 @@ export async function generateScreeningSessionPDF({
     if (d === "no match") return { label: "No Match", color: [34, 197, 94] }
     if (d === "insufficient data") return { label: "Insufficient Data", color: [156, 163, 175] }
     // if (d === "pending review") return { label: "Pending Review", color: [156, 163, 175] }
-    return { label: "N/A", color: [156, 163, 175] }
+    return { label: "No Match", color: [156, 163, 175] }
   }
 
   const risk = decisionToRisk(finalDecision)

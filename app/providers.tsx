@@ -14,6 +14,7 @@ import {
   Space_Grotesk,
   Nunito
 } from "next/font/google"
+import { useEffect, useState } from "react"
 
 // --- FONT OPTIONS (Uncomment the one you want to use) ---
 
@@ -100,16 +101,60 @@ const font = Outfit({
 //   display: "swap",
 // })
 
+function setCookie(name: string, value: string, days = 365) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString()
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+}
+function getCookie(name: string) {
+  return document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1]
+}
+
+function CookieBanner() {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !getCookie('cookie_consent')) {
+      setShow(true)
+    }
+  }, [])
+  if (!show) return null
+  return (
+    <div className="fixed bottom-0 left-0 w-full z-50 bg-white border-t border-gray-200 shadow-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="text-sm text-gray-700">
+        We use cookies to enhance your experience, analyze site usage, and assist in our marketing efforts. See our{' '}
+        <button
+          className="underline text-primary bg-transparent border-none p-0 m-0 cursor-pointer"
+          onClick={() => { setShow(false); window.location.href = "/privacy-policy"; }}
+        >Privacy Policy</button> and{' '}
+        <button
+          className="underline text-primary bg-transparent border-none p-0 m-0 cursor-pointer"
+          onClick={() => { setShow(false); window.location.href = "/cookie-policy"; }}
+        >Cookie Policy</button>.
+      </div>
+      <div className="flex gap-2">
+        <button
+          className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/90 text-sm"
+          onClick={() => { setCookie('cookie_consent', 'accepted'); setShow(false); }}
+        >Accept All</button>
+        <button
+          className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 text-sm"
+          onClick={() => { setCookie('cookie_consent', 'rejected'); setShow(false); }}
+        >Reject All
+        </button>
+        {/* <button
+          className="px-4 py-2 rounded bg-gray-100 text-gray-800 hover:bg-gray-200 text-sm border border-gray-300"
+          onClick={() => { setCookie('cookie_consent', 'settings'); setShow(false); }}
+        >Cookie Settings</button> */}
+      </div>
+    </div>
+  )
+}
+
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <div className={font.className}>
-      {/* <style jsx global>{`
-        p, ul, ol, blockquote, input, textarea, select, td {
-          font-family: ${bodyFont.style.fontFamily}, sans-serif;
-        }
-      `}</style> */}
       {children}
       <Toaster />
+      <CookieBanner />
     </div>
   )
 }

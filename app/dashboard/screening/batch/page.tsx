@@ -145,13 +145,13 @@ export default function BatchScreeningPage() {
                   <code className="bg-slate-100 px-1 rounded">female</code>, or left empty.
                 </span>
               </li>
-              <li className="flex gap-2">
+              {/* <li className="flex gap-2">
                 <span>•</span>
                 <span>
                   Fuzzy Search: Optional, must be <code className="bg-slate-100 px-1 rounded">1</code>,{" "}
                   <code className="bg-slate-100 px-1 rounded">2</code>, or empty (0 is omitted).
                 </span>
-              </li>
+              </li> */}
               <li className="flex gap-2">
                 <span>•</span>
                 <span>

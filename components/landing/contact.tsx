@@ -79,12 +79,17 @@ export function Contact() {
     {
       icon: MapPin,
       title: "Headquarters",
-      details: "B.C. 1300531 Ajman Free Zone C1 Building Ajman Free Zone, United Arab Emirates",
+      details: "Bangladesh",
+    },
+    {
+      icon: MapPin,
+      title: "Hub Office",
+      details: "United Arab Emirates",
     },
     {
       icon: Phone,
       title: "Phone Support",
-      details: ["+971 509627076", "+971 562953927"].join("\n"),
+      details: ["+971 509627076", "+971 562953927", "+8801302700344"].join("\n"),
     },
     {
       icon: Mail,
