@@ -5,25 +5,25 @@ import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { RequiredLabel } from "@/components/ui/required-label"
 import { Combobox } from "@/components/ui/combobox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
 import {
+  ArrowLeft,
   User,
   Building2,
   MapPin,
   Phone,
-  Globe,
   Award as IdCard,
   Briefcase,
   DollarSign,
   FileText,
+  Loader2,
   Upload,
-  UsersIcon,
   Plus,
   Trash2,
-  FileCheck,
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -106,6 +106,32 @@ const screeningFuzziness = [
   { value: "Level 2", label: "Level 2" },
 ]
 
+const PAGE_CONTAINER_CLASS = "max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-in fade-in duration-500"
+const HEADER_CARD_CLASS =
+  "relative overflow-hidden rounded-3xl border-border/50 bg-gradient-to-br from-background via-background to-primary/10 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)]"
+const FORM_SECTION_CARD_CLASS =
+  "rounded-2xl border border-border/60 bg-background/80 p-5 sm:p-6 shadow-[0_12px_32px_-20px_oklch(0.28_0.06_260/0.4)]"
+const TABS_BAR_CLASS =
+  "sticky top-0 z-20 mb-4 border-b border-border/60 bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+const TABS_LIST_CLASS = "h-auto w-full flex-wrap justify-start gap-2 rounded-2xl border border-border/60 bg-card/70 p-2"
+const TABS_TRIGGER_CLASS =
+  "h-9 rounded-xl border border-transparent px-3 text-xs font-medium text-muted-foreground transition data-[state=active]:border-primary/30 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+const SECONDARY_LABEL_CLASS = "text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground"
+const FORM_SECTION_HEADING_CLASS = "text-sm font-semibold tracking-tight"
+const FORM_SUPPORT_TEXT_CLASS = "text-xs text-muted-foreground"
+const FORM_QUESTION_GROUP_TITLE_CLASS = "mb-2 text-sm font-semibold tracking-tight"
+const FORM_QUESTION_TEXT_CLASS = "text-sm font-medium text-foreground"
+const CANCEL_BUTTON_CLASS =
+  "h-10 rounded-full border-zinc-300 !bg-white px-6 text-zinc-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-zinc-400 hover:!bg-zinc-100 hover:text-zinc-900 active:!bg-zinc-200 focus-visible:ring-2 focus-visible:ring-zinc-300 dark:border-zinc-600 dark:!bg-zinc-900 dark:text-zinc-100 dark:hover:!bg-zinc-800 dark:active:!bg-zinc-700 hover:shadow-md"
+const SAVE_BUTTON_CLASS = "h-10 rounded-full px-6 text-sm font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+const CORPORATE_GRID_CLASS =
+  "grid grid-cols-1 gap-4 md:grid-cols-2 [&_[data-slot=input]]:mt-2 [&_[data-slot=input]]:h-11 [&_[data-slot=input]]:rounded-xl [&_[data-slot=input]]:border-border/70 [&_[data-slot=input]]:bg-background/90 [&_[data-slot=input]]:transition-colors [&_[data-slot=input]:focus-visible]:border-primary/80 [&_[data-slot=input]:focus-visible]:ring-0 [&_[data-slot=input]:focus-visible]:ring-transparent [&_[data-slot=input]:focus-visible]:ring-offset-0 [&_[data-slot=button][role=combobox]]:mt-2 [&_[data-slot=button][role=combobox]]:h-11 [&_[data-slot=button][role=combobox]]:rounded-xl [&_[data-slot=button][role=combobox]]:border-border/70 [&_[data-slot=button][role=combobox]]:bg-background/90 [&_[data-slot=button][role=combobox]]:transition-colors [&_[data-slot=button][role=combobox]:focus-visible]:border-primary/80 [&_[data-slot=button][role=combobox]:focus-visible]:ring-0 [&_[data-slot=button][role=combobox]:focus-visible]:ring-transparent [&_[data-slot=button][role=combobox]:focus-visible]:ring-offset-0"
+const RELATED_PERSON_GRID_CLASS =
+  "grid grid-cols-1 gap-3 md:grid-cols-2 [&_[data-slot=input]]:mt-1.5 [&_[data-slot=input]]:h-10 [&_[data-slot=input]]:rounded-xl [&_[data-slot=input]]:border-border/70 [&_[data-slot=input]]:bg-background/90 [&_[data-slot=input]]:transition-colors [&_[data-slot=input]:focus-visible]:border-primary/80 [&_[data-slot=input]:focus-visible]:ring-0 [&_[data-slot=input]:focus-visible]:ring-transparent [&_[data-slot=input]:focus-visible]:ring-offset-0 [&_[data-slot=button][role=combobox]]:mt-1.5 [&_[data-slot=button][role=combobox]]:h-10 [&_[data-slot=button][role=combobox]]:rounded-xl [&_[data-slot=button][role=combobox]]:border-border/70 [&_[data-slot=button][role=combobox]]:bg-background/90 [&_[data-slot=button][role=combobox]]:transition-colors [&_[data-slot=button][role=combobox]:focus-visible]:border-primary/80 [&_[data-slot=button][role=combobox]:focus-visible]:ring-0 [&_[data-slot=button][role=combobox]:focus-visible]:ring-transparent [&_[data-slot=button][role=combobox]:focus-visible]:ring-offset-0"
+const ID_BADGE_CLASS = "inline-flex items-center rounded-full border border-border/70 bg-background/80 px-2.5 py-1 text-xs font-semibold text-muted-foreground"
+const INDIVIDUAL_BADGE_CLASS = "border-primary/25 bg-primary/10 text-primary"
+const CORPORATE_BADGE_CLASS = "border-zinc-300 bg-zinc-200 text-zinc-700"
+
 export default function EditCustomerPage() {
   const params = useParams()
   const id = params?.id as string
@@ -177,29 +203,79 @@ export default function EditCustomerPage() {
     }
   }, [id])
 
-  if (loading) return <div className="max-w-5xl mx-auto p-6">Loading...</div>
+  if (loading) {
+    return (
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex h-14 w-14 items-center justify-center">
+          <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+          <Loader2 className="relative z-10 h-10 w-10 animate-spin text-primary" aria-hidden="true" />
+        </div>
+      </div>
+    )
+  }
 
-  if (!customerData) return <div className="max-w-5xl mx-auto p-6">Customer not found</div>
+  if (!customerData) return <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">Customer not found</div>
+
+  const customerLabel =
+    customerType === "individual"
+      ? [customerData?.individual_detail?.first_name, customerData?.individual_detail?.last_name].filter(Boolean).join(" ")
+      : customerData?.corporate_detail?.company_name
+  const fallbackLabel = customerData?.name || "Customer"
+  const customerTitle = customerLabel || fallbackLabel
+  const customerEmail = customerData?.individual_detail?.email || customerData?.corporate_detail?.email || customerData?.email
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <UsersIcon className="w-5 h-5" />
-          <h1 className="text-2xl font-semibold">Edit Customer</h1>
-        </div>
-      </div>
-
-      {/* Customer Type Display (non-editable) */}
-      <div className="mb-8">
-        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-muted-foreground mb-2">Customer Type:</p>
-          <div className="flex items-center gap-2">
-            {customerType === "individual" ? <User className="w-5 h-5" /> : <Building2 className="w-5 h-5" />}
-            <span className="font-semibold">{customerType === "individual" ? "Individual" : "Corporate"}</span>
+    <div className={PAGE_CONTAINER_CLASS}>
+      <Card className={HEADER_CARD_CLASS}>
+        <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-primary/10 blur-2xl" />
+        <div className="relative p-5 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 rounded-full border-border/70 bg-background/85 px-4 text-xs font-semibold"
+                onClick={() => router.push("/dashboard/customers")}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Customers
+              </Button>
+              <div className="mt-3 flex min-w-0 items-start gap-3">
+                <div className="h-11 w-11 shrink-0 rounded-xl border border-primary/20 bg-primary/10 text-primary flex items-center justify-center">
+                  {customerType === "individual" ? <User className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}
+                </div>
+                <div className="min-w-0">
+                  <p className={SECONDARY_LABEL_CLASS}>Compliance Dashboard</p>
+                  <h1 className="mt-0.5 text-xl font-semibold tracking-tight text-foreground break-words sm:text-2xl">{customerTitle}</h1>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className={ID_BADGE_CLASS}>Customer ID: {id}</span>
+                    <span
+                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                        customerType === "individual" ? INDIVIDUAL_BADGE_CLASS : CORPORATE_BADGE_CLASS
+                      }`}
+                    >
+                      {customerType === "individual" ? "Individual" : "Corporate"}
+                    </span>
+                  </div>
+                  {customerEmail ? <p className="mt-2 text-sm text-muted-foreground break-all">{customerEmail}</p> : null}
+                </div>
+              </div>
+            </div>
+            <div className="grid w-full max-w-sm grid-cols-2 gap-2">
+              <div className="rounded-2xl border border-border/60 bg-background/80 p-3">
+                <p className={SECONDARY_LABEL_CLASS}>Record Type</p>
+                <p className="mt-1 text-sm font-semibold">{customerType === "individual" ? "Individual" : "Corporate"}</p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-background/80 p-3">
+                <p className={SECONDARY_LABEL_CLASS}>Edit Mode</p>
+                <p className="mt-1 text-sm font-semibold">Customer Profile</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Forms */}
       {customerType === "individual" ? (
@@ -296,6 +372,7 @@ function IndividualEditForm({
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   
   const [activeTab, setActiveTab] = useState("personal")
+  const [submitting, setSubmitting] = useState(false)
 
   const handleSingleSelect = (setter: (v: string) => void) => (value: string | string[]) => {
     if (typeof value === "string") setter(value)
@@ -324,6 +401,8 @@ function IndividualEditForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
 
     const payload = {
       customer_type: "individual",
@@ -395,47 +474,44 @@ function IndividualEditForm({
       }
     } catch (err: any) {
       toast({ title: "Update failed", description: err?.message || "Network error" })
+    } finally {
+      setSubmitting(false)
     }
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Individual</span>
-        <h3 className="text-lg font-semibold">Edit Individual Customer</h3>
-      </div>
-
+    <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur py-3 border-b mb-4">
-          <TabsList className="w-full h-auto flex flex-wrap justify-start gap-2 bg-transparent p-0">
-            <TabsTrigger value="personal" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+        <div className={TABS_BAR_CLASS}>
+          <TabsList className={TABS_LIST_CLASS}>
+            <TabsTrigger value="personal" className={TABS_TRIGGER_CLASS}>
               Personal Information
             </TabsTrigger>
-            <TabsTrigger value="address" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="address" className={TABS_TRIGGER_CLASS}>
               Address Information
             </TabsTrigger>
-            <TabsTrigger value="contact" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="contact" className={TABS_TRIGGER_CLASS}>
               Contact Information
             </TabsTrigger>
-            <TabsTrigger value="gender-pep" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="gender-pep" className={TABS_TRIGGER_CLASS}>
               Gender and PEP Status
             </TabsTrigger>
-            <TabsTrigger value="occupation" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="occupation" className={TABS_TRIGGER_CLASS}>
               Occupation and Income
             </TabsTrigger>
-            <TabsTrigger value="financial" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="financial" className={TABS_TRIGGER_CLASS}>
               Financial Details
             </TabsTrigger>
-            <TabsTrigger value="transactions" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="transactions" className={TABS_TRIGGER_CLASS}>
               Transactions and ID Details
             </TabsTrigger>
-            <TabsTrigger value="identification" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="identification" className={TABS_TRIGGER_CLASS}>
               Identification Details
             </TabsTrigger>
-            <TabsTrigger value="additional-info" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="additional-info" className={TABS_TRIGGER_CLASS}>
               Additional Information
             </TabsTrigger>
-            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="documents" className={TABS_TRIGGER_CLASS}>
               Upload Documents
             </TabsTrigger>
           </TabsList>
@@ -445,26 +521,26 @@ function IndividualEditForm({
 
           {/* Personal Information Tab */}
           <TabsContent value="personal" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Personal Information</h4>
+                <User className="w-5 h-5 text-primary" />
+                <h4 className={FORM_SECTION_HEADING_CLASS}>Personal Information</h4>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>First Name *</Label>
+                  <RequiredLabel text="First Name" />
                   <Input placeholder="Enter first name" value={firstName} onChange={e => setFirstName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Last Name *</Label>
+                  <RequiredLabel text="Last Name" />
                   <Input placeholder="Enter last name" value={lastName} onChange={e => setLastName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Date of Birth *</Label>
+                  <RequiredLabel text="Date of Birth" />
                   <Input type="date" placeholder="mm/dd/yyyy" value={dob} onChange={e => setDob(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Residential Status *</Label>
+                  <RequiredLabel text="Residential Status" />
                   <RadioGroup value={residentialStatus} onValueChange={setResidentialStatus} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="resident" id="resident" />
@@ -481,22 +557,22 @@ function IndividualEditForm({
           </TabsContent>
 
           <TabsContent value="address" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="flex items-center gap-2 mb-4">
-                <MapPin className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Address Information</h4>
+                <MapPin className="w-5 h-5 text-primary" />
+                <h4 className={FORM_SECTION_HEADING_CLASS}>Address Information</h4>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-2">
-                  <Label>Address *</Label>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="md:col-span-2 space-y-2">
+                  <RequiredLabel text="Address" />
                   <Input placeholder="Enter address" value={address} onChange={e => setAddress(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>City *</Label>
+                  <RequiredLabel text="City" />
                   <Input placeholder="Enter city" value={city} onChange={e => setCity(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Country *</Label>
+                  <RequiredLabel text="Country" />
                   <Combobox
                     options={countries}
                     value={country}
@@ -506,7 +582,7 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Nationality *</Label>
+                  <RequiredLabel text="Nationality" />
                   <Combobox
                     options={countries}
                     value={nationality}
@@ -520,14 +596,14 @@ function IndividualEditForm({
           </TabsContent>
 
           <TabsContent value="contact" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="flex items-center gap-2 mb-4">
-                <Phone className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Contact Information</h4>
+                <Phone className="w-5 h-5 text-primary" />
+                <h4 className={FORM_SECTION_HEADING_CLASS}>Contact Information</h4>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label>Country Code *</Label>
+                  <RequiredLabel text="Country Code" />
                   <Combobox
                     options={countryCodes}
                     value={countryCode}
@@ -537,11 +613,11 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Contact No *</Label>
+                  <RequiredLabel text="Contact No" />
                   <Input placeholder="Enter contact number" value={contactNo} onChange={e => setContactNo(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Email *</Label>
+                  <RequiredLabel text="Email" />
                   <Input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} />
                 </div>
               </div>
@@ -549,14 +625,14 @@ function IndividualEditForm({
           </TabsContent>
 
           <TabsContent value="gender-pep" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Gender and PEP Status</h4>
+                <User className="w-5 h-5 text-primary" />
+                <h4 className={FORM_SECTION_HEADING_CLASS}>Gender and PEP Status</h4>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Gender *</Label>
+                  <RequiredLabel text="Gender" />
                   <RadioGroup value={gender} onValueChange={handleGenderRadio} className="flex flex-col gap-2 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="Male" id="male" />
@@ -573,7 +649,7 @@ function IndividualEditForm({
                   </RadioGroup>
                 </div>
                 <div className="space-y-2">
-                  <Label>Politically Exposed Person (PEP)? *</Label>
+                  <RequiredLabel text="Politically Exposed Person (PEP)?" />
                   <RadioGroup value={isPep ? "yes" : "no"} onValueChange={handlePepRadio} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="pep-yes" />
@@ -590,14 +666,14 @@ function IndividualEditForm({
           </TabsContent>
 
           <TabsContent value="occupation" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="flex items-center gap-2 mb-4">
-                <Briefcase className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Occupation and Income</h4>
+                <Briefcase className="w-5 h-5 text-primary" />
+                <h4 className={FORM_SECTION_HEADING_CLASS}>Occupation and Income</h4>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Occupation *</Label>
+                  <RequiredLabel text="Occupation" />
                   <Combobox
                     options={occupations}
                     value={occupation}
@@ -607,7 +683,7 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Source of Income *</Label>
+                  <RequiredLabel text="Source of Income" />
                   <Combobox
                     options={sourceOfIncome}
                     value={sourceIncome}
@@ -621,14 +697,14 @@ function IndividualEditForm({
           </TabsContent>
 
           <TabsContent value="financial" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Financial Details</h4>
+                <DollarSign className="w-5 h-5 text-primary" />
+                <h4 className={FORM_SECTION_HEADING_CLASS}>Financial Details</h4>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Purpose *</Label>
+                  <RequiredLabel text="Purpose" />
                   <Combobox
                     options={purposes}
                     value={purpose}
@@ -638,7 +714,7 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Payment Mode *</Label>
+                  <RequiredLabel text="Payment Mode" />
                   <Combobox
                     options={paymentMethods}
                     value={paymentMethod}
@@ -652,14 +728,14 @@ function IndividualEditForm({
           </TabsContent>
 
           <TabsContent value="transactions" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Transactions and ID Details</h4>
+                <FileText className="w-5 h-5 text-primary" />
+                <h4 className={FORM_SECTION_HEADING_CLASS}>Transactions and ID Details</h4>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Product Type *</Label>
+                  <RequiredLabel text="Product Type" />
                   <Combobox
                     options={products}
                     value={productTypes}
@@ -670,7 +746,7 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Mode of Approach *</Label>
+                  <RequiredLabel text="Mode of Approach" />
                   <Combobox
                     options={modeOfApproach}
                     value={approach}
@@ -702,14 +778,14 @@ function IndividualEditForm({
           </TabsContent>
 
           <TabsContent value="identification" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="flex items-center gap-2 mb-4">
-                <IdCard className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Identification Details</h4>
+                <IdCard className="w-5 h-5 text-primary" />
+                <h4 className={FORM_SECTION_HEADING_CLASS}>Identification Details</h4>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>ID Type *</Label>
+                  <RequiredLabel text="ID Type" />
                   <Combobox
                     options={idTypes}
                     value={idType}
@@ -719,15 +795,15 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>ID No*</Label>
+                  <RequiredLabel text="ID No" />
                   <Input placeholder="Enter ID number" value={idNo} onChange={e => setIdNo(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>ID Issued By *</Label>
+                  <RequiredLabel text="ID Issued By" />
                   <Input placeholder="Enter issuing authority" value={issuingAuthority} onChange={e => setIssuingAuthority(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>ID Issued At *</Label>
+                  <RequiredLabel text="ID Issued At" />
                   <Combobox
                     options={countries}
                     value={idIssueAtCountry}
@@ -737,11 +813,11 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>ID Issued Date *</Label>
+                  <RequiredLabel text="ID Issued Date" />
                   <Input type="date" placeholder="mm/dd/yyyy" value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>ID Expiry Date *</Label>
+                  <RequiredLabel text="ID Expiry Date" />
                   <Input type="date" placeholder="mm/dd/yyyy" value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
                 </div>
               </div>
@@ -749,14 +825,14 @@ function IndividualEditForm({
           </TabsContent>
 
           <TabsContent value="additional-info" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Additional Information</h4>
+                <FileText className="w-5 h-5 text-primary" />
+                <h4 className={FORM_SECTION_HEADING_CLASS}>Additional Information</h4>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Place of Birth *</Label>
+                  <RequiredLabel text="Place of Birth" />
                   <Combobox
                     options={countries}
                     value={placeOfBirth}
@@ -766,7 +842,7 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Country of Residence *</Label>
+                  <RequiredLabel text="Country of Residence" />
                   <Combobox
                     options={countries}
                     value={countryOfResidence}
@@ -775,8 +851,8 @@ function IndividualEditForm({
                     searchPlaceholder="Search country..."
                   />
                 </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Dual Nationality *</Label>
+                <div className="md:col-span-2 space-y-2">
+                  <RequiredLabel text="Dual Nationality" />
                   <RadioGroup value={dualNationality ? "yes" : "no"} onValueChange={handleBooleanRadio(setDualNationality)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="dual-yes" />
@@ -788,9 +864,9 @@ function IndividualEditForm({
                     </div>
                   </RadioGroup>
                 </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Is Customer Facing any adverse event? *</Label>
-                  <p className="text-xs text-blue-600 mb-2">We don't Check adverse news feed</p>
+                <div className="md:col-span-2 space-y-2">
+                  <RequiredLabel text="Is Customer Facing any adverse event?" />
+                  <p className="text-xs text-primary mb-2">We don't Check adverse news feed</p>
                   <RadioGroup value={adverseNews ? "yes" : "no"} onValueChange={handleBooleanRadio(setAdverseNews)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="adverse-yes" />
@@ -802,8 +878,8 @@ function IndividualEditForm({
                     </div>
                   </RadioGroup>
                 </div>
-                {/* <div className="col-span-2 space-y-2">
-                  <Label>Screening Fuzziness *</Label>
+                {/* <div className="md:col-span-2 space-y-2">
+                  <RequiredLabel text="Screening Fuzziness" />
                   <Combobox
                     options={screeningFuzziness}
                     value={fuzziness}
@@ -812,7 +888,7 @@ function IndividualEditForm({
                     searchPlaceholder="Search fuzziness..."
                   />
                 </div> */}
-                <div className="col-span-2 space-y-2">
+                <div className="md:col-span-2 space-y-2">
                   <Label>Remarks</Label>
                   <Textarea placeholder="Enter any remarks" rows={3} value={remarks} onChange={e => setRemarks(e.target.value)} />
                 </div>
@@ -821,14 +897,14 @@ function IndividualEditForm({
           </TabsContent>
 
           <TabsContent value="documents" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
+                className="border-2 border-dashed border-primary/30 rounded-lg p-8 text-center cursor-pointer"
                 onClick={openFilePicker}
               >
-                <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                <p className="text-sm text-blue-600 mb-1">Add Documents</p>
-                <p className="text-xs text-muted-foreground">Max 5 files, each up to 2MB (Images, PDFs, Docs)</p>
+                <Upload className="w-8 h-8 mx-auto mb-2 text-primary" />
+                <p className="mb-1 text-sm font-semibold tracking-tight text-primary">Add Documents</p>
+                <p className={FORM_SUPPORT_TEXT_CLASS}>Max 5 files, each up to 2MB (Images, PDFs, Docs)</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -839,7 +915,7 @@ function IndividualEditForm({
                 />
                 <div className="mt-2 flex flex-col items-center gap-1">
                   {files.map((file, idx) => (
-                    <span key={idx} className="text-xs text-gray-700">
+                    <span key={idx} className={`${FORM_SUPPORT_TEXT_CLASS} break-all`}>
                       {file.name} ({(file.size / 1024).toFixed(1)} KB)
                     </span>
                   ))}
@@ -848,8 +924,28 @@ function IndividualEditForm({
             </Card>
           </TabsContent>
 
-          <div className="sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t mt-6">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">Update Information</Button>
+          <div className="sticky bottom-0 mt-6 rounded-2xl border border-border/60 bg-background/95 px-3 py-3 shadow-[0_12px_30px_-24px_oklch(0.28_0.06_260/0.5)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                className={`w-full sm:w-auto ${CANCEL_BUTTON_CLASS}`}
+                onClick={() => router.push("/dashboard/customers")}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button className={`w-full sm:w-auto ${SAVE_BUTTON_CLASS}`} type="submit" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Information"
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </Tabs>
@@ -1001,6 +1097,7 @@ function CorporateEditForm({
   )
   
   const [activeTab, setActiveTab] = useState("company")
+  const [submitting, setSubmitting] = useState(false)
 
   // Compliance questionnaire answers (prefill from API)
   // Stored as: { [question_id]: boolean | null }
@@ -1074,6 +1171,8 @@ function CorporateEditForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
 
     const payload = {
       customer_type: "corporate",
@@ -1157,44 +1256,41 @@ function CorporateEditForm({
       }
     } catch (err: any) {
       toast({ title: "Update failed", description: err?.message || "Network error" })
+    } finally {
+      setSubmitting(false)
     }
   }
   
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Corporate</span>
-        <h3 className="text-lg font-semibold">Edit Corporate Customer</h3>
-      </div>
-
+    <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur py-3 border-b mb-4">
-          <TabsList className="w-full h-auto flex flex-wrap justify-start gap-2 bg-transparent p-0">
-            <TabsTrigger value="company" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+        <div className={TABS_BAR_CLASS}>
+          <TabsList className={TABS_LIST_CLASS}>
+            <TabsTrigger value="company" className={TABS_TRIGGER_CLASS}>
               Company Information
             </TabsTrigger>
-            <TabsTrigger value="contact" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="contact" className={TABS_TRIGGER_CLASS}>
               Contact Information
             </TabsTrigger>
-            <TabsTrigger value="identity" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="identity" className={TABS_TRIGGER_CLASS}>
               Identity Information
             </TabsTrigger>
-            <TabsTrigger value="operations" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="operations" className={TABS_TRIGGER_CLASS}>
               Operations Information
             </TabsTrigger>
-            <TabsTrigger value="product" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="product" className={TABS_TRIGGER_CLASS}>
               Product Details
             </TabsTrigger>
-            <TabsTrigger value="aml" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="aml" className={TABS_TRIGGER_CLASS}>
               AML Compliance
             </TabsTrigger>
-            <TabsTrigger value="related" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="related" className={TABS_TRIGGER_CLASS}>
               Partner/Representative
             </TabsTrigger>
-            <TabsTrigger value="additional" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="additional" className={TABS_TRIGGER_CLASS}>
               Additional Information
             </TabsTrigger>
-            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="documents" className={TABS_TRIGGER_CLASS}>
               Upload Documents
             </TabsTrigger>
           </TabsList>
@@ -1204,10 +1300,10 @@ function CorporateEditForm({
 
           {/* Company Info Tab */}
           <TabsContent value="company" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <Label htmlFor="companyName">Company Name *</Label>
+            <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className={CORPORATE_GRID_CLASS}>
+                <div className="md:col-span-2">
+                  <RequiredLabel htmlFor="companyName" text="Company Name" />
                   <Input
                     id="companyName"
                     value={companyName}
@@ -1216,8 +1312,8 @@ function CorporateEditForm({
                     className="mt-1.5"
                   />
                 </div>
-                <div className="col-span-2">
-                  <Label htmlFor="companyAddress">Company Address *</Label>
+                <div className="md:col-span-2">
+                  <RequiredLabel htmlFor="companyAddress" text="Company Address" />
                   <Input
                     id="companyAddress"
                     value={companyAddress}
@@ -1237,7 +1333,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="countryIncorporated">Country Incorporated *</Label>
+                  <RequiredLabel htmlFor="countryIncorporated" text="Country Incorporated" />
                   <Combobox
                     options={countries}
                     value={countryIncorporated}
@@ -1272,8 +1368,8 @@ function CorporateEditForm({
 
           {/* Contact Tab */}
           <TabsContent value="contact" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
+            <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className={CORPORATE_GRID_CLASS}>
                 <div>
                   <Label htmlFor="officeCountryCode">Office Country Code</Label>
                   <Combobox
@@ -1314,8 +1410,8 @@ function CorporateEditForm({
                     className="mt-1.5"
                   />
                 </div>
-                <div className="col-span-2">
-                  <Label htmlFor="email">Email *</Label>
+                <div className="md:col-span-2">
+                  <RequiredLabel htmlFor="email" text="Email" />
                   <Input
                     id="email"
                     type="email"
@@ -1331,8 +1427,8 @@ function CorporateEditForm({
 
           {/* Identity Information Tab */}
           <TabsContent value="identity" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
+            <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className={CORPORATE_GRID_CLASS}>
                 <div>
                   <Label htmlFor="tradeLicenseNo">Trade License Number</Label>
                   <Input
@@ -1409,10 +1505,10 @@ function CorporateEditForm({
 
           {/* Operations Information Tab */}
           <TabsContent value="operations" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
+            <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className={CORPORATE_GRID_CLASS}>
                 <div>
-                  <Label htmlFor="entityType">Entity Type *</Label>
+                  <RequiredLabel htmlFor="entityType" text="Entity Type" />
                   <Combobox
                     options={entity_types}
                     value={entityType}
@@ -1422,7 +1518,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="countriesOfOperation">Countries of Operation *</Label>
+                  <RequiredLabel htmlFor="countriesOfOperation" text="Countries of Operation" />
                   <Combobox
                     options={countries}
                     value={operationCountries}
@@ -1433,7 +1529,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="businessActivity">Business Activity *</Label>
+                  <RequiredLabel htmlFor="businessActivity" text="Business Activity" />
                   <Combobox
                     options={business_activities}
                     value={businessActivity}
@@ -1443,7 +1539,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div>
-                  <Label>Is entity dealing with Import/Export? *</Label>
+                  <RequiredLabel text="Is entity dealing with Import/Export?" />
                   <RadioGroup value={isImportExport ? "yes" : "no"} onValueChange={handleBooleanRadio(setIsImportExport)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="import-yes" />
@@ -1455,8 +1551,8 @@ function CorporateEditForm({
                     </div>
                   </RadioGroup>
                 </div>
-                <div className="col-span-2">
-                  <Label>Any other sister concern/branch? *</Label>
+                <div className="md:col-span-2">
+                  <RequiredLabel text="Any other sister concern/branch?" />
                   <RadioGroup value={hasSisterConcern ? "yes" : "no"} onValueChange={handleBooleanRadio(setHasSisterConcern)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="sister-yes" />
@@ -1468,8 +1564,8 @@ function CorporateEditForm({
                     </div>
                   </RadioGroup>
                 </div>
-                <div className="col-span-2">
-                  <Label htmlFor="accountHoldingBankName">Account Holding Bank Name *</Label>
+                <div className="md:col-span-2">
+                  <RequiredLabel htmlFor="accountHoldingBankName" text="Account Holding Bank Name" />
                   <Input
                     id="accountHoldingBankName"
                     value={accountHoldingBankName}
@@ -1484,10 +1580,10 @@ function CorporateEditForm({
 
           {/* Product Details Tab */}
           <TabsContent value="product" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
+            <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className={CORPORATE_GRID_CLASS}>
                 <div>
-                  <Label htmlFor="productTypes">Product Type *</Label>
+                  <RequiredLabel htmlFor="productTypes" text="Product Type" />
                   <Combobox
                     options={products}
                     value={productTypes}
@@ -1498,7 +1594,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="productSource">Product Source *</Label>
+                  <RequiredLabel htmlFor="productSource" text="Product Source" />
                   <Combobox
                     options={product_sources}
                     value={productSource}
@@ -1508,7 +1604,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="paymentMode">Payment Mode *</Label>
+                  <RequiredLabel htmlFor="paymentMode" text="Payment Mode" />
                   <Combobox
                     options={payment_modes}
                     value={paymentMode}
@@ -1518,7 +1614,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="deliveryChannel">Delivery Channel *</Label>
+                  <RequiredLabel htmlFor="deliveryChannel" text="Delivery Channel" />
                   <Combobox
                     options={delivery_channels}
                     value={deliveryChannel}
@@ -1549,8 +1645,8 @@ function CorporateEditForm({
                     className="mt-1.5"
                   />
                 </div>
-                <div className="col-span-2">
-                  <Label>Deal with Goods? *</Label>
+                <div className="md:col-span-2">
+                  <RequiredLabel text="Deal with Goods?" />
                   <RadioGroup value={dualUseGoods ? "yes" : "no"} onValueChange={handleBooleanRadio(setDualUseGoods)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="goods-yes" />
@@ -1568,8 +1664,8 @@ function CorporateEditForm({
 
           {/* AML Compliance Tab */}
           <TabsContent value="aml" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
+            <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className={CORPORATE_GRID_CLASS}>
                 <div>
                   <Label>KYC Documents Collected</Label>
                   <RadioGroup value={kycDocumentsCollected ? "yes" : "no"} onValueChange={handleBooleanRadio(setKycDocumentsCollected)} className="flex gap-4 mt-2">
@@ -1624,7 +1720,7 @@ function CorporateEditForm({
                       }, {})
                     ).map(([category, items]) => (
                       <div key={category} className="border rounded p-3">
-                        <div className="font-medium mb-2">{category}</div>
+                        <div className={FORM_QUESTION_GROUP_TITLE_CLASS}>{category}</div>
                         <div className="space-y-3">
                           {(items as any[]).map((qa: any) => {
                             const qid = Number(qa?.compliance_question_id ?? qa?.question?.id)
@@ -1634,7 +1730,7 @@ function CorporateEditForm({
 
                             return (
                               <div key={qa.id || `${qid}-${qText}`} className="rounded-md border bg-white p-3">
-                                <div className="text-sm font-medium">{qText}</div>
+                                <div className={FORM_QUESTION_TEXT_CLASS}>{qText}</div>
                                 <div className="mt-3">
                                   <RadioGroup
                                     value={value}
@@ -1667,7 +1763,7 @@ function CorporateEditForm({
 
           {/* Partner/Representative Tab */}
           <TabsContent value="related" className="space-y-4">
-            <Card className="p-6">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="flex items-center justify-between mb-4">
                 <Label>Partner/Representative/Authorized Person Details</Label>
                 <Button type="button" variant="outline" size="sm" onClick={addRelatedPerson}>
@@ -1677,9 +1773,9 @@ function CorporateEditForm({
               </div>
               
               {relatedPersons.map((person, index) => (
-                <Card key={index} className="p-4 mb-4 bg-slate-50">
+                <Card key={index} className="p-4 mb-4 bg-muted/40">
                   <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <h4 className={`${FORM_SECTION_HEADING_CLASS} flex items-center gap-2`}>
                       <User className="w-4 h-4" />
                       UBO {index + 1}
                     </h4>
@@ -1694,9 +1790,9 @@ function CorporateEditForm({
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className={RELATED_PERSON_GRID_CLASS}>
                     <div>
-                      <Label className="text-xs">Type *</Label>
+                      <RequiredLabel className="text-xs" text="Type" />
                       <Combobox
                         options={[
                           { value: "Individual", label: "Individual" },
@@ -1709,7 +1805,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">Name *</Label>
+                      <RequiredLabel className="text-xs" text="Name" />
                       <Input
                         value={person.name}
                         onChange={(e) => updateRelatedPerson(index, "name", e.target.value)}
@@ -1717,8 +1813,8 @@ function CorporateEditForm({
                         className="mt-1"
                       />
                     </div>
-                    <div className="col-span-2">
-                      <Label className="text-xs">Previously Exposed Person (PEP)? *</Label>
+                    <div className="md:col-span-2">
+                      <RequiredLabel className="text-xs" text="Previously Exposed Person (PEP)?" />
                       <RadioGroup 
                         value={person.is_pep ? "yes" : "no"} 
                         onValueChange={(v) => updateRelatedPerson(index, "is_pep", v === "yes")} 
@@ -1745,7 +1841,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">ID Type *</Label>
+                      <RequiredLabel className="text-xs" text="ID Type" />
                       <Combobox
                         options={idTypes}
                         value={person.id_type}
@@ -1755,7 +1851,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">ID No/License No *</Label>
+                      <RequiredLabel className="text-xs" text="ID No/License No" />
                       <Input
                         value={person.id_no}
                         onChange={(e) => updateRelatedPerson(index, "id_no", e.target.value)}
@@ -1764,7 +1860,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">ID Issue Date *</Label>
+                      <RequiredLabel className="text-xs" text="ID Issue Date" />
                       <Input
                         type="date"
                         placeholder="mm/dd/yyyy"
@@ -1774,7 +1870,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">ID Expiry Date *</Label>
+                      <RequiredLabel className="text-xs" text="ID Expiry Date" />
                       <Input
                         type="date"
                         placeholder="mm/dd/yyyy"
@@ -1784,7 +1880,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">Date of Birth *</Label>
+                      <RequiredLabel className="text-xs" text="Date of Birth" />
                       <Input
                         type="date"
                         placeholder="mm/dd/yyyy"
@@ -1794,7 +1890,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">Role *</Label>
+                      <RequiredLabel className="text-xs" text="Role" />
                       <Combobox
                         options={roles}
                         value={person.role}
@@ -1804,7 +1900,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">Percentage of Share *</Label>
+                      <RequiredLabel className="text-xs" text="Percentage of Share" />
                       <Input
                         value={person.ownership_percentage}
                         onChange={(e) => updateRelatedPerson(index, "ownership_percentage", e.target.value)}
@@ -1820,8 +1916,8 @@ function CorporateEditForm({
 
           {/* Additional Information Tab */}
           <TabsContent value="additional" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
+            <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className={CORPORATE_GRID_CLASS}>
                 {/* <div>
                   <Label htmlFor="fuzziness">Screening Fuzziness</Label>
                   <Combobox
@@ -1832,7 +1928,7 @@ function CorporateEditForm({
                     searchPlaceholder="Search fuzziness..."
                   />
                 </div> */}
-                <div className="col-span-2">
+                <div className="md:col-span-2">
                   <Label htmlFor="remarks">Remarks</Label>
                   <Textarea
                     id="remarks"
@@ -1849,7 +1945,7 @@ function CorporateEditForm({
 
           {/* Documents Tab */}
           <TabsContent value="documents" className="space-y-4">
-            <Card className="p-6">
+            <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="space-y-4">
                 <Label>Upload Documents</Label>
                 <div className="border-2 border-dashed rounded-lg p-4">
@@ -1877,18 +1973,26 @@ function CorporateEditForm({
             </Card>
           </TabsContent>
 
-          <div className="sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t mt-6">
-            <div className="flex gap-4">
+          <div className="sticky bottom-0 mt-6 rounded-2xl border border-border/60 bg-background/95 px-3 py-3 shadow-[0_12px_30px_-24px_oklch(0.28_0.06_260/0.5)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <Button 
                 type="button" 
                 variant="outline" 
-                className="flex-1"
+                className={`w-full sm:w-auto ${CANCEL_BUTTON_CLASS}`}
                 onClick={() => router.push("/dashboard/customers")}
+                disabled={submitting}
               >
                 Cancel
               </Button>
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700" type="submit">
-                Update Information
+              <Button className={`w-full sm:w-auto ${SAVE_BUTTON_CLASS}`} type="submit" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Information"
+                )}
               </Button>
             </div>
           </div>

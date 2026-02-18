@@ -1,8 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import type { ReactNode } from "react"
+import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { User, Calendar, Hash, FileText, Home, Phone, Globe, CreditCard } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { CheckCircle2, CreditCard, FileText, Home, Loader2, Phone, ShieldCheck, User, Users } from "lucide-react"
+import { formatDate } from "@/lib/date-format"
 
 type ProfileData = {
   id: number
@@ -63,15 +69,30 @@ type ProfileApiResponse = {
   }
 }
 
+type InfoItem = {
+  label: string
+  value: ReactNode
+}
+
+const CARD_STYLE =
+  "rounded-3xl border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all hover:shadow-[0_28px_70px_-34px_oklch(0.28_0.06_260/0.6)]"
+const SECONDARY_LABEL_CLASS = "text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground"
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [companyUsers, setCompanyUsers] = useState<CompanyUserRow[]>([])
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
+    let cancelled = false
+
     async function fetchProfile() {
       try {
+        setLoading(true)
+        setError(null)
+
         const res = await fetch("/api/profile", {
           method: "GET",
           credentials: "include",
@@ -79,302 +100,325 @@ export default function ProfilePage() {
 
         const data = (await res.json()) as ProfileApiResponse
 
+        if (cancelled) return
+
         if (data?.status === "success" || data?.status === true) {
-          const mainProfile = (data.data as any)?.["0"] as ProfileData | undefined
+          const payload = data.data || {}
+          const mainProfile = (payload as any)?.["0"] as ProfileData | undefined
           setProfile(mainProfile ?? null)
+          setCompanyUsers(payload.company_users || [])
         } else {
-          setError((data as any)?.message || "Failed to load profile")
+          setError(data?.message || "Failed to load profile")
         }
       } catch (err: any) {
-        setError(err.message || "Failed to load profile")
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchProfile()
-  }, [])
-
-  useEffect(() => {
-    async function fetchUsersOnly() {
-      try {
-        const res = await fetch("/api/profile", { method: "GET", credentials: "include" })
-        const data = (await res.json()) as ProfileApiResponse
-        if (data?.status === "success" || data?.status === true) {
-          setCompanyUsers(data.data?.company_users || [])
+        if (!cancelled) {
+          setError(err?.message || "Failed to load profile")
         }
-      } catch {
-        // ignore
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
     }
-    fetchUsersOnly()
-  }, [])
+
+    fetchProfile()
+
+    return () => {
+      cancelled = true
+    }
+  }, [refreshKey])
 
   const company = profile?.company_users?.[0]?.company_information
-  console.log("Company info: ", company)
+
+  const screeningMetrics = useMemo(() => {
+    const total = Number(company?.total_screenings || 0)
+    const remainingRaw = Number(company?.remaining_screenings || 0)
+    if (!Number.isFinite(total) || total <= 0) {
+      return {
+        hasData: false,
+        total: 0,
+        remaining: 0,
+        used: 0,
+        usedPercent: 0,
+      }
+    }
+
+    const remaining = Math.min(Math.max(remainingRaw, 0), total)
+    const used = total - remaining
+    const usedPercent = Math.round((used / total) * 100)
+
+    return {
+      hasData: true,
+      total,
+      remaining,
+      used,
+      usedPercent,
+    }
+  }, [company?.remaining_screenings, company?.total_screenings])
 
   if (loading) {
     return (
-      <div className="space-y-6 max-w-7xl">
-        <div className="text-center py-12">Loading profile...</div>
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex h-14 w-14 items-center justify-center">
+          <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+          <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" aria-hidden="true" />
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="space-y-6 max-w-7xl">
-        <div className="text-center py-12 text-red-600">{error}</div>
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card className={CARD_STYLE}>
+          <CardContent className="py-10 text-center">
+            <p className="text-sm text-red-600">{error}</p>
+            <Button variant="outline" className="mt-4 rounded-xl" onClick={() => setRefreshKey((value) => value + 1)}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
+  const personalInfo: InfoItem[] = [
+    { label: "Name", value: profile?.name || "Not Available" },
+    { label: "Reporting Entity ID", value: company?.reporting_entry_id || "Not Available" },
+    { label: "Birthdate", value: formatDate(company?.dob, "Not Available") },
+  ]
+
+  const passportInfo: InfoItem[] = [
+    { label: "Passport Number", value: company?.passport_number || "Not Available" },
+    { label: "Passport Country", value: company?.passport_country || "Not Available" },
+    { label: "Nationality", value: company?.nationality || "Not Available" },
+  ]
+
+  const addressInfo: InfoItem[] = [
+    { label: "Address", value: company?.address || "Not Available" },
+    { label: "City", value: company?.city || "Not Available" },
+    { label: "State", value: company?.state || "Not Available" },
+    { label: "Country", value: company?.country || "Not Available" },
+  ]
+
+  const companyContactInfo: InfoItem[] = [
+    { label: "Email", value: company?.email || profile?.email || "Not Available" },
+    { label: "Phone Number", value: company?.phone_number || profile?.phone || "Not Available" },
+    { label: "Contact Type", value: company?.contact_type || "Not Available" },
+    { label: "Communication Type", value: company?.communication_type || "Not Available" },
+    { label: "Created Date", value: formatDate(company?.creation_date, "Not Available") },
+  ]
+
+  const scrollToCompanyUsers = () => {
+    const usersTable = document.getElementById("company-users-table")
+    usersTable?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
   return (
-    <div className="space-y-6 max-w-7xl">
-      <div className="flex items-center gap-3">
-        <User className="w-6 h-6 text-blue-600" />
-        <h1 className="text-2xl font-semibold">Profile Information</h1>
-      </div>
-
-      {/* Company Name Banner */}
-      <Card>
-        <CardContent className="pt-6 flex items-center gap-3 justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-50 rounded flex items-center justify-center">
-              <FileText className="w-6 h-6 text-blue-600" />
-            </div>
-            <h2 className="text-xl font-semibold">{company?.name || "Not Available"}</h2>
-          </div>
-          {company?.id && (
-            <a href={`/dashboard/profile/${company.id}`}>
-              <button className="px-4 py-2 bg-blue-100 text-black rounded hover:bg-blue-700 hover:text-white transition">Edit</button>
-            </a>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* General Information */}
-      <Card>
-        <CardHeader className="bg-blue-50/50">
-          <CardTitle className="text-base font-medium">• General Information</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <Phone className="w-3 h-3" />
-                EMAIL
+    <div className="space-y-8 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500">
+      <Card className={`${CARD_STYLE} relative overflow-hidden border-border/60 bg-gradient-to-br from-background via-background to-primary/10`}>
+        <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+        <CardContent className="relative p-4 lg:p-5">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+            <div className="min-w-0 flex items-start gap-3">
+              <div className="mt-0.5 h-10 w-10 shrink-0 rounded-xl border border-primary/20 bg-primary/10 text-primary flex items-center justify-center">
+                <FileText className="w-5 h-5" />
               </div>
-              <div className="font-medium">{company?.email || profile?.email || "Not Available"}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <Calendar className="w-3 h-3" />
-                CREATED DATE
-              </div>
-              <div className="font-medium">{company?.creation_date ? new Date(company.creation_date).toLocaleDateString() : "Not Available"}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <Calendar className="w-3 h-3" />
-                EXPIRY DATE
-              </div>
-              <div className="font-medium">{company?.expiration_date ? new Date(company.expiration_date).toLocaleDateString() : "Not Available"}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <Hash className="w-3 h-3" />
-                REMAINING SCREENING COUNT
-              </div>
-              <div className="font-medium">{company?.remaining_screenings ?? "Not Available"}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <Hash className="w-3 h-3" />
-                TOTAL SCREENING COUNT
-              </div>
-              <div className="font-medium">{company?.total_screenings ?? "Not Available"}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <FileText className="w-3 h-3" />
-                TRADE LICENSE NUMBER
-              </div>
-              <div className="font-medium">{company?.trade_license_number || "Not Available"}</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Personal Information */}
-      <Card>
-        <CardHeader className="bg-blue-50/50">
-          <CardTitle className="text-base font-medium">• Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <User className="w-3 h-3" />
-                NAME
-              </div>
-              <div className="font-medium">{profile?.name || "Not Available"}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <FileText className="w-3 h-3" />
-                REPORTING ENTITY ID
-              </div>
-              <div className="font-medium">{company?.reporting_entry_id || "Not Available"}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <Calendar className="w-3 h-3" />
-                BIRTHDATE
-              </div>
-              <div className="font-medium">{company?.dob ? new Date(company.dob).toLocaleDateString() : "Not Available"}</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Passport Information */}
-      <Card>
-        <CardHeader className="bg-blue-50/50">
-          <CardTitle className="text-base font-medium">• Passport Information</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <CreditCard className="w-3 h-3" />
-                PASSPORT NUMBER
-              </div>
-              <div className="font-medium">{company?.passport_number || "Not Available"}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <Globe className="w-3 h-3" />
-                PASSPORT COUNTRY
-              </div>
-              <div className="font-medium">{company?.passport_country || "Not Available"}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <Globe className="w-3 h-3" />
-                NATIONALITY
-              </div>
-              <div className="font-medium">{company?.nationality || "Not Available"}</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Contact Information */}
-      <Card>
-        <CardHeader className="bg-blue-50/50">
-          <CardTitle className="text-base font-medium">• Contact Information</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <Phone className="w-3 h-3" />
-                CONTACT TYPE
-              </div>
-              <div className="font-medium">{company?.contact_type || "Not Available"}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <Phone className="w-3 h-3" />
-                COMMUNICATION TYPE
-              </div>
-              <div className="font-medium">{company?.communication_type || "Not Available"}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                <Phone className="w-3 h-3" />
-                PHONE NUMBER
-              </div>
-              <div className="font-medium">{company?.phone_number || profile?.phone || "Not Available"}</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Address Information */}
-      <Card>
-        <CardHeader className="bg-blue-50/50">
-          <CardTitle className="text-base font-medium">• Address Information</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <Home className="w-5 h-5 text-blue-600 mt-1" />
-              <div className="flex-1">
-                <div className="font-semibold mb-4">Address</div>
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">Address</div>
-                    <div className="font-medium">{company?.address || "Not Available"}</div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">City</div>
-                    <div className="font-medium">{company?.city || "Not Available"}</div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">Country</div>
-                    <div className="font-medium">{company?.country || "Not Available"}</div>
-                  </div>
-                  <div className="space-y-2 col-span-3">
-                    <div className="text-sm text-muted-foreground">State</div>
-                    <div className="font-medium">{company?.state || "Not Available"}</div>
-                  </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                  {profile?.name ? (
+                    <span className="text-xs font-medium text-muted-foreground">Owner: {profile.name}</span>
+                  ) : null}
+                  {company?.reporting_entry_id ? (
+                    <span className="inline-flex items-center rounded-full border border-border/60 bg-background/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                      ID: {company.reporting_entry_id}
+                    </span>
+                  ) : null}
+                </div>
+                <h2 className="mt-1 text-xl font-semibold leading-snug tracking-tight text-foreground break-words lg:text-[1.65rem]">
+                  {company?.name || "Not Available"}
+                </h2>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  <Badge variant="secondary" className="rounded-full h-6 px-2.5">{profile?.role || "User"}</Badge>
+                  <Badge className="rounded-full h-6 px-2.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                    <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+                    Active
+                  </Badge>
                 </div>
               </div>
             </div>
+            <div className="flex items-center lg:justify-end">
+              {company?.id ? (
+                <Button asChild className="h-9 rounded-lg px-4">
+                  <Link href={`/dashboard/profile/${company.id}`}>Edit Profile</Link>
+                </Button>
+              ) : null}
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Users Table */}
-      <Card>
-        <CardHeader className="bg-blue-50/50">
-          <div className="flex items-center gap-2">
-            <User className="w-5 h-5" />
-            <CardTitle className="text-base font-medium">Users</CardTitle>
-          </div>
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-0">
+            <button
+              type="button"
+              onClick={scrollToCompanyUsers}
+              className="w-full rounded-3xl p-5 text-left transition-colors hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              aria-label="Jump to company users table"
+            >
+              <p className={SECONDARY_LABEL_CLASS}>Company Users</p>
+              <p className="mt-2 text-3xl font-bold tracking-tight">{companyUsers.length}</p>
+              <p className="mt-1 text-xs text-muted-foreground">View Table</p>
+            </button>
+          </CardContent>
+        </Card>
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-5">
+            <p className={SECONDARY_LABEL_CLASS}>Screening Capacity</p>
+            {screeningMetrics.hasData ? (
+              <div className="mt-3 space-y-3">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-3xl font-bold tracking-tight">{screeningMetrics.remaining}</p>
+                    <p className="text-xs text-muted-foreground">Remaining of {screeningMetrics.total}</p>
+                  </div>
+                  <p className="text-sm font-semibold">{screeningMetrics.used} used</p>
+                </div>
+                <Progress value={screeningMetrics.usedPercent} className="h-2.5" />
+                <p className="text-[11px] text-muted-foreground">{screeningMetrics.usedPercent}% utilized</p>
+              </div>
+            ) : (
+              <p className="mt-2 text-lg font-semibold tracking-tight">Not Available</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-5">
+            <p className={SECONDARY_LABEL_CLASS}>License And Expiry</p>
+            <div className="mt-2 space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Trade License</p>
+                <p className="mt-1 text-sm font-semibold break-words">{company?.trade_license_number || "Not Available"}</p>
+              </div>
+              <div className="border-t border-border/50 pt-2 flex items-center justify-between gap-3">
+                <span className="text-xs text-muted-foreground">Expiry</span>
+                <span className="text-sm font-semibold">{formatDate(company?.expiration_date, "Not Available")}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Card className={CARD_STYLE}>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold">Profile Details</CardTitle>
         </CardHeader>
-        <CardContent className="pt-6">
-          <div className="border rounded-lg overflow-hidden">
+        <CardContent className="space-y-6 pb-6">
+          <section className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Phone className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold tracking-tight">Company And Contact</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {companyContactInfo.map((item) => (
+                <div key={item.label} className="rounded-2xl border border-border/50 bg-background/70 p-4">
+                  <p className={SECONDARY_LABEL_CLASS}>{item.label}</p>
+                  <p className="mt-2 text-sm font-semibold break-words">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-4 border-t border-border/50 pt-6">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold tracking-tight">Personal Information</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {personalInfo.map((item) => (
+                <div key={item.label} className="rounded-2xl border border-border/50 bg-background/70 p-4">
+                  <p className={SECONDARY_LABEL_CLASS}>{item.label}</p>
+                  <p className="mt-2 text-sm font-semibold break-words">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-4 border-t border-border/50 pt-6">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold tracking-tight">Passport Information</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {passportInfo.map((item) => (
+                <div key={item.label} className="rounded-2xl border border-border/50 bg-background/70 p-4">
+                  <p className={SECONDARY_LABEL_CLASS}>{item.label}</p>
+                  <p className="mt-2 text-sm font-semibold break-words">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-4 border-t border-border/50 pt-6">
+            <div className="flex items-center gap-2">
+              <Home className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold tracking-tight">Address Information</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              {addressInfo.map((item) => (
+                <div key={item.label} className="rounded-2xl border border-border/50 bg-background/70 p-4">
+                  <p className={SECONDARY_LABEL_CLASS}>{item.label}</p>
+                  <p className="mt-2 text-sm font-semibold break-words">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </CardContent>
+      </Card>
+
+      <Card id="company-users-table" className={`${CARD_STYLE} scroll-mt-24`}>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Users className="w-4 h-4 text-primary" />
+            Company Users
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pb-6">
+          <div className="overflow-x-auto rounded-2xl border border-border/50">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b">
+              <thead className="bg-muted/40 border-b border-border/50">
                 <tr>
-                  <th className="text-left p-4 font-medium text-sm">Name</th>
-                  <th className="text-left p-4 font-medium text-sm">Email</th>
-                  <th className="text-left p-4 font-medium text-sm">Role</th>
-                  <th className="text-left p-4 font-medium text-sm">Status</th>
+                  <th scope="col" className="text-left px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Name</th>
+                  <th scope="col" className="text-left px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Email</th>
+                  <th scope="col" className="text-left px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Role</th>
+                  <th scope="col" className="text-left px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Created</th>
+                  <th scope="col" className="text-left px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {companyUsers.length === 0 ? (
                   <tr>
-                    <td className="p-4 text-sm text-muted-foreground" colSpan={4}>
+                    <td className="px-4 py-8 text-sm text-muted-foreground" colSpan={5}>
                       No users found.
                     </td>
                   </tr>
                 ) : (
                   companyUsers.map((cu) => (
-                    <tr key={cu.id} className="border-b last:border-b-0">
-                      <td className="p-4">{cu.user?.name || "-"}</td>
-                      <td className="p-4">{cu.user?.email || "-"}</td>
-                      <td className="p-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <tr key={cu.id} className="border-b border-border/40 last:border-0 hover:bg-muted/20">
+                      <td className="px-4 py-3 text-sm font-medium">{cu.user?.name || "-"}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{cu.user?.email || "-"}</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-primary/10 text-primary">
                           {cu.user?.role || "-"}
                         </span>
                       </td>
-                      <td className="p-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          ✓ Active
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(cu.created_at, "-")}</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Active
                         </span>
                       </td>
                     </tr>
