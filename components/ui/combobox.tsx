@@ -25,6 +25,7 @@ interface ComboboxProps {
   showCheckIcon?: boolean
   roundedItems?: boolean
   matchTriggerWidth?: boolean
+  disabled?: boolean
 }
 
 export function Combobox({
@@ -40,8 +41,15 @@ export function Combobox({
   showCheckIcon = true,
   roundedItems = false,
   matchTriggerWidth = false,
+  disabled = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    if (disabled && open) {
+      setOpen(false)
+    }
+  }, [disabled, open])
 
   // For multi-select, value is string[]
   const isMulti = multiple
@@ -88,7 +96,11 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", className)}
+          disabled={disabled}
+          className={cn(
+            "w-full justify-between disabled:cursor-not-allowed disabled:opacity-100 disabled:border-border/80 disabled:bg-muted/60 disabled:text-muted-foreground disabled:hover:bg-muted/60 disabled:hover:text-muted-foreground",
+            className
+          )}
         >
           <span
             className={cn(
@@ -118,7 +130,9 @@ export function Combobox({
                   // Combining value and index ensures the key is always unique 
                   // even if the data contains duplicate values like '+61'
                   key={`${option.value}-${index}`}
-                  value={option.label} // Command component uses 'value' for internal search filtering
+                  // Use a unique internal command value to avoid duplicate highlight state
+                  // when labels repeat (e.g., customers with same name).
+                  value={`${option.label} ${option.value}`}
                   onSelect={() => handleSelect(option.value)}
                   className={roundedItems ? "rounded-md" : undefined}
                 >

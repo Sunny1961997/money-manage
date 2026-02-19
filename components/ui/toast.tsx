@@ -30,6 +30,8 @@ const toastVariants = cva(
     variants: {
       variant: {
         default: 'border bg-background text-foreground',
+        success:
+          'success border-emerald-300/70 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/60 dark:text-emerald-100',
         destructive:
           'destructive border-rose-300/70 bg-rose-50 text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/60 dark:text-rose-100',
       },
@@ -62,7 +64,7 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      'inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-rose-300/70 group-[.destructive]:bg-rose-100/80 group-[.destructive]:text-rose-800 group-[.destructive]:hover:bg-rose-200 group-[.destructive]:hover:text-rose-900 group-[.destructive]:focus:ring-rose-300 dark:group-[.destructive]:border-rose-900/60 dark:group-[.destructive]:bg-rose-900/30 dark:group-[.destructive]:text-rose-200 dark:group-[.destructive]:hover:bg-rose-900/50',
+      'inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.success]:border-emerald-300/70 group-[.success]:bg-emerald-100/80 group-[.success]:text-emerald-800 group-[.success]:hover:bg-emerald-200 group-[.success]:hover:text-emerald-900 group-[.success]:focus:ring-emerald-300 dark:group-[.success]:border-emerald-900/60 dark:group-[.success]:bg-emerald-900/30 dark:group-[.success]:text-emerald-200 dark:group-[.success]:hover:bg-emerald-900/50 group-[.destructive]:border-rose-300/70 group-[.destructive]:bg-rose-100/80 group-[.destructive]:text-rose-800 group-[.destructive]:hover:bg-rose-200 group-[.destructive]:hover:text-rose-900 group-[.destructive]:focus:ring-rose-300 dark:group-[.destructive]:border-rose-900/60 dark:group-[.destructive]:bg-rose-900/30 dark:group-[.destructive]:text-rose-200 dark:group-[.destructive]:hover:bg-rose-900/50',
       className,
     )}
     {...props}
@@ -77,7 +79,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      'absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-rose-600 group-[.destructive]:hover:text-rose-800 group-[.destructive]:focus:ring-rose-300 dark:group-[.destructive]:text-rose-200 dark:group-[.destructive]:hover:text-rose-50 dark:group-[.destructive]:focus:ring-rose-700',
+      'absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.success]:text-emerald-600 group-[.success]:hover:text-emerald-800 group-[.success]:focus:ring-emerald-300 dark:group-[.success]:text-emerald-200 dark:group-[.success]:hover:text-emerald-50 dark:group-[.success]:focus:ring-emerald-700 group-[.destructive]:text-rose-600 group-[.destructive]:hover:text-rose-800 group-[.destructive]:focus:ring-rose-300 dark:group-[.destructive]:text-rose-200 dark:group-[.destructive]:hover:text-rose-50 dark:group-[.destructive]:focus:ring-rose-700',
       className,
     )}
     toast-close=""
