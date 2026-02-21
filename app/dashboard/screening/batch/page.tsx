@@ -1,15 +1,22 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Download, Upload, FileSpreadsheet, Loader2 } from "lucide-react"
+import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, Info, Loader2, Upload } from "lucide-react"
 import { useState, useRef } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 
+const PAGE_CLASS = "space-y-8 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
+const CARD_STYLE =
+  "rounded-3xl border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
+const SECONDARY_LABEL_CLASS = "text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground"
+const INSTRUCTION_ICON_CLASS = "mt-0.5 h-4 w-4 shrink-0"
+
 export default function BatchScreeningPage() {
   const [dragActive, setDragActive] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [selectedFileName, setSelectedFileName] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
   const router = useRouter()
@@ -25,7 +32,7 @@ export default function BatchScreeningPage() {
 
   const handleFile = async (file: File) => {
     if (!file) return
-    if (!file.name.endsWith(".xlsx")) {
+    if (!/\.xlsx$/i.test(file.name)) {
       toast({
         title: "Invalid file type",
         description: "Please upload an Excel (.xlsx) file.",
@@ -35,6 +42,7 @@ export default function BatchScreeningPage() {
     }
 
     setLoading(true)
+    setSelectedFileName(file.name)
     const formData = new FormData()
     formData.append("file", file)
 
@@ -83,140 +91,172 @@ export default function BatchScreeningPage() {
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
-      <div className="flex items-center gap-3">
-        <FileSpreadsheet className="w-6 h-6" />
-        <h1 className="text-2xl font-semibold">Batch Screening</h1>
-      </div>
+    <div className={PAGE_CLASS}>
+      <Card className={`${CARD_STYLE} relative overflow-hidden border-border/60 bg-gradient-to-br from-background via-background to-primary/10`}>
+        <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+        <CardContent className="relative p-5 sm:p-6">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="min-w-0">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+                  <FileSpreadsheet className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">Batch Screening</h1>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Upload one Excel file to process multiple screening checks in a single run.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
+              <Button variant="outline" className="h-10 rounded-xl border-border/70 bg-background/90" onClick={handleDownloadTemplate}>
+                <Download className="h-4 w-4" />
+                Download Template
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="space-y-4">
-        <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleDownloadTemplate}>
-          <Download className="w-4 h-4 mr-2" />
-          Download Excel Template
-        </Button>
+      <input
+        type="file"
+        ref={inputRef}
+        className="hidden"
+        accept=".xlsx"
+        onChange={(e) => e.target.files && handleFile(e.target.files[0])}
+      />
 
-        <Card>
-          <CardHeader className="bg-blue-50/50">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-blue-600" />
-              Instructions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <ul className="space-y-2 text-sm">
-              <li className="flex gap-2">
-                <span>•</span>
-                <span>
-                  Customer Type: Required, must be <code className="bg-slate-100 px-1 rounded">Individual</code> or{" "}
-                  <code className="bg-slate-100 px-1 rounded">Entity</code> or{" "}
-                  <code className="bg-slate-100 px-1 rounded">Vessel</code>.
-                </span>
-              </li>
-              <li className="flex gap-2">
-                <span>•</span>
-                <span>Name: Required, enter the full name.</span>
-              </li>
-              <li className="flex gap-2">
-                <span>•</span>
-                <span>Date of Birth: Optional, supported formats:</span>
-              </li>
-              <ul className="ml-8 space-y-1 text-sm text-muted-foreground">
-                <li>
-                  • <code className="bg-slate-100 px-1 rounded">mm/dd/yyyy</code> – Full date known (e.g.,{" "}
-                  <code className="bg-slate-100 px-1 rounded">01/05/1990</code>).
-                </li>
-                <li>
-                  • <code className="bg-slate-100 px-1 rounded">00/00/yyyy</code> – Only year known (e.g.,{" "}
-                  <code className="bg-slate-100 px-1 rounded">00/00/1990</code>).
-                </li>
-                <li>
-                  • <code className="bg-slate-100 px-1 rounded">mm/00/yyyy</code> – Month and year known (e.g.,{" "}
-                  <code className="bg-slate-100 px-1 rounded">00/05/1990</code>).
-                </li>
-                <li>
-                  • <code className="bg-slate-100 px-1 rounded">00/dd/yyyy</code> – Day and year known (e.g.,{" "}
-                  <code className="bg-slate-100 px-1 rounded">01/00/1990</code>).
-                </li>
-              </ul>
-              <li className="flex gap-2">
-                <span>•</span>
-                <span>
-                  Gender: Optional, must be <code className="bg-slate-100 px-1 rounded">male</code>,{" "}
-                  <code className="bg-slate-100 px-1 rounded">female</code>, or left empty.
-                </span>
-              </li>
-              {/* <li className="flex gap-2">
-                <span>•</span>
-                <span>
-                  Fuzzy Search: Optional, must be <code className="bg-slate-100 px-1 rounded">1</code>,{" "}
-                  <code className="bg-slate-100 px-1 rounded">2</code>, or empty (0 is omitted).
-                </span>
-              </li> */}
-              <li className="flex gap-2">
-                <span>•</span>
-                <span>
-                  Rows with missing Customer Type or Name will be{" "}
-                  <span className="text-red-600 font-medium">skipped</span>.
-                </span>
-              </li>
-            </ul>
+      <div className="grid items-start gap-6 xl:grid-cols-[1.15fr_minmax(0,1fr)]">
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-5 sm:p-6">
+            <div className="flex items-center gap-2">
+              <Info className={`${INSTRUCTION_ICON_CLASS} text-primary`} />
+              <p className={SECONDARY_LABEL_CLASS}>Instructions</p>
+            </div>
+            <div className="mt-4 space-y-3 text-sm text-foreground">
+              <div className="flex items-start gap-2 rounded-xl border border-border/60 bg-background/80 p-3">
+                <CheckCircle2 className={`${INSTRUCTION_ICON_CLASS} text-emerald-600`} />
+                <p>
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">Customer Type</code> and{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">Name</code> are required. Type must be{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">Individual</code>,{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">Entity</code>, or{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">Vessel</code>.
+                </p>
+              </div>
+              <div className="flex items-start gap-2 rounded-xl border border-border/60 bg-background/80 p-3">
+                <CheckCircle2 className={`${INSTRUCTION_ICON_CLASS} text-emerald-600`} />
+                <p>
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">Gender</code> is optional and supports{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">male</code> or{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">female</code>.
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-background/80 p-3">
+                <p className="font-medium">Date of Birth: Optional, supported formats:</p>
+                <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className={`${INSTRUCTION_ICON_CLASS} text-emerald-600`} />
+                    <span>
+                      <code className="rounded bg-muted px-1 py-0.5 text-[11px]">mm/dd/yyyy</code> - Full date known (e.g.,{" "}
+                      <code className="rounded bg-muted px-1 py-0.5 text-[11px]">01/05/1990</code>).
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className={`${INSTRUCTION_ICON_CLASS} text-emerald-600`} />
+                    <span>
+                      <code className="rounded bg-muted px-1 py-0.5 text-[11px]">00/00/yyyy</code> - Only year known (e.g.,{" "}
+                      <code className="rounded bg-muted px-1 py-0.5 text-[11px]">00/00/1990</code>).
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className={`${INSTRUCTION_ICON_CLASS} text-emerald-600`} />
+                    <span>
+                      <code className="rounded bg-muted px-1 py-0.5 text-[11px]">mm/00/yyyy</code> - Month and year known (e.g.,{" "}
+                      <code className="rounded bg-muted px-1 py-0.5 text-[11px]">00/05/1990</code>).
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className={`${INSTRUCTION_ICON_CLASS} text-emerald-600`} />
+                    <span>
+                      <code className="rounded bg-muted px-1 py-0.5 text-[11px]">00/dd/yyyy</code> - Day and year known (e.g.,{" "}
+                      <code className="rounded bg-muted px-1 py-0.5 text-[11px]">01/00/1990</code>).
+                    </span>
+                  </li>
+                </ul>
+              </div>
+              <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-700">
+                <AlertTriangle className={`${INSTRUCTION_ICON_CLASS}`} />
+                <p>
+                  Rows with missing <code className="rounded bg-rose-100 px-1 py-0.5 text-[11px]">Customer Type</code> or{" "}
+                  <code className="rounded bg-rose-100 px-1 py-0.5 text-[11px]">Name</code> will be skipped automatically.
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Upload Area */}
-        <div
-          className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${
-            dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
-          }`}
-          onDragEnter={() => setDragActive(true)}
-          onDragLeave={() => setDragActive(false)}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={onDrop}
-          onClick={() => inputRef.current?.click()}
-        >
-          <input
-            type="file"
-            ref={inputRef}
-            className="hidden"
-            accept=".xlsx"
-            onChange={(e) => e.target.files && handleFile(e.target.files[0])}
-          />
-          <div className="flex flex-col items-center gap-4">
-            {loading ? (
-               <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-            ) : (
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                  <Upload className="w-8 h-8 text-gray-400" />
-                </div>
-            )}
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                {loading ? "Processing batch..." : "Drag & drop a .xlsx file here, or click to select"}
-              </p>
+        <Card className={`${CARD_STYLE} xl:self-start`}>
+          <CardContent className="p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <p className={SECONDARY_LABEL_CLASS}>Upload File</p>
+              <span className="rounded-full border border-border/60 bg-background/80 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+                .xlsx only
+              </span>
             </div>
-          </div>
-        </div>
 
-        <div className="flex justify-end">
-          <Button 
-            size="lg" 
-            className="bg-indigo-600 hover:bg-indigo-700"
-            disabled={loading}
-            onClick={() => inputRef.current?.click()}
-          >
-            {loading ? (
-               <>
-                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                 Processing...
-               </>
-            ) : (
-                <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Process Batch
-                </>
-            )}
-          </Button>
-        </div>
+            <div
+              className={`mt-4 rounded-2xl border-2 border-dashed p-8 text-center transition-colors sm:p-9 ${
+                dragActive ? "border-primary/60 bg-primary/10" : "border-border/70 bg-background/80"
+              } ${loading ? "cursor-wait opacity-90" : "cursor-pointer"}`}
+              onDragEnter={() => setDragActive(true)}
+              onDragLeave={() => setDragActive(false)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={onDrop}
+              onClick={() => !loading && inputRef.current?.click()}
+            >
+              <div className="flex flex-col items-center gap-4">
+                {loading ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                ) : (
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-muted-foreground">
+                    <Upload className="h-6 w-6" />
+                  </span>
+                )}
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {loading ? "Processing batch file..." : "Drag and drop your template file here"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedFileName ? `Selected: ${selectedFileName}` : "or click to select an Excel file"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-col items-center gap-2 text-center">
+              <p className="text-xs text-muted-foreground">
+                Template:{" "}
+                <code className="rounded border border-border/60 bg-muted/50 px-1.5 py-0.5 text-[11px]">Bulk screening.xlsx</code>
+              </p>
+              <Button className="h-10 rounded-xl px-5" disabled={loading} onClick={() => inputRef.current?.click()}>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Select and Process
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

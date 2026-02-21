@@ -97,7 +97,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 40, rotateX: 20 }}
             animate={{ opacity: 1, y: 0, rotateX: 0 }}
             transition={{ duration: 0.8, delay: 0.4, type: "spring" }}
-            style={{ y, opacity, scale }}
+            style={{ y, scale }}
             className="relative mt-12 w-full max-w-7xl mx-auto perspective-1000"
           >
             <div

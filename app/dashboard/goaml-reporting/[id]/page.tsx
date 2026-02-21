@@ -1,26 +1,81 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
-import { buildGoamlXml, downloadXml, buildGoamlXmlFilename } from "./goamlXml"
+import { useParams, useRouter } from "next/navigation"
+import { ArrowLeft, Download, FileText, Loader2, PencilLine } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { buildGoamlXml, buildGoamlXmlFilename, downloadXml } from "./goamlXml"
 import { useAuthStore } from "@/lib/store"
+import { formatDate } from "@/lib/date-format"
+
+type DetailFieldItem = {
+  key: string
+  label: string
+  value: ReactNode
+  fullWidth?: boolean
+}
+
+const PAGE_CLASS = "space-y-8 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
+const CARD_STYLE =
+  "rounded-3xl border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
+const SECONDARY_LABEL_CLASS = "text-xs font-extrabold uppercase tracking-[0.14em] text-foreground"
+
+async function readJsonSafely(res: Response): Promise<any | null> {
+  const text = await res.text()
+  if (!text || !text.trim()) return null
+  try {
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
+function formatNumberValue(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "-"
+
+  const source = typeof value === "string" ? value.trim() : value
+  const normalized = typeof source === "string" ? source.replace(/,/g, "") : source
+  const numberValue = typeof normalized === "number" ? normalized : Number(normalized)
+
+  if (Number.isFinite(numberValue)) {
+    return new Intl.NumberFormat("en-US").format(numberValue)
+  }
+
+  return String(value)
+}
+
+function DetailField({ label, value, fullWidth }: { label: string; value: ReactNode; fullWidth?: boolean }) {
+  return (
+    <div className={fullWidth ? "md:col-span-2" : undefined}>
+      <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
+      <div className="mt-1 rounded-xl border border-border/60 bg-background/80 px-3 py-2 text-sm">{value}</div>
+    </div>
+  )
+}
 
 export default function ViewGoamlReportPage() {
+  const router = useRouter()
   const params = useParams()
   const id = params?.id as string
+
   const [report, setReport] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [xmlBusy, setXmlBusy] = useState(false)
+
   const { user } = useAuthStore()
+  const normalizedRole = user?.role?.toLowerCase().trim() || ""
 
   useEffect(() => {
     if (!id) {
-      setError("Missing report id")
+      setError("Missing report ID")
       setLoading(false)
       return
     }
+
     async function fetchReport() {
       try {
         setLoading(true)
@@ -29,25 +84,42 @@ export default function ViewGoamlReportPage() {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
         })
-        const json = await res.json()
-        console.log("Fetched GOAML Report:", json)
+        const json = await readJsonSafely(res)
+
+        if (!res.ok) {
+          setError(json?.message || json?.error || `Failed to load report (${res.status})`)
+          return
+        }
+
         if (json?.status) {
           setReport(json.data.report)
+          setError(null)
+        } else if (json?.data?.report) {
+          setReport(json.data.report)
+          setError(null)
         } else {
           setError(json?.message || "Failed to load report")
         }
-      } catch (e: any) {
-        setError(e.message || "Failed to load report")
+      } catch (fetchError: unknown) {
+        const message = fetchError instanceof Error ? fetchError.message : "Failed to load report"
+        setError(message)
       } finally {
         setLoading(false)
       }
     }
-    fetchReport()
+
+    void fetchReport()
   }, [id])
 
-  const xmlFilename = useMemo(() => {
-    return buildGoamlXmlFilename(report, id)
-  }, [report, id])
+  const xmlFilename = useMemo(() => buildGoamlXmlFilename(report, id), [report, id])
+
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back()
+      return
+    }
+    router.push("/dashboard/goaml-reporting")
+  }
 
   const onGenerateXml = () => {
     if (!report) return
@@ -61,13 +133,44 @@ export default function ViewGoamlReportPage() {
   }
 
   if (loading) {
-    return <div className="p-6">Loading...</div>
+    return (
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex h-14 w-14 items-center justify-center">
+          <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" aria-hidden="true" />
+          <Loader2 className="relative z-10 h-10 w-10 animate-spin text-primary" aria-hidden="true" />
+        </div>
+      </div>
+    )
   }
+
   if (error) {
-    return <div className="p-6 text-red-600">{error}</div>
+    return (
+      <div className={PAGE_CLASS}>
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-6 text-center">
+            <p className="text-sm text-rose-600">{error}</p>
+            <Button className="mt-4 rounded-xl" variant="outline" onClick={handleBack}>
+              Back to Reports
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
+
   if (!report) {
-    return <div className="p-6">No report found.</div>
+    return (
+      <div className={PAGE_CLASS}>
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-6 text-center">
+            <p className="text-sm text-muted-foreground">No report found.</p>
+            <Button className="mt-4 rounded-xl" variant="outline" onClick={handleBack}>
+              Back to Reports
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   const customerType = report.customer?.customer_type
@@ -77,449 +180,322 @@ export default function ViewGoamlReportPage() {
   const corp = report.customer?.corporate_detail
   const products = Array.isArray(report.customer?.products) ? report.customer.products : []
 
+  const customerFields: DetailFieldItem[] = [
+    {
+      key: "customerType",
+      label: "Customer Type",
+      value: customerType || "-",
+    },
+    {
+      key: "customerName",
+      label: "Customer Name",
+      value:
+        report.customer_name ||
+        (isCorporate ? corp?.company_name : `${indiv?.first_name || ""} ${indiv?.last_name || ""}`.trim()) ||
+        report.customer?.name ||
+        "-",
+    },
+    {
+      key: "customerId",
+      label: "Customer ID",
+      value: report.customer_id || report.customer?.id || "-",
+    },
+    {
+      key: "customerEmail",
+      label: "Email",
+      value: indiv?.email || corp?.email || report.customer?.email || "-",
+    },
+  ]
+
+  if (isCorporate) {
+    customerFields.push(
+      {
+        key: "companyAddress",
+        label: "Company Address",
+        value: corp?.company_address || "-",
+      },
+      {
+        key: "companyCity",
+        label: "City",
+        value: corp?.city || "-",
+      },
+      {
+        key: "countryIncorporated",
+        label: "Country of Incorporation",
+        value: corp?.country_incorporated || "-",
+      },
+      {
+        key: "officeContact",
+        label: "Office Contact",
+        value: corp?.office_no ? `${corp?.office_country_code || ""} ${corp?.office_no}`.trim() : "-",
+      },
+    )
+  }
+
+  if (isIndividual) {
+    customerFields.push(
+      {
+        key: "contactNo",
+        label: "Contact Number",
+        value: indiv?.contact_no ? `${indiv?.country_code || ""} ${indiv?.contact_no}`.trim() : "-",
+      },
+      {
+        key: "address",
+        label: "Address",
+        value: indiv?.address || "-",
+      },
+      {
+        key: "countryResidence",
+        label: "Country of Residence",
+        value: indiv?.country_of_residence || "-",
+      },
+      {
+        key: "city",
+        label: "City",
+        value: indiv?.city || "-",
+      },
+    )
+  }
+
+  const individualPersonalFields: DetailFieldItem[] = [
+    { key: "firstName", label: "First Name", value: indiv?.first_name || "-" },
+    { key: "lastName", label: "Last Name", value: indiv?.last_name || "-" },
+    { key: "dob", label: "Date of Birth", value: formatDate(indiv?.dob, indiv?.dob || "-") },
+    { key: "gender", label: "Gender", value: indiv?.gender || "-" },
+    { key: "residential", label: "Residential Status", value: indiv?.residential_status || "-" },
+    { key: "nationality", label: "Nationality", value: indiv?.nationality || "-" },
+    { key: "placeBirth", label: "Place of Birth", value: indiv?.place_of_birth || "-" },
+    { key: "countryResidence", label: "Country of Residence", value: indiv?.country_of_residence || "-" },
+    { key: "address", label: "Address", value: indiv?.address || "-", fullWidth: true },
+    { key: "country", label: "Country", value: indiv?.country || "-" },
+    {
+      key: "contactNo",
+      label: "Contact Number",
+      value: indiv?.contact_no ? `${indiv?.country_code || ""} ${indiv?.contact_no}`.trim() : "-",
+    },
+    { key: "email", label: "Email", value: indiv?.email || report.customer?.email || "-" },
+    { key: "dualNationality", label: "Dual Nationality", value: indiv?.dual_nationality ? "Yes" : "No" },
+    { key: "adverseNews", label: "Adverse News", value: indiv?.adverse_news ? "Yes" : "No" },
+    { key: "pep", label: "PEP", value: indiv?.is_pep ? "Yes" : "No" },
+    { key: "occupation", label: "Occupation", value: indiv?.occupation || "-" },
+    { key: "income", label: "Source of Income", value: indiv?.source_of_income || "-" },
+    { key: "purpose", label: "Purpose of Onboarding", value: indiv?.purpose_of_onboarding || "-" },
+    { key: "payment", label: "Payment Mode", value: indiv?.payment_mode || "-" },
+    { key: "expectedNo", label: "Expected No. of Transactions", value: formatNumberValue(indiv?.expected_no_of_transactions) },
+    { key: "expectedVolume", label: "Expected Volume", value: formatNumberValue(indiv?.expected_volume) },
+    { key: "approach", label: "Mode of Approach", value: indiv?.mode_of_approach || "-" },
+  ]
+
+  const individualIdentificationFields: DetailFieldItem[] = [
+    { key: "idType", label: "ID Type", value: indiv?.id_type || "-" },
+    { key: "idNo", label: "ID Number", value: indiv?.id_no || "-" },
+    { key: "issuingAuthority", label: "Issuing Authority", value: indiv?.issuing_authority || "-" },
+    { key: "issuingCountry", label: "Issuing Country", value: indiv?.issuing_country || "-" },
+    { key: "issueDate", label: "ID Issue Date", value: formatDate(indiv?.id_issue_date, indiv?.id_issue_date || "-") },
+    { key: "expiryDate", label: "ID Expiry Date", value: formatDate(indiv?.id_expiry_date, indiv?.id_expiry_date || "-") },
+  ]
+
+  const corporateFields: DetailFieldItem[] = [
+    { key: "companyName", label: "Company Name", value: corp?.company_name || "-" },
+    { key: "entityType", label: "Entity Type", value: corp?.entity_type || "-" },
+    { key: "customerType", label: "Customer Type", value: corp?.customer_type || "-" },
+    { key: "businessActivity", label: "Business Activity", value: corp?.business_activity || "-" },
+    { key: "companyAddress", label: "Company Address", value: corp?.company_address || "-" },
+    { key: "poBox", label: "PO Box", value: corp?.po_box || "-" },
+    { key: "city", label: "City", value: corp?.city || "-" },
+    { key: "country", label: "Country of Incorporation", value: corp?.country_incorporated || "-" },
+    { key: "email", label: "Email", value: corp?.email || report.customer?.email || "-" },
+    {
+      key: "officeNo",
+      label: "Office Contact",
+      value: corp?.office_no ? `${corp?.office_country_code || ""} ${corp?.office_no}`.trim() : "-",
+    },
+    {
+      key: "mobileNo",
+      label: "Mobile Contact",
+      value: corp?.mobile_no ? `${corp?.mobile_country_code || ""} ${corp?.mobile_no}`.trim() : "-",
+    },
+    { key: "tradeLicenseNo", label: "Trade License No", value: corp?.trade_license_no || "-" },
+    { key: "tradeLicenseAt", label: "Trade License Issued At", value: corp?.trade_license_issued_at || "-" },
+    { key: "tradeLicenseBy", label: "Trade License Issued By", value: corp?.trade_license_issued_by || "-" },
+    { key: "licenseIssueDate", label: "License Issue Date", value: formatDate(corp?.license_issue_date, corp?.license_issue_date || "-") },
+    { key: "licenseExpiryDate", label: "License Expiry Date", value: formatDate(corp?.license_expiry_date, corp?.license_expiry_date || "-") },
+    { key: "vat", label: "VAT Registration No", value: corp?.vat_registration_no || "-" },
+    {
+      key: "tenancyExpiry",
+      label: "Tenancy Contract Expiry",
+      value: formatDate(corp?.tenancy_contract_expiry_date, corp?.tenancy_contract_expiry_date || "-"),
+    },
+    { key: "bank", label: "Account Holding Bank Name", value: corp?.account_holding_bank_name || "-" },
+    { key: "productSource", label: "Product Source", value: corp?.product_source || "-" },
+    { key: "paymentMode", label: "Payment Mode", value: corp?.payment_mode || "-" },
+    { key: "delivery", label: "Delivery Channel", value: corp?.delivery_channel || "-" },
+    { key: "expectedNo", label: "Expected No. of Transactions", value: formatNumberValue(corp?.expected_no_of_transactions) },
+    { key: "expectedVolume", label: "Expected Volume", value: formatNumberValue(corp?.expected_volume) },
+    { key: "importExport", label: "Import/Export", value: corp?.is_entity_dealting_with_import_export ? "Yes" : "No" },
+    { key: "sisterConcern", label: "Has Sister Concern", value: corp?.has_sister_concern ? "Yes" : "No" },
+    { key: "dualUse", label: "Dual Use Goods", value: corp?.dual_use_goods ? "Yes" : "No" },
+    {
+      key: "kycDocs",
+      label: "KYC Documents Collected With Form",
+      value: corp?.kyc_documents_collected_with_form ? "Yes" : "No",
+    },
+    {
+      key: "registeredGoaml",
+      label: "Registered in GOAML",
+      value: corp?.is_entity_registered_in_GOAML ? "Yes" : "No",
+    },
+    {
+      key: "adverseNews",
+      label: "Adverse News",
+      value: corp?.is_entity_having_adverse_news ? "Yes" : "No",
+    },
+  ]
+
+  const reportFields: DetailFieldItem[] = [
+    { key: "entityReference", label: "Entity Reference", value: report.entity_reference || "-" },
+    { key: "transactionType", label: "Transaction Type", value: report.transaction_type || "-" },
+    { key: "comments", label: "Comments", value: report.comments || "-" },
+    { key: "itemType", label: "Item Type", value: report.item_type || "-" },
+    { key: "itemMake", label: "Item Make", value: report.item_make || "-" },
+    { key: "description", label: "Description", value: report.description || "-", fullWidth: true },
+    { key: "disposedValue", label: "Disposed Value", value: report.disposed_value || "-" },
+    { key: "statusComments", label: "Status Comments", value: report.status_comments || "-" },
+    { key: "estimatedValue", label: "Estimated Value", value: report.estimated_value || "-" },
+    { key: "currencyCode", label: "Currency Code", value: report.currency_code || "-" },
+  ]
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">View GOAML Report</h2>
-        <div className="flex gap-2">
-          <button
-            className="px-3 py-2 rounded border text-sm disabled:opacity-60"
-            onClick={onGenerateXml}
-            disabled={xmlBusy}
-          >
-            {xmlBusy ? "Generating..." : "Generate XML"}
-          </button>
-          {user?.role !== "Analyst" && (
-            <>
-              <Link href={`/dashboard/goaml-reporting/edit/${id}`}>
-                <button className="px-3 py-2 rounded border text-sm">Edit</button>
-              </Link>
-              {/* <button className="px-3 py-2 rounded border text-sm text-red-600">Delete</button> */}
-            </>
-          )}
-        </div>
-      </div>
+    <div className={PAGE_CLASS}>
+      <Button
+        variant="ghost"
+        onClick={handleBack}
+        className="w-fit gap-2 rounded-xl px-2 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Reports
+      </Button>
 
-      <div className="mb-4">
-        <div className="text-sm text-gray-600">Report ID: {report.id}</div>
-        <div className="text-sm text-gray-600">Created: {report.created_at ? new Date(report.created_at).toLocaleDateString() : "-"}</div>
-      </div>
+      <Card className={`${CARD_STYLE} relative overflow-hidden border-border/60 bg-gradient-to-br from-background via-background to-primary/10`}>
+        <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+        <CardContent className="relative p-5 sm:p-6">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="min-w-0">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">GOAML Report Details</h1>
+                  <p className="mt-1 text-sm text-muted-foreground">Report ID #{report.id}</p>
+                </div>
+              </div>
+            </div>
 
-      <div className="mb-4 border p-3 rounded">
-        <h3 className="font-semibold mb-2">Customer Information</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="text-sm text-gray-600">Customer Type</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{customerType || "-"}</div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-600">Customer Name</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">
-              {report.customer_name || (isCorporate ? corp?.company_name : `${indiv?.first_name || ""} ${indiv?.last_name || ""}`.trim()) || report.customer?.name || "-"}
+            <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">
+              <Button variant="outline" className="h-10 w-full rounded-xl sm:w-auto" onClick={onGenerateXml} disabled={xmlBusy}>
+                <Download className="h-4 w-4" />
+                {xmlBusy ? "Generating..." : "Generate XML"}
+              </Button>
+              {normalizedRole !== "analyst" && (
+                <Button asChild className="h-10 w-full rounded-xl sm:w-auto">
+                  <Link href={`/dashboard/goaml-reporting/edit/${id}`}>
+                    <PencilLine className="h-4 w-4" />
+                    Edit
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
-          <div>
-            <div className="text-sm text-gray-600">Customer ID</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.customer_id || report.customer?.id || "-"}</div>
-          </div>
-          {/* <div>
-            <div className="text-sm text-gray-600">Contact Office Number</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.customer?.contact_office_number || "-"}</div>
-          </div> */}
 
-          {isCorporate && (
-            <>
-              <div>
-                <div className="text-sm text-gray-600">Company Address</div>
-                <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.company_address || "-"}</div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-2xl border border-border/60 bg-background/80 p-3">
+              <p className={SECONDARY_LABEL_CLASS}>Created</p>
+              <p className="mt-1 text-sm font-semibold">{formatDate(report.created_at, "-")}</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-background/80 p-3">
+              <p className={SECONDARY_LABEL_CLASS}>Customer Type</p>
+              <p className="mt-1 text-sm font-semibold capitalize">{customerType || "-"}</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-background/80 p-3">
+              <p className={SECONDARY_LABEL_CLASS}>Currency</p>
+              <p className="mt-1 text-sm font-semibold">{report.currency_code || "-"}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className={CARD_STYLE}>
+        <CardContent className="space-y-6 p-5 sm:p-6">
+          <section>
+            <p className={SECONDARY_LABEL_CLASS}>Customer Information</p>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {customerFields.map((field) => (
+                <DetailField key={field.key} label={field.label} value={field.value} fullWidth={field.fullWidth} />
+              ))}
+            </div>
+          </section>
+
+          <section className="border-t border-border/60 pt-6">
+            <p className={SECONDARY_LABEL_CLASS}>Products</p>
+            {products.length > 0 ? (
+              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {products.map((product: any) => (
+                  <div key={product.id || product.sku || product.name} className="rounded-2xl border border-border/60 bg-background/80 p-3">
+                    <p className="text-sm font-semibold">{product?.name || "-"}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">SKU: {product?.sku || "-"}</p>
+                  </div>
+                ))}
               </div>
-              <div>
-                <div className="text-sm text-gray-600">Company Email</div>
-                <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.email || report.customer?.email || "-"}</div>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">No products found.</p>
+            )}
+          </section>
+
+          {isIndividual && (
+            <section className="border-t border-border/60 pt-6">
+              <p className={SECONDARY_LABEL_CLASS}>Personal Information (Tenant Details)</p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {individualPersonalFields.map((field) => (
+                  <DetailField key={field.key} label={field.label} value={field.value} fullWidth={field.fullWidth} />
+                ))}
               </div>
-              <div>
-                <div className="text-sm text-gray-600">City</div>
-                <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.city || "-"}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Country of Incorporation</div>
-                <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.country_incorporated || "-"}</div>
-              </div>
-            </>
+            </section>
           )}
 
           {isIndividual && (
-            <>
-              <div>
-                <div className="text-sm text-gray-600">Contact Number</div>
-                <div className="mt-1 p-2 bg-gray-50 rounded border">
-                  {indiv?.contact_no ? `${indiv?.country_code || ""} ${indiv?.contact_no}`.trim() : "-"}
-                </div>
+            <section className="border-t border-border/60 pt-6">
+              <p className={SECONDARY_LABEL_CLASS}>Identification Details</p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {individualIdentificationFields.map((field) => (
+                  <DetailField key={field.key} label={field.label} value={field.value} />
+                ))}
               </div>
-              <div>
-                <div className="text-sm text-gray-600">Email</div>
-                <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.email || report.customer?.email || "-"}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Address</div>
-                <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.address || "-"}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Country of Residence</div>
-                <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.country_of_residence || "-"}</div>
-              </div>
-            </>
+            </section>
           )}
-        </div>
-      </div>
 
-      <div className="mb-4 border p-3 rounded">
-        <h3 className="font-semibold mb-2">Products</h3>
-        {products.length > 0 ? (
-          <div className="space-y-2">
-            {products.map((p: any) => (
-              <div key={p.id || p.sku || p.name} className="p-2 bg-gray-50 rounded border">
-                <div className="font-medium text-sm">{p?.name || "-"}</div>
-                <div className="text-xs text-gray-600">SKU: {p?.sku || "-"}</div>
+          {isCorporate && (
+            <section className="border-t border-border/60 pt-6">
+              <p className={SECONDARY_LABEL_CLASS}>Company Information</p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {corporateFields.map((field) => (
+                  <DetailField key={field.key} label={field.label} value={field.value} />
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-sm text-muted-foreground">No products found.</div>
-        )}
-      </div>
+            </section>
+          )}
 
-      {isIndividual && (
-        <div className="mb-4 border p-3 rounded">
-          <h3 className="font-semibold mb-2">Personal Information (Tenant Details)</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm text-gray-600">First Name</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.first_name || "-"}</div>
+          <section className="border-t border-border/60 pt-6">
+            <p className={SECONDARY_LABEL_CLASS}>Report Details</p>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {reportFields.map((field) => (
+                <DetailField key={field.key} label={field.label} value={field.value} fullWidth={field.fullWidth} />
+              ))}
             </div>
-            <div>
-              <div className="text-sm text-gray-600">Last Name</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.last_name || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Date of Birth</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.dob || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Gender</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.gender || "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Residential Status</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.residential_status || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Nationality</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.nationality || "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Place of Birth</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.place_of_birth || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Country of Residence</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.country_of_residence || "-"}</div>
-            </div>
-
-            <div className="col-span-2">
-              <div className="text-sm text-gray-600">Address</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.address || "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">City</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.city || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Country</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.country || "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Contact Number</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">
-                {indiv?.contact_no ? `${indiv?.country_code || ""} ${indiv?.contact_no}`.trim() : "-"}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Email</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.email || report.customer?.email || "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Dual Nationality</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.dual_nationality ? "Yes" : "No"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Adverse News</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.adverse_news ? "Yes" : "No"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">PEP</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.is_pep ? "Yes" : "No"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Occupation</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.occupation || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Source of Income</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.source_of_income || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Purpose of Onboarding</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.purpose_of_onboarding || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Payment Mode</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.payment_mode || "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Expected No. of Transactions</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.expected_no_of_transactions ?? "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Expected Volume</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.expected_volume ?? "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Mode of Approach</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.mode_of_approach || "-"}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isIndividual && (
-        <div className="mb-4 border p-3 rounded">
-          <h3 className="font-semibold mb-2">Identification Details</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm text-gray-600">ID Type</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.id_type || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">ID Number</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.id_no || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Issuing Authority</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.issuing_authority || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Issuing Country</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.issuing_country || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">ID Issue Date</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.id_issue_date || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">ID Expiry Date</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{indiv?.id_expiry_date || "-"}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isCorporate && (
-        <div className="mb-4 border p-3 rounded">
-          <h3 className="font-semibold mb-2">Company Information</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm text-gray-600">Company Name</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.company_name || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Entity Type</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.entity_type || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Customer Type</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.customer_type || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Business Activity</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.business_activity || "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Company Address</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.company_address || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">PO Box</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.po_box || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">City</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.city || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Country of Incorporation</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.country_incorporated || "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Email</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.email || report.customer?.email || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Office Contact</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">
-                {corp?.office_no ? `${corp?.office_country_code || ""} ${corp?.office_no}`.trim() : "-"}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Mobile Contact</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">
-                {corp?.mobile_no ? `${corp?.mobile_country_code || ""} ${corp?.mobile_no}`.trim() : "-"}
-              </div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Trade License No</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.trade_license_no || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Trade License Issued At</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.trade_license_issued_at || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Trade License Issued By</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.trade_license_issued_by || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">License Issue Date</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.license_issue_date || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">License Expiry Date</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.license_expiry_date || "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">VAT Registration No</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.vat_registration_no || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Tenancy Contract Expiry</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.tenancy_contract_expiry_date || "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Account Holding Bank Name</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.account_holding_bank_name || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Product Source</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.product_source || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Payment Mode</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.payment_mode || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Delivery Channel</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.delivery_channel || "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Expected No. of Transactions</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.expected_no_of_transactions ?? "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Expected Volume</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.expected_volume ?? "-"}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-600">Import/Export</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.is_entity_dealting_with_import_export ? "Yes" : "No"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Has Sister Concern</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.has_sister_concern ? "Yes" : "No"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Dual Use Goods</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.dual_use_goods ? "Yes" : "No"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">KYC Documents Collected With Form</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.kyc_documents_collected_with_form ? "Yes" : "No"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Registered in GOAML</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.is_entity_registered_in_GOAML ? "Yes" : "No"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Adverse News</div>
-              <div className="mt-1 p-2 bg-gray-50 rounded border">{corp?.is_entity_having_adverse_news ? "Yes" : "No"}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="mb-4 border p-3 rounded">
-        <h3 className="font-semibold mb-2">Report Details</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="text-sm text-gray-600">Entity Reference</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.entity_reference || "-"}</div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-600">Transaction Type</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.transaction_type || "-"}</div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-600">Comments</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.comments || "-"}</div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-600">Item Type</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.item_type || "-"}</div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-600">Item Make</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.item_make || "-"}</div>
-          </div>
-          <div className="col-span-2">
-            <div className="text-sm text-gray-600">Description</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.description || "-"}</div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-600">Disposed Value</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.disposed_value || "-"}</div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-600">Status Comments</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.status_comments || "-"}</div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-600">Estimated Value</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.estimated_value || "-"}</div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-600">Currency Code</div>
-            <div className="mt-1 p-2 bg-gray-50 rounded border">{report.currency_code || "-"}</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-6">
-        <Link href="/dashboard/goaml-reporting" className="px-3 py-2 rounded border text-sm bg-primary text-white hover:bg-primary/70">Back to list</Link>
-      </div>
+          </section>
+        </CardContent>
+      </Card>
     </div>
   )
 }

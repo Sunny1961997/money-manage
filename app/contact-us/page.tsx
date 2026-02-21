@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Combobox } from "@/components/ui/combobox";
+import { fallbackCountries } from "@/lib/countries";
 
 export default function ContactUs() {
   const { toast } = useToast();
@@ -24,16 +25,25 @@ export default function ContactUs() {
   const [countries, setCountries] = useState<any[]>([]);
   const [countriesLoading, setCountriesLoading] = useState(false);
 
+
   useEffect(() => {
     const fetchCountries = async () => {
       try {
         setCountriesLoading(true);
+        console.log("Fetching countries from /api/countries...");
         const res = await fetch("/api/countries", { method: "GET", credentials: "include" });
         const payload = await res.json().catch(async () => ({ message: await res.text() }));
-        if (!res.ok) throw new Error(payload?.message || "Failed to load countries");
-        setCountries(payload?.data?.countries || []);
+        console.log("Countries payload:", payload);
+
+        if (!res.ok || !payload?.data?.countries?.length) {
+          console.warn("API failed or empty, using fallback countries.");
+          setCountries(fallbackCountries);
+          return;
+        }
+        setCountries(payload.data.countries);
       } catch (e) {
-        console.error("Countries load failed:", e);
+        console.error("Countries load failed, using fallback:", e);
+        setCountries(fallbackCountries);
       } finally {
         setCountriesLoading(false);
       }

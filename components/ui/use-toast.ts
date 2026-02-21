@@ -139,8 +139,38 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, 'id'>
 
+function nodeToText(node: React.ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map((value) => nodeToText(value)).join(' ')
+  return ''
+}
+
+function inferVariant(props: Toast): ToastProps['variant'] | undefined {
+  if (props.variant) return props.variant
+
+  const text = `${nodeToText(props.title)} ${nodeToText(props.description)}`.toLowerCase()
+  const errorKeywords = [
+    'error',
+    'failed',
+    'failure',
+    'unable',
+    'invalid',
+    'missing',
+    'not found',
+    'denied',
+    'forbidden',
+    'unauthorized',
+    'unavailable',
+    'timeout',
+    'network',
+  ]
+
+  return errorKeywords.some((keyword) => text.includes(keyword)) ? 'destructive' : undefined
+}
+
 function toast({ ...props }: Toast) {
   const id = genId()
+  const variant = inferVariant(props)
 
   const update = (props: ToasterToast) =>
     dispatch({
@@ -153,6 +183,7 @@ function toast({ ...props }: Toast) {
     type: 'ADD_TOAST',
     toast: {
       ...props,
+      variant,
       id,
       open: true,
       onOpenChange: (open) => {
