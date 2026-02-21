@@ -71,7 +71,7 @@ const companyAdminNavigation: NavItem[] = [
     icon: LifeBuoy,
     children: [
       { name: "Raise a Ticket", href: "/dashboard/tickets" },
-      { name: "Automated Bot", disabled: true },
+      { name: "Automated Bot", href: "/dashboard/support/bot" },
     ],
   },
 ]
@@ -102,7 +102,7 @@ const authorNavigation: NavItem[] = [
     icon: LifeBuoy,
     children: [
       { name: "Raise a Ticket", href: "/dashboard/tickets" },
-      { name: "Automated Bot", disabled: true },
+      { name: "Automated Bot", href: "/dashboard/support/bot" },
     ],
   },
 ]
@@ -145,7 +145,7 @@ const mlroNavigation: NavItem[] = [
     icon: LifeBuoy,
     children: [
       { name: "Raise a Ticket", href: "/dashboard/tickets" },
-      { name: "Automated Bot", disabled: true },
+      { name: "Automated Bot", href: "/dashboard/support/bot" },
     ],
   },
 ]
@@ -185,7 +185,7 @@ const flaNavigation: NavItem[] = [
     icon: LifeBuoy,
     children: [
       { name: "Raise a Ticket", href: "/dashboard/tickets" },
-      { name: "Automated Bot", disabled: true },
+      { name: "Automated Bot", href: "/dashboard/support/bot" },
     ],
   },
 ]
