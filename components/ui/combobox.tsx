@@ -25,6 +25,7 @@ interface ComboboxProps {
   showCheckIcon?: boolean
   roundedItems?: boolean
   matchTriggerWidth?: boolean
+  disabled?: boolean
 }
 
 export function Combobox({
@@ -40,14 +41,36 @@ export function Combobox({
   showCheckIcon = true,
   roundedItems = false,
   matchTriggerWidth = false,
+  disabled = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    if (disabled && open) {
+      setOpen(false)
+    }
+  }, [disabled, open])
 
   // For multi-select, value is string[]
   const isMulti = multiple
   const selectedValues = isMulti
     ? (Array.isArray(value) ? value : [])
     : (typeof value === 'string' ? value : "")
+
+  const singleSelectedValue = typeof selectedValues === "string" ? selectedValues.trim() : ""
+  const singleSelectedOption = !isMulti && singleSelectedValue
+    ? options.find((option) => option.value === singleSelectedValue)
+    : undefined
+  const singleDisplayText = singleSelectedOption?.label ?? (singleSelectedValue || placeholder)
+  const hasSingleSelection = Boolean(singleSelectedOption || singleSelectedValue)
+
+  const multiSelectedLabels = isMulti
+    ? options
+        .filter((option) => Array.isArray(selectedValues) && selectedValues.includes(option.value))
+        .map((option) => option.label)
+    : []
+  const multiDisplayText = multiSelectedLabels.length > 0 ? multiSelectedLabels.join(", ") : placeholder
+  const hasMultiSelection = multiSelectedLabels.length > 0
 
   const handleSelect = (currentValue: string) => {
     if (isMulti) {
@@ -73,16 +96,20 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", className)}
+          disabled={disabled}
+          className={cn(
+            "w-full justify-between disabled:cursor-not-allowed disabled:opacity-100 disabled:border-border/80 disabled:bg-muted/60 disabled:text-muted-foreground disabled:hover:bg-muted/60 disabled:hover:text-muted-foreground",
+            className
+          )}
         >
-          {isMulti
-            ? (selectedValues.length > 0
-                ? options.filter(option => selectedValues.includes(option.value)).map(option => option.label).join(", ")
-                : placeholder)
-            : (selectedValues
-                ? options.find(option => option.value === selectedValues)?.label
-                : placeholder)
-          }
+          <span
+            className={cn(
+              "truncate text-left",
+              isMulti ? !hasMultiSelection && "text-muted-foreground" : !hasSingleSelection && "text-muted-foreground"
+            )}
+          >
+            {isMulti ? multiDisplayText : singleDisplayText}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -103,7 +130,9 @@ export function Combobox({
                   // Combining value and index ensures the key is always unique 
                   // even if the data contains duplicate values like '+61'
                   key={`${option.value}-${index}`}
-                  value={option.label} // Command component uses 'value' for internal search filtering
+                  // Use a unique internal command value to avoid duplicate highlight state
+                  // when labels repeat (e.g., customers with same name).
+                  value={`${option.label} ${option.value}`}
                   onSelect={() => handleSelect(option.value)}
                   className={roundedItems ? "rounded-md" : undefined}
                 >
