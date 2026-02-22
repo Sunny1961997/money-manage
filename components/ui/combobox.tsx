@@ -66,8 +66,8 @@ export function Combobox({
 
   const multiSelectedLabels = isMulti
     ? options
-        .filter((option) => Array.isArray(selectedValues) && selectedValues.includes(option.value))
-        .map((option) => option.label)
+      .filter((option) => Array.isArray(selectedValues) && selectedValues.includes(option.value))
+      .map((option) => option.label)
     : []
   const multiDisplayText = multiSelectedLabels.length > 0 ? multiSelectedLabels.join(", ") : placeholder
   const hasMultiSelection = multiSelectedLabels.length > 0
@@ -98,19 +98,21 @@ export function Combobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "w-full justify-between disabled:cursor-not-allowed disabled:opacity-100 disabled:border-border/80 disabled:bg-muted/60 disabled:text-muted-foreground disabled:hover:bg-muted/60 disabled:hover:text-muted-foreground",
+            "w-full justify-between disabled:cursor-not-allowed disabled:opacity-100 disabled:border-border/80 disabled:bg-muted/60 disabled:text-muted-foreground disabled:hover:bg-muted/60 disabled:hover:text-muted-foreground group",
             className
           )}
         >
           <span
             className={cn(
               "truncate text-left",
-              isMulti ? !hasMultiSelection && "text-muted-foreground" : !hasSingleSelection && "text-muted-foreground"
+              isMulti
+                ? !hasMultiSelection && "text-muted-foreground group-hover:text-accent-foreground"
+                : !hasSingleSelection && "text-muted-foreground group-hover:text-accent-foreground"
             )}
           >
             {isMulti ? multiDisplayText : singleDisplayText}
           </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 group-hover:text-accent-foreground" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
