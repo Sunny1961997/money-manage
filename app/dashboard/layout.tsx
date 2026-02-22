@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { TopNavbar } from "@/components/top-navbar"
 import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 import DashboardLayout from "@/components/dashboard-layout"
 
 export default function DashboardLayoutWrapper({
@@ -18,6 +19,8 @@ export default function DashboardLayoutWrapper({
   const router = useRouter()
   const { isAuthenticated, setUser, setLoading, navPosition } = useAuthStore()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const isMobile = useIsMobile()
+  const isSidebar = navPosition === "sidebar"
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -41,11 +44,16 @@ export default function DashboardLayoutWrapper({
     }
   }, [isAuthenticated, setUser, setLoading, router])
 
+  // Collapse sidebar by default on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setIsCollapsed(true)
+    }
+  }, [isMobile])
+
   if (!isAuthenticated) {
     return null
   }
-
-  const isSidebar = navPosition === "sidebar"
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,10 +61,10 @@ export default function DashboardLayoutWrapper({
 
       <div className={cn(
         "flex flex-col min-h-screen transition-all duration-300",
-        isSidebar ? (isCollapsed ? "ml-16" : "ml-72") : "ml-0"
+        isSidebar ? (!isMobile ? (isCollapsed ? "ml-16" : "ml-72") : "ml-0") : "ml-0"
       )}>
-        <Header />
-        {!isSidebar && <TopNavbar />}
+        <Header setIsCollapsed={setIsCollapsed} />
+        {!isSidebar && <TopNavbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />}
         <main className="flex-1 p-6">
           {children}
         </main>

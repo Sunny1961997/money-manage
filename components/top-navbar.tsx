@@ -24,6 +24,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { Dispatch, SetStateAction, Fragment } from "react"
 
 type NavItem = {
   name: string
@@ -208,102 +210,129 @@ function getNavigationByRole(user: any): NavItem[] {
   }
 }
 
-export function TopNavbar() {
+type TopNavbarProps = {
+  isCollapsed: boolean
+  setIsCollapsed: Dispatch<SetStateAction<boolean>>
+}
+
+export function TopNavbar({ isCollapsed, setIsCollapsed }: TopNavbarProps) {
   const { user } = useAuthStore()
   const pathname = usePathname()
+  const isMobile = useIsMobile()
   const navigation = getNavigationByRole(user)
 
   return (
-    <nav className="h-11 border-b border-border bg-background px-4 sm:px-6 flex items-center overflow-x-auto">
-      <ul className="flex items-center gap-1">
-        {navigation.map((item) => {
-          if (item.children) {
-            const isActive = item.children.some((child) => !!child.href && pathname === child.href)
+    <Fragment>
+      {/* Mobile Backdrop */}
+      {isMobile && !isCollapsed && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+          onClick={() => setIsCollapsed(true)}
+        />
+      )}
+
+      {/* Navigation Container - Horizontal on Desktop, Vertical Sidebar on Mobile */}
+      <nav
+        className={cn(
+          "transition-transform duration-300 ease-in-out z-50",
+          isMobile
+            ? cn(
+              "fixed top-0 left-0 h-screen w-72 bg-sidebar border-r border-border flex flex-col pt-20", // pt-20 to clear the header
+              isCollapsed ? "-translate-x-full" : "translate-x-0"
+            )
+            : "h-11 border-b border-border bg-background px-4 sm:px-6 flex items-center overflow-x-auto"
+        )}
+      >
+        <ul className={cn("flex", isMobile ? "flex-col w-full p-4 gap-2" : "items-center gap-1")}>
+          {navigation.map((item) => {
+            if (item.children) {
+              const isActive = item.children.some((child) => !!child.href && pathname === child.href)
+
+              return (
+                <li key={item.name}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors whitespace-nowrap",
+                          "hover:bg-primary/10 hover:text-primary",
+                          isActive && "text-primary bg-primary/10 font-medium"
+                        )}
+                      >
+                        <item.icon className="h-3.5 w-3.5" />
+                        <span>{item.name}</span>
+                        <ChevronDown className="h-3 w-3 opacity-60" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-56 rounded-xl p-2">
+                      <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                        {item.name}
+                      </div>
+                      <DropdownMenuSeparator />
+                      {item.children.map((child) =>
+                        child.disabled || !child.href ? (
+                          <DropdownMenuItem
+                            key={child.name}
+                            disabled
+                            className="flex items-center justify-between rounded-lg px-2.5 py-2 text-sm text-muted-foreground"
+                          >
+                            <span className="truncate">{child.name}</span>
+                            <span className="text-[9px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                              Soon
+                            </span>
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            key={child.name}
+                            asChild
+                            className={cn(
+                              "rounded-lg px-2.5 py-2 text-sm data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground",
+                              pathname === child.href && "bg-primary/10 text-primary"
+                            )}
+                          >
+                            <Link href={child.href}>{child.name}</Link>
+                          </DropdownMenuItem>
+                        )
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </li>
+              )
+            }
 
             return (
               <li key={item.name}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors whitespace-nowrap",
-                        "hover:bg-primary/10 hover:text-primary",
-                        isActive && "text-primary bg-primary/10 font-medium"
-                      )}
-                    >
-                      <item.icon className="h-3.5 w-3.5" />
-                      <span>{item.name}</span>
-                      <ChevronDown className="h-3 w-3 opacity-60" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56 rounded-xl p-2">
-                    <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                      {item.name}
-                    </div>
-                    <DropdownMenuSeparator />
-                    {item.children.map((child) =>
-                      child.disabled || !child.href ? (
-                        <DropdownMenuItem
-                          key={child.name}
-                          disabled
-                          className="flex items-center justify-between rounded-lg px-2.5 py-2 text-sm text-muted-foreground"
-                        >
-                          <span className="truncate">{child.name}</span>
-                          <span className="text-[9px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                            Soon
-                          </span>
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem
-                          key={child.name}
-                          asChild
-                          className={cn(
-                            "rounded-lg px-2.5 py-2 text-sm data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground",
-                            pathname === child.href && "bg-primary/10 text-primary"
-                          )}
-                        >
-                          <Link href={child.href}>{child.name}</Link>
-                        </DropdownMenuItem>
-                      )
+                {item.disabled || !item.href ? (
+                  <span
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg whitespace-nowrap",
+                      "text-muted-foreground/80 cursor-not-allowed opacity-80"
                     )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  >
+                    <item.icon className="h-3.5 w-3.5" />
+                    <span>{item.name}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.1em] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground ml-1">
+                      Soon
+                    </span>
+                  </span>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors whitespace-nowrap",
+                      "hover:bg-primary/10 hover:text-primary",
+                      pathname === item.href && "text-primary bg-primary/10 font-medium"
+                    )}
+                  >
+                    <item.icon className="h-3.5 w-3.5" />
+                    <span>{item.name}</span>
+                  </Link>
+                )}
               </li>
             )
-          }
-
-          return (
-            <li key={item.name}>
-              {item.disabled || !item.href ? (
-                <span
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg whitespace-nowrap",
-                    "text-muted-foreground/80 cursor-not-allowed opacity-80"
-                  )}
-                >
-                  <item.icon className="h-3.5 w-3.5" />
-                  <span>{item.name}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-[0.1em] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground ml-1">
-                    Soon
-                  </span>
-                </span>
-              ) : (
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors whitespace-nowrap",
-                    "hover:bg-primary/10 hover:text-primary",
-                    pathname === item.href && "text-primary bg-primary/10 font-medium"
-                  )}
-                >
-                  <item.icon className="h-3.5 w-3.5" />
-                  <span>{item.name}</span>
-                </Link>
-              )}
-            </li>
-          )
-        })}
-      </ul>
-    </nav>
+          })}
+        </ul>
+      </nav>
+    </Fragment>
   )
 }
