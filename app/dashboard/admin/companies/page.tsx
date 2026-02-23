@@ -41,11 +41,19 @@ export default function CompaniesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [total, setTotal] = useState(0)
 
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const res = await fetch("/api/companies", {
+        const params = new URLSearchParams({
+          offset: String((page - 1) * limit),
+          limit: String(limit),
+        })
+        if (searchTerm) params.append("search", searchTerm)
+        const res = await fetch(`/api/companies?${params.toString()}`, {
           method: "GET",
           credentials: "include",
         })
@@ -54,6 +62,9 @@ export default function CompaniesPage() {
         if (data.status === "success" || data.status) {
           const companiesMap = new Map<number, Company>()
           const users = data.data || []
+          // If API returns total, set it
+          if (typeof data.total === "number") setTotal(data.total)
+          else if (Array.isArray(users)) setTotal(users.length)
 
           users.forEach((user: any) => {
             if (user.company_users && Array.isArray(user.company_users)) {
@@ -78,7 +89,7 @@ export default function CompaniesPage() {
     }
 
     fetchCompanies()
-  }, [])
+  }, [page, limit, searchTerm])
 
   const filteredCompanies = useMemo(
     () =>
@@ -249,6 +260,7 @@ export default function CompaniesPage() {
                           <div className="flex items-center gap-1.5">
                             <Button
                               type="button"
+                              title="View Company Details"
                               variant="ghost"
                               size="sm"
                               className={ACTION_ICON_BUTTON_CLASS}
@@ -258,6 +270,7 @@ export default function CompaniesPage() {
                             </Button>
                             <Button
                               type="button"
+                              title="Edit Company Details"
                               variant="ghost"
                               size="sm"
                               className={ACTION_ICON_BUTTON_CLASS}
@@ -267,12 +280,25 @@ export default function CompaniesPage() {
                             </Button>
                             <Button
                               type="button"
+                              title="Delete Company"
                               variant="ghost"
                               size="sm"
                               className={ACTION_ICON_DELETE_BUTTON_CLASS}
                               aria-label={`Delete ${company.name}`}
                             >
                               <Trash2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              title="View Subscription History"
+                              variant="ghost"
+                              size="sm"
+                              className={ACTION_ICON_BUTTON_CLASS}
+                              aria-label={`Subscription History for ${company.name}`}
+                              onClick={() => router.push(`/dashboard/admin/companies/${company.id}/subscriptions`)}
+                            >
+                              <span className="sr-only">Subscription History</span>
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M8 17l4 4 4-4m-4-5v9" /><circle cx="12" cy="7" r="4" /></svg>
                             </Button>
                           </div>
                         </td>
@@ -282,6 +308,31 @@ export default function CompaniesPage() {
                 )}
               </tbody>
             </table>
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between gap-4 px-4 py-6">
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm" disabled={companies.length < limit} onClick={() => setPage(page + 1)}>
+                  Next
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Page {page}
+              </div>
+              <div>
+                <select
+                  className="border rounded px-2 py-1 text-xs"
+                  value={limit}
+                  onChange={e => { setLimit(Number(e.target.value)); setPage(1) }}
+                >
+                  {[10, 25, 50, 100].map(opt => (
+                    <option key={opt} value={opt}>{opt} / page</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

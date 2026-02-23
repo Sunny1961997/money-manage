@@ -42,7 +42,17 @@ export default function AddPackagePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ name, price, currency, isDefault, trialDays, screeningLimit, kycLimit, duration, description }),
+        body: JSON.stringify({ 
+          name, 
+          price, 
+          currency, 
+          'is_default': isDefault, 
+          'trial_days': trialDays, 
+          'screening_limit': screeningLimit, 
+          'kyc_limit': kycLimit, 
+          'duration': duration, 
+          'description': description 
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.message || "Failed to create package")
