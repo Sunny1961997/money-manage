@@ -22,7 +22,7 @@ export default function EditProductPage() {
   const { toast } = useToast()
   const router = useRouter()
   const params = useParams()
-  const productId = params.id
+  const productId = params?.id
 
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)

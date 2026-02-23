@@ -87,6 +87,7 @@ const adminNavigation: NavItem[] = [
   { name: "System Users", href: "/dashboard/admin/users", icon: Users },
   { name: "Products", href: "/dashboard/admin/product", icon: FileSpreadsheet },
   { name: "Support Center", href: "/dashboard/tickets", icon: LifeBuoy },
+  { name: "Packages", href: "/dashboard/admin/packages", icon: FileSpreadsheet },
 ]
 
 const authorNavigation: NavItem[] = [
@@ -204,7 +205,6 @@ const flaNavigation: NavItem[] = [
 // Helper function to get navigation based on role
 function getNavigationByRole(user: any): NavItem[] {
   // Normalize role to lowercase for comparison
-  console.log("[Sidebar] Current user role:", user)
   const normalizedRole = (user?.role || "").toLowerCase().trim()
   console.log("[Sidebar] Determining navigation for role:", normalizedRole)
 

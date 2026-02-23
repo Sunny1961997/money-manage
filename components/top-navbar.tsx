@@ -83,6 +83,7 @@ const adminNavigation: NavItem[] = [
   { name: "System Users", href: "/dashboard/admin/users", icon: Users },
   { name: "Products", href: "/dashboard/admin/product", icon: FileSpreadsheet },
   { name: "Support Center", href: "/dashboard/tickets", icon: LifeBuoy },
+  { name: "Packages", href: "/dashboard/admin/packages", icon: FileSpreadsheet },
 ]
 
 const authorNavigation: NavItem[] = [

@@ -285,25 +285,25 @@ export default function AddCompanyPage() {
           <CardContent className="pt-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Date of Birth *</Label>
+                <Label>Date of Birth </Label>
                 <Input
                   type="date"
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
-                  required
+                  
                 />
               </div>
               <div className="space-y-2">
-                <Label>Passport Number *</Label>
+                <Label>Passport Number </Label>
                 <Input
                   value={passportNumber}
                   onChange={(e) => setPassportNumber(e.target.value)}
                   placeholder="Enter passport number"
-                  required
+                  
                 />
               </div>
               <div className="space-y-2">
-                <Label>Passport Country *</Label>
+                <Label>Passport Country </Label>
                 <Combobox
                   options={countries}
                   value={passportCountry}
@@ -313,7 +313,7 @@ export default function AddCompanyPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Nationality *</Label>
+                <Label>Nationality </Label>
                 <Combobox
                   options={countries}
                   value={nationality}
