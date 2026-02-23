@@ -4,6 +4,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { useState, useEffect, useRef } from "react"
 import type { KeyboardEvent } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { RequiredLabel } from "@/components/ui/required-label"
 import { Combobox } from "@/components/ui/combobox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -530,7 +531,7 @@ function IndividualForm({
                   </div>
                   <div>
                     <RequiredLabel text="Date of Birth" className={FIELD_LABEL_CLASS} />
-                    <input type="date" className={FIELD_CLASS} value={dob} onChange={e => setDob(e.target.value)} />
+                    <Input type="date" className={FIELD_CLASS} value={dob} onChange={e => setDob(e.target.value)} />
                   </div>
                   <div>
                     <RequiredLabel text="Residential Status" className={FIELD_LABEL_CLASS} />
@@ -837,11 +838,11 @@ function IndividualForm({
                   </div>
                   <div>
                     <RequiredLabel text="ID Issued Date" className={FIELD_LABEL_CLASS} />
-                    <input type="date" className={FIELD_CLASS} value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
+                    <Input type="date" className={FIELD_CLASS} value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
                   </div>
                   <div>
                     <RequiredLabel text="ID Expiry Date" className={FIELD_LABEL_CLASS} />
-                    <input type="date" className={FIELD_CLASS} value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
+                    <Input type="date" className={FIELD_CLASS} value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
                   </div>
                 </div>
               </CardContent>
@@ -1586,11 +1587,11 @@ function CorporateForm({
                   </div>
                   <div className="space-y-2">
                     <RequiredLabel text="Trade License/CR Issued Date" className={FIELD_LABEL_CLASS} />
-                    <input type="date" className={FIELD_CLASS} value={licenseIssueDate} onChange={e => setLicenseIssueDate(e.target.value)} />
+                    <Input type="date" className={FIELD_CLASS} value={licenseIssueDate} onChange={e => setLicenseIssueDate(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <RequiredLabel text="Trade License/CR Expiry Date" className={FIELD_LABEL_CLASS} />
-                    <input type="date" className={FIELD_CLASS} value={licenseExpiryDate} onChange={e => setLicenseExpiryDate(e.target.value)} />
+                    <Input type="date" className={FIELD_CLASS} value={licenseExpiryDate} onChange={e => setLicenseExpiryDate(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <label className={FIELD_LABEL_CLASS}>VAT Registration Number </label>
@@ -1598,7 +1599,7 @@ function CorporateForm({
                   </div>
                   <div className="md:col-span-2 space-y-2">
                     <RequiredLabel text="Tenancy Contract Expiry Date" className={FIELD_LABEL_CLASS} />
-                    <input type="date" className={FIELD_CLASS} value={tenancyContractExpiryDate} onChange={e => setTenancyContractExpiryDate(e.target.value)} />
+                    <Input type="date" className={FIELD_CLASS} value={tenancyContractExpiryDate} onChange={e => setTenancyContractExpiryDate(e.target.value)} />
                   </div>
                 </div>
               </CardContent>
@@ -1981,15 +1982,15 @@ function CorporateForm({
                       </div>
                       <div className="space-y-2">
                         <RequiredLabel text="ID Issue Date" className={FIELD_LABEL_CLASS} />
-                        <input type="date" className={FIELD_CLASS} value={ubo.idIssue} onChange={e => setUboField(ubo.id, "idIssue", e.target.value)} />
+                        <Input type="date" className={FIELD_CLASS} value={ubo.idIssue} onChange={e => setUboField(ubo.id, "idIssue", e.target.value)} />
                       </div>
                       <div className="space-y-2">
                         <RequiredLabel text="ID Expiry Date" className={FIELD_LABEL_CLASS} />
-                        <input type="date" className={FIELD_CLASS} value={ubo.idExpiry} onChange={e => setUboField(ubo.id, "idExpiry", e.target.value)} />
+                        <Input type="date" className={FIELD_CLASS} value={ubo.idExpiry} onChange={e => setUboField(ubo.id, "idExpiry", e.target.value)} />
                       </div>
                       <div className="space-y-2">
                         <RequiredLabel text="Date of Birth" className={FIELD_LABEL_CLASS} />
-                        <input type="date" className={FIELD_CLASS} value={ubo.dob} onChange={e => setUboField(ubo.id, "dob", e.target.value)} />
+                        <Input type="date" className={FIELD_CLASS} value={ubo.dob} onChange={e => setUboField(ubo.id, "dob", e.target.value)} />
                       </div>
                       <div className="space-y-2">
                         <RequiredLabel text="Role" className={FIELD_LABEL_CLASS} />

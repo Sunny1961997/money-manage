@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { RequiredLabel } from "@/components/ui/required-label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Combobox } from "@/components/ui/combobox"
@@ -399,7 +400,7 @@ export default function QuickOnboardingPage() {
                     </div>
                     <div className="space-y-2">
                       <RequiredLabel htmlFor="dob" text="Date of Birth" className={FIELD_LABEL_CLASS} />
-                      <input
+                      <Input
                         id="dob"
                         type="date"
                         className={FIELD_CLASS}
@@ -522,7 +523,7 @@ export default function QuickOnboardingPage() {
 
                     <div className="space-y-2">
                       <RequiredLabel htmlFor="idIssued" text="ID Issued Date" className={FIELD_LABEL_CLASS} />
-                      <input
+                      <Input
                         id="idIssued"
                         type="date"
                         className={FIELD_CLASS}
@@ -532,7 +533,7 @@ export default function QuickOnboardingPage() {
                     </div>
                     <div className="space-y-2">
                       <RequiredLabel htmlFor="idExpiry" text="ID Expiry Date" className={FIELD_LABEL_CLASS} />
-                      <input
+                      <Input
                         id="idExpiry"
                         type="date"
                         className={FIELD_CLASS}
