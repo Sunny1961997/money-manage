@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import type { KeyboardEvent } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, FilePenLine, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
@@ -61,6 +62,12 @@ const TEXTAREA_CLASS =
   "w-full rounded-xl border border-border/70 bg-background/90 px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20"
 const READONLY_FIELD_CLASS =
   "rounded-xl border border-border/80 bg-muted/60 px-3 py-2 text-sm text-foreground/80 cursor-not-allowed select-none"
+
+const blockExponentInput = (e: KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === "e" || e.key === "E") {
+    e.preventDefault()
+  }
+}
 
 const INITIAL_FORM_DATA: ReportFormData = {
   entity_reference: "",
@@ -469,6 +476,7 @@ export default function CreateGoamlReportPage() {
                         className={FIELD_CLASS}
                         value={formData.disposed_value}
                         onChange={(e) => setFormData({ ...formData, disposed_value: e.target.value })}
+                        onKeyDown={blockExponentInput}
                       />
                     </div>
                     <div>
@@ -491,6 +499,7 @@ export default function CreateGoamlReportPage() {
                         className={FIELD_CLASS}
                         value={formData.estimated_value}
                         onChange={(e) => setFormData({ ...formData, estimated_value: e.target.value })}
+                        onKeyDown={blockExponentInput}
                       />
                     </div>
                     <div>

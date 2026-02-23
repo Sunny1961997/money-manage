@@ -2,6 +2,7 @@
 
 import { Spinner } from "@/components/ui/spinner"
 import { useState, useEffect, useRef } from "react"
+import type { KeyboardEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -42,6 +43,12 @@ const TEXTAREA_CLASS =
 const TABS_GRID_LIST_CLASS = "grid h-auto w-full grid-cols-2 gap-1 bg-transparent p-0 md:grid-cols-3 lg:grid-cols-5"
 const TABS_GRID_TRIGGER_CLASS =
   "h-10 w-full rounded-xl px-2 text-center text-sm whitespace-nowrap justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+
+const blockExponentInput = (e: KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === "e" || e.key === "E") {
+    e.preventDefault()
+  }
+}
 
 type CustomerType = "individual" | "corporate"
 
@@ -769,6 +776,7 @@ function IndividualForm({
                       placeholder="0"
                       value={expectedNoOfTransactions}
                       onChange={e => setExpectedNoOfTransactions(e.target.value)}
+                      onKeyDown={blockExponentInput}
                     />
                   </div>
                   <div>
@@ -779,6 +787,7 @@ function IndividualForm({
                       placeholder="0"
                       value={expectedVolume}
                       onChange={e => setExpectedVolume(e.target.value)}
+                      onKeyDown={blockExponentInput}
                     />
                   </div>
                 </div>
