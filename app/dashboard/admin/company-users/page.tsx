@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useMemo, useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Users, Search, Plus, X, Building2 } from "lucide-react"
+import { Users, Search, Plus, Building2, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { Combobox } from "@/components/ui/combobox"
+import { formatDate } from "@/lib/date-format"
 import {
   Dialog,
   DialogContent,
@@ -36,10 +37,17 @@ type Company = {
 
 const userRoles = [
   { value: "Company Admin", label: "Company Admin" },
-//   { value: "Author", label: "Author" },
   { value: "MLRO", label: "MLRO" },
   { value: "Analyst", label: "Analyst" },
 ]
+
+const PAGE_CLASS = "space-y-8 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
+const CARD_STYLE =
+  "rounded-3xl border border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
+const FIELD_LABEL_CLASS = "block text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+const FIELD_GROUP_CLASS = "space-y-2"
+const FIELD_CLASS =
+  "h-10 w-full rounded-xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20"
 
 export default function CompanyUsersPage() {
   const { toast } = useToast()
@@ -51,7 +59,6 @@ export default function CompanyUsersPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // Form fields
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -72,7 +79,6 @@ export default function CompanyUsersPage() {
         credentials: "include",
       })
       const data = await res.json()
-      console.log("Fetched company users:", data)
 
       if (data.status === "success" || data.status) {
         setUsers(data.data || [])
@@ -95,10 +101,9 @@ export default function CompanyUsersPage() {
       const data = await res.json()
 
       if (data.status === "success" || data.status) {
-        // Extract unique companies from users' company_users array
         const companiesMap = new Map<number, Company>()
-
         const usersData = data.data || []
+
         usersData.forEach((user: any) => {
           if (user.company_users && Array.isArray(user.company_users)) {
             user.company_users.forEach((cu: any) => {
@@ -131,7 +136,7 @@ export default function CompanyUsersPage() {
       password_confirmation: passwordConfirmation,
       phone,
       role,
-      company_information_id: parseInt(companyId),
+      company_information_id: parseInt(companyId, 10),
     }
 
     try {
@@ -145,7 +150,6 @@ export default function CompanyUsersPage() {
       })
 
       const data = await res.json()
-      console.log("[Company Users] Create response:", data)
 
       if (res.ok) {
         toast({
@@ -154,7 +158,6 @@ export default function CompanyUsersPage() {
         })
         setIsDialogOpen(false)
         resetForm()
-        // Reload the users list
         await fetchUsers()
       } else {
         const details = data?.errors
@@ -166,14 +169,12 @@ export default function CompanyUsersPage() {
         toast({
           title: "Failed to create user",
           description: errText,
-        //   variant: "destructive",
         })
       }
     } catch (err: any) {
       toast({
         title: "Failed to create user",
         description: err?.message || "Network error",
-        // variant: "destructive",
       })
     } finally {
       setSubmitting(false)
@@ -190,12 +191,16 @@ export default function CompanyUsersPage() {
     setCompanyId("")
   }
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = useMemo(
+    () =>
+      users.filter(
+        (user) =>
+          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.role.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [users, searchTerm]
   )
 
   const companyOptions = companies.map((c) => ({
@@ -205,238 +210,270 @@ export default function CompanyUsersPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="text-center py-12">Loading company users...</div>
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex h-14 w-14 items-center justify-center">
+          <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+          <Loader2 className="relative z-10 h-10 w-10 animate-spin text-primary" aria-hidden="true" />
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div className="text-center py-12 text-red-600">{error}</div>
+      <div className={PAGE_CLASS}>
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-10 text-center text-sm text-destructive">{error}</CardContent>
+        </Card>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Users className="w-6 h-6 text-blue-600" />
-          <h1 className="text-2xl font-semibold">Company Users</h1>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Company User
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Company User</DialogTitle>
-              <DialogDescription>
-                Create a new user and assign them to a company with a specific role.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter name"
-                    required
-                  />
+    <div className={PAGE_CLASS}>
+      <Card className={`${CARD_STYLE} relative overflow-hidden border-border/60 bg-gradient-to-br from-background via-background to-primary/10`}>
+        <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+        <CardContent className="relative p-5 sm:p-6">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="min-w-0">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+                  <Users className="h-5 w-5" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter email"
-                    required
-                  />
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">Company Users</h1>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Create and manage users assigned to each client company.
+                  </p>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password (min 8 characters)"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="passwordConfirmation">Confirm Password *</Label>
-                  <Input
-                    id="passwordConfirmation"
-                    type="password"
-                    value={passwordConfirmation}
-                    onChange={(e) => setPasswordConfirmation(e.target.value)}
-                    placeholder="Confirm password"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter phone number"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company *</Label>
-                  <Combobox
-                    options={companyOptions}
-                    value={companyId}
-                    onValueChange={(v) => typeof v === "string" && setCompanyId(v)}
-                    placeholder="Select company"
-                    searchPlaceholder="Search company..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role *</Label>
-                  <Combobox
-                    options={userRoles}
-                    value={role}
-                    onValueChange={(v) => typeof v === "string" && setRole(v)}
-                    placeholder="Select role"
-                    searchPlaceholder="Search role..."
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-4 justify-end pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsDialogOpen(false)
-                    resetForm()
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={submitting}>
-                  {submitting ? "Creating..." : "Create User"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{users.length}</div>
-            <p className="text-sm text-muted-foreground">Total Users</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{companies.length}</div>
-            <p className="text-sm text-muted-foreground">Companies</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">
-              {new Set(users.map((u) => u.role)).size}
             </div>
-            <p className="text-sm text-muted-foreground">User Roles</p>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Search */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, email, company, or role..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="h-10 rounded-xl px-4">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Company User
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border-border/70 p-0">
+                <div className="border-b border-border/60 px-6 py-4">
+                  <DialogHeader>
+                    <DialogTitle>Add New Company User</DialogTitle>
+                    <DialogDescription>
+                      Create a new user and assign them to a company with the correct role.
+                    </DialogDescription>
+                  </DialogHeader>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-5 px-6 py-5">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className={FIELD_GROUP_CLASS}>
+                      <Label htmlFor="name" className={FIELD_LABEL_CLASS}>
+                        Name *
+                      </Label>
+                      <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter name" className={FIELD_CLASS} required />
+                    </div>
+                    <div className={FIELD_GROUP_CLASS}>
+                      <Label htmlFor="email" className={FIELD_LABEL_CLASS}>
+                        Email *
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter email"
+                        className={FIELD_CLASS}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className={FIELD_GROUP_CLASS}>
+                      <Label htmlFor="password" className={FIELD_LABEL_CLASS}>
+                        Password *
+                      </Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter password (min 8 characters)"
+                        className={FIELD_CLASS}
+                        required
+                      />
+                    </div>
+                    <div className={FIELD_GROUP_CLASS}>
+                      <Label htmlFor="passwordConfirmation" className={FIELD_LABEL_CLASS}>
+                        Confirm Password *
+                      </Label>
+                      <Input
+                        id="passwordConfirmation"
+                        type="password"
+                        value={passwordConfirmation}
+                        onChange={(e) => setPasswordConfirmation(e.target.value)}
+                        placeholder="Confirm password"
+                        className={FIELD_CLASS}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className={FIELD_GROUP_CLASS}>
+                      <Label htmlFor="phone" className={FIELD_LABEL_CLASS}>
+                        Phone
+                      </Label>
+                      <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" className={FIELD_CLASS} />
+                    </div>
+                    <div className={FIELD_GROUP_CLASS}>
+                      <Label htmlFor="company" className={FIELD_LABEL_CLASS}>
+                        Company *
+                      </Label>
+                      <Combobox
+                        options={companyOptions}
+                        value={companyId}
+                        onValueChange={(v) => typeof v === "string" && setCompanyId(v)}
+                        placeholder="Select company"
+                        searchPlaceholder="Search company..."
+                        className={FIELD_CLASS}
+                        matchTriggerWidth
+                      />
+                    </div>
+                  </div>
+
+                  <div className={FIELD_GROUP_CLASS}>
+                    <Label htmlFor="role" className={FIELD_LABEL_CLASS}>
+                      Role *
+                    </Label>
+                    <Combobox
+                      options={userRoles}
+                      value={role}
+                      onValueChange={(v) => typeof v === "string" && setRole(v)}
+                      placeholder="Select role"
+                      searchPlaceholder="Search role..."
+                      className={FIELD_CLASS}
+                      matchTriggerWidth
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 border-t border-border/60 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-10 rounded-xl"
+                      onClick={() => {
+                        setIsDialogOpen(false)
+                        resetForm()
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" className="h-10 rounded-xl px-4" disabled={submitting}>
+                      {submitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        "Create User"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
-        </CardHeader>
+        </CardContent>
       </Card>
 
-      {/* Users Table */}
-      <Card>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-5">
+            <p className={FIELD_LABEL_CLASS}>Total Users</p>
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{users.length}</p>
+          </CardContent>
+        </Card>
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-5">
+            <p className={FIELD_LABEL_CLASS}>Companies</p>
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{companies.length}</p>
+          </CardContent>
+        </Card>
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-5">
+            <p className={FIELD_LABEL_CLASS}>User Roles</p>
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{new Set(users.map((u) => u.role)).size}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className={CARD_STYLE}>
         <CardContent className="p-0">
+          <div className="border-b border-border/60 p-5 sm:p-6">
+            <div className={FIELD_GROUP_CLASS}>
+              <p className={FIELD_LABEL_CLASS}>Search</p>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, email, company, or role..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`${FIELD_CLASS} pl-10`}
+                />
+              </div>
+            </div>
+          </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b">
-                <tr>
-                  <th className="text-left p-4 font-medium text-sm">User Name</th>
-                  <th className="text-left p-4 font-medium text-sm">Email</th>
-                  <th className="text-left p-4 font-medium text-sm">Phone</th>
-                  <th className="text-left p-4 font-medium text-sm">Company</th>
-                  <th className="text-left p-4 font-medium text-sm">Role</th>
-                  <th className="text-left p-4 font-medium text-sm">Created</th>
+            <table className="w-full min-w-[860px]">
+              <thead className="border-b border-border/70 bg-muted/30">
+                <tr className="text-left">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">User Name</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Email</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Phone</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Company</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Role</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Created</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td className="p-4 text-sm text-muted-foreground text-center" colSpan={6}>
+                    <td className="px-4 py-10 text-center text-sm text-muted-foreground" colSpan={6}>
                       No company users found.
                     </td>
                   </tr>
                 ) : (
                   filteredUsers.map((companyUser) => (
-                    <tr key={companyUser.id} className="border-b last:border-b-0 hover:bg-slate-50">
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-blue-600 font-semibold text-sm">
+                    <tr key={companyUser.id} className="border-b border-border/60 transition hover:bg-muted/20">
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-primary/20 bg-primary/10">
+                            <span className="text-sm font-semibold text-primary">
                               {companyUser.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <span className="font-medium">{companyUser.name}</span>
+                          <span className="font-medium text-foreground">{companyUser.name}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-sm">{companyUser.email}</td>
-                      <td className="p-4 text-sm">{companyUser.phone || "-"}</td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm">{companyUser.company_name}</span>
+                      <td className="px-4 py-3.5 text-sm text-foreground">{companyUser.email}</td>
+                      <td className="px-4 py-3.5 text-sm text-foreground">{companyUser.phone || "-"}</td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2 text-sm text-foreground">
+                          <Building2 className="h-4 w-4 text-primary" />
+                          <span>{companyUser.company_name}</span>
                         </div>
                       </td>
-                      <td className="p-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      <td className="px-4 py-3.5">
+                        <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
                           {companyUser.role}
                         </span>
                       </td>
-                      <td className="p-4 text-sm">
-                        {companyUser.created_at
-                          ? new Date(companyUser.created_at).toLocaleDateString()
-                          : "-"}
+                      <td className="px-4 py-3.5 text-sm text-foreground">
+                        {companyUser.created_at ? formatDate(companyUser.created_at) : "-"}
                       </td>
                     </tr>
                   ))

@@ -1,14 +1,22 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Combobox } from "@/components/ui/combobox"
-import { Building2, ArrowLeft } from "lucide-react"
+import { Building2, ArrowLeft, Loader2, UserRound } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+
+const PAGE_CLASS = "space-y-8 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
+const CARD_STYLE =
+  "rounded-3xl border border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
+const FIELD_LABEL_CLASS = "block text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+const FIELD_GROUP_CLASS = "space-y-2"
+const FIELD_CLASS =
+  "h-10 w-full rounded-xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20"
 
 export default function AddCompanyPage() {
   const router = useRouter()
@@ -16,7 +24,6 @@ export default function AddCompanyPage() {
   const [loading, setLoading] = useState(false)
   const [countries, setCountries] = useState<Array<{ value: string; label: string }>>([])
 
-  // User fields
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [companyEmail, setCompanyEmail] = useState("")
@@ -24,7 +31,6 @@ export default function AddCompanyPage() {
   const [passwordConfirmation, setPasswordConfirmation] = useState("")
   const [phone, setPhone] = useState("")
 
-  // Company fields
   const [companyName, setCompanyName] = useState("")
   const [expirationDate, setExpirationDate] = useState("")
   const [totalScreenings, setTotalScreenings] = useState("")
@@ -35,7 +41,7 @@ export default function AddCompanyPage() {
   const [nationality, setNationality] = useState("")
   const [contactType, setContactType] = useState("")
   const [communicationType, setCommunicationType] = useState("")
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
   const [address, setAddress] = useState("")
   const [city, setCity] = useState("")
@@ -43,7 +49,7 @@ export default function AddCompanyPage() {
   const [country, setCountry] = useState("")
 
   useEffect(() => {
-    async function fetchCountries() {
+    const fetchCountries = async () => {
       try {
         const res = await fetch("/api/onboarding/meta", { credentials: "include" })
         const json = await res.json()
@@ -72,7 +78,7 @@ export default function AddCompanyPage() {
       phone,
       company_name: companyName,
       expiration_date: expirationDate,
-      total_screenings: parseInt(totalScreenings),
+      total_screenings: parseInt(totalScreenings, 10),
       trade_license_number: tradeLicenseNumber,
       dob,
       passport_number: passportNumber,
@@ -116,7 +122,6 @@ export default function AddCompanyPage() {
         toast({
           title: "Failed to create company",
           description: errText,
-        //   variant: "destructive",
         })
       }
     } catch (err: any) {
@@ -142,134 +147,130 @@ export default function AddCompanyPage() {
     { value: "Phone", label: "Phone" },
   ]
   const roles = [
-    { value: "Company Admin", label: "Company Admin"},
-    { value: "MLRO", label: "MLRO"},
-    { value: "Analyst", label: "Analyst"}
+    { value: "Company Admin", label: "Company Admin" },
+    { value: "MLRO", label: "MLRO" },
+    { value: "Analyst", label: "Analyst" },
   ]
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <div className="flex items-center gap-3">
-          <Building2 className="w-6 h-6 text-blue-600" />
-          <h1 className="text-2xl font-semibold">Add New Company</h1>
-        </div>
-      </div>
+    <div className={PAGE_CLASS}>
+      <Card className={`${CARD_STYLE} relative overflow-hidden border-border/60 bg-gradient-to-br from-background via-background to-primary/10`}>
+        <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+        <CardContent className="relative p-5 sm:p-6">
+          <div className="flex items-start gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 rounded-xl border-border/70 bg-background/90"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">Add New Company</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Create a company profile and assign the initial admin user.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* User Information */}
-        <Card>
-          <CardHeader className="bg-blue-50/50">
-            <CardTitle className="text-base font-medium">User Information</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Name *</Label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter name"
-                  required
-                />
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-5 sm:p-6">
+            <div className="mb-5 border-b border-border/50 pb-4">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <UserRound className="h-4 w-4" />
+                </div>
+                <h2 className="text-lg font-semibold tracking-tight text-foreground">User Information</h2>
               </div>
-              <div className="space-y-2">
-                <Label>Email *</Label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter email"
-                  required
-                />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Name *</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter name" className={FIELD_CLASS} required />
               </div>
-              <div className="space-y-2">
-                <Label>Password *</Label>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Email *</Label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter email" className={FIELD_CLASS} required />
+              </div>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Password *</Label>
                 <Input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password (min 8 characters)"
+                  className={FIELD_CLASS}
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Confirm Password *</Label>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Confirm Password *</Label>
                 <Input
                   type="password"
                   value={passwordConfirmation}
                   onChange={(e) => setPasswordConfirmation(e.target.value)}
                   placeholder="Confirm password"
+                  className={FIELD_CLASS}
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Phone</Label>
-                <Input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter phone number"
-                />
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Phone</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" className={FIELD_CLASS} />
               </div>
-              <div className="space-y-2">
-                <Label>Role *</Label>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Role *</Label>
                 <Combobox
                   options={roles}
                   value={role}
                   onValueChange={(v) => typeof v === "string" && setRole(v)}
                   placeholder="Select role"
                   searchPlaceholder="Search role..."
+                  className={FIELD_CLASS}
+                  matchTriggerWidth
                 />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Company Information */}
-        <Card>
-          <CardHeader className="bg-blue-50/50">
-            <CardTitle className="text-base font-medium">Company Information</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Company Name *</Label>
-                <Input
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Enter company name"
-                  required
-                />
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-5 sm:p-6">
+            <div className="mb-5 border-b border-border/50 pb-4">
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">Company Information</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Company Name *</Label>
+                <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Enter company name" className={FIELD_CLASS} required />
               </div>
-              <div className="space-y-2">
-                <Label>Trade License Number *</Label>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Trade License Number *</Label>
                 <Input
                   value={tradeLicenseNumber}
                   onChange={(e) => setTradeLicenseNumber(e.target.value)}
                   placeholder="Enter trade license number"
+                  className={FIELD_CLASS}
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Expiration Date *</Label>
-                <Input
-                  type="date"
-                  value={expirationDate}
-                  onChange={(e) => setExpirationDate(e.target.value)}
-                  required
-                />
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Expiration Date *</Label>
+                <Input type="date" value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)} className={FIELD_CLASS} required />
               </div>
-              <div className="space-y-2">
-                <Label>Total Screenings *</Label>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Total Screenings *</Label>
                 <Input
                   type="number"
                   value={totalScreenings}
                   onChange={(e) => setTotalScreenings(e.target.value)}
                   placeholder="Enter total screenings"
+                  className={FIELD_CLASS}
                   required
                 />
               </div>
@@ -277,161 +278,140 @@ export default function AddCompanyPage() {
           </CardContent>
         </Card>
 
-        {/* Personal Information */}
-        <Card>
-          <CardHeader className="bg-blue-50/50">
-            <CardTitle className="text-base font-medium">Personal Information</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Date of Birth </Label>
-                <Input
-                  type="date"
-                  value={dob}
-                  onChange={(e) => setDob(e.target.value)}
-                  
-                />
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-5 sm:p-6">
+            <div className="mb-5 border-b border-border/50 pb-4">
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">Personal Information</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Date of Birth</Label>
+                <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={FIELD_CLASS} />
               </div>
-              <div className="space-y-2">
-                <Label>Passport Number </Label>
-                <Input
-                  value={passportNumber}
-                  onChange={(e) => setPassportNumber(e.target.value)}
-                  placeholder="Enter passport number"
-                  
-                />
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Passport Number</Label>
+                <Input value={passportNumber} onChange={(e) => setPassportNumber(e.target.value)} placeholder="Enter passport number" className={FIELD_CLASS} />
               </div>
-              <div className="space-y-2">
-                <Label>Passport Country </Label>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Passport Country</Label>
                 <Combobox
                   options={countries}
                   value={passportCountry}
                   onValueChange={(v) => typeof v === "string" && setPassportCountry(v)}
                   placeholder="Select passport country"
                   searchPlaceholder="Search country..."
+                  className={FIELD_CLASS}
+                  matchTriggerWidth
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Nationality </Label>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Nationality</Label>
                 <Combobox
                   options={countries}
                   value={nationality}
                   onValueChange={(v) => typeof v === "string" && setNationality(v)}
                   placeholder="Select nationality"
                   searchPlaceholder="Search nationality..."
+                  className={FIELD_CLASS}
+                  matchTriggerWidth
                 />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Contact Information */}
-        <Card>
-          <CardHeader className="bg-blue-50/50">
-            <CardTitle className="text-base font-medium">Contact Information</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Phone Number *</Label>
-                <Input
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="Enter phone number"
-                  required
-                />
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-5 sm:p-6">
+            <div className="mb-5 border-b border-border/50 pb-4">
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">Contact Information</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Phone Number *</Label>
+                <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Enter phone number" className={FIELD_CLASS} required />
               </div>
-              <div className="space-y-2">
-                <Label>Contact Type *</Label>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Contact Type *</Label>
                 <Combobox
                   options={contactTypes}
                   value={contactType}
                   onValueChange={(v) => typeof v === "string" && setContactType(v)}
                   placeholder="Select contact type"
                   searchPlaceholder="Search contact type..."
+                  className={FIELD_CLASS}
+                  matchTriggerWidth
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Communication Type *</Label>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Communication Type *</Label>
                 <Combobox
                   options={communicationTypes}
                   value={communicationType}
                   onValueChange={(v) => typeof v === "string" && setCommunicationType(v)}
                   placeholder="Select communication type"
                   searchPlaceholder="Search communication type..."
+                  className={FIELD_CLASS}
+                  matchTriggerWidth
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Comapny Email *</Label>
-                <Input
-                  type="email"
-                  value={companyEmail}
-                  onChange={(e) => setCompanyEmail(e.target.value)}
-                  placeholder="Enter email"
-                  required
-                />
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Company Email *</Label>
+                <Input type="email" value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} placeholder="Enter company email" className={FIELD_CLASS} required />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Address Information */}
-        <Card>
-          <CardHeader className="bg-blue-50/50">
-            <CardTitle className="text-base font-medium">Address Information</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-2">
-                <Label>Address *</Label>
-                <Input
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Enter address"
-                  required
-                />
+        <Card className={CARD_STYLE}>
+          <CardContent className="p-5 sm:p-6">
+            <div className="mb-5 border-b border-border/50 pb-4">
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">Address Information</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className={`${FIELD_GROUP_CLASS} md:col-span-2`}>
+                <Label className={FIELD_LABEL_CLASS}>Address *</Label>
+                <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Enter address" className={FIELD_CLASS} required />
               </div>
-              <div className="space-y-2">
-                <Label>City *</Label>
-                <Input
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="Enter city"
-                  required
-                />
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>City *</Label>
+                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Enter city" className={FIELD_CLASS} required />
               </div>
-              <div className="space-y-2">
-                <Label>State *</Label>
-                <Input
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  placeholder="Enter state"
-                  required
-                />
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>State *</Label>
+                <Input value={state} onChange={(e) => setState(e.target.value)} placeholder="Enter state" className={FIELD_CLASS} required />
               </div>
-              <div className="space-y-2">
-                <Label>Country *</Label>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>Country *</Label>
                 <Combobox
                   options={countries}
                   value={country}
                   onValueChange={(v) => typeof v === "string" && setCountry(v)}
                   placeholder="Select country"
                   searchPlaceholder="Search country..."
+                  className={FIELD_CLASS}
+                  matchTriggerWidth
                 />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Submit Button */}
-        <div className="flex gap-4 justify-end">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
-            Cancel
-          </Button>
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
-            {loading ? "Creating..." : "Create Company"}
-          </Button>
+        <div className="sticky bottom-0 z-10 border-t border-border/60 bg-background/95 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => router.back()}>
+              Cancel
+            </Button>
+            <Button type="submit" className="h-10 rounded-xl px-4" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Company"
+              )}
+            </Button>
+          </div>
         </div>
       </form>
     </div>

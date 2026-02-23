@@ -1,11 +1,13 @@
 "use client"
 
-import { Bell, KeyRound, LayoutDashboard, LogOut, PanelLeft, Settings, PanelTop } from "lucide-react"
+import { Bell, KeyRound, LayoutDashboard, LogOut, PanelLeft, Settings, PanelTop, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { usePathname, useRouter } from "next/navigation"
 import { useAuthStore } from "@/lib/store"
 import { logout } from "@/lib/auth"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { Dispatch, SetStateAction } from "react"
 
 // function toTitleCase(value: string) {
 //   return value
@@ -19,15 +21,15 @@ function getHeaderMeta(pathname: string) {
   // 1. Clean segments and find the dashboard entry point
   const segments = pathname.split("/").filter(Boolean);
   const dashboardIndex = segments.indexOf("dashboard");
-  
+
   // Extract segments after "/dashboard"
   let pathSegments = segments.slice(dashboardIndex + 1);
-  
+
   // 2. Handle Dynamic IDs (e.g., /profile/1 or /customers/123)
   // We check if the last segment is a number or a UUID-like string
   const lastSegment = pathSegments[pathSegments.length - 1];
   const isId = lastSegment && (!isNaN(Number(lastSegment)) || lastSegment.length > 20);
-  
+
   if (isId && pathSegments.length > 1) {
     pathSegments = pathSegments.slice(0, -1); // Remove the ID from the title logic
   }
@@ -44,24 +46,24 @@ function getHeaderMeta(pathname: string) {
     "screening-logs": "Audit Trail",
     "tickets": "Ticket",
     "change-password": "Change Password",
-    
+
     // Onboarding Sub-routes
     "onboarding/customer": "Digital Onboarding",
     "onboarding/quick": "Quick Onboarding",
-    
+
     // Screening Sub-routes
     "screening/quick": "Name and PEP Screening",
-    
+
     // Support Sub-routes
     "support/bot": "Automated Bot",
-    
+
     // Admin Routes
     "admin": "Compliance Dashboard",
     "admin/companies": "Companies",
     "admin/company-users": "Company Users",
     "admin/users": "System Users",
     "admin/product": "Products",
-    
+
     // Regulatory
     "goaml-reporting": "GoAML Reporting",
   };
@@ -97,9 +99,10 @@ function toTitleCase(str: string) {
     .join(" ");
 }
 
-export function Header() {
+export function Header({ setIsCollapsed }: { setIsCollapsed?: Dispatch<SetStateAction<boolean>> }) {
   const pathname = usePathname()
   const router = useRouter()
+  const isMobile = useIsMobile()
   const { user, clearAuth, isLoading, setLoading, setError, navPosition, setNavPosition } = useAuthStore()
   const { section, title } = getHeaderMeta(pathname ?? "/dashboard")
 
@@ -147,6 +150,16 @@ export function Header() {
             </div>
             <span className="font-semibold text-sm">ALHAZ ALSAATIE GOLD AND JEWELRY TRADING LLC</span>
           </div> */}
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-xl mr-1"
+              onClick={() => setIsCollapsed?.(prev => !prev)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          )}
           <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <LayoutDashboard className="h-5 w-5" />
           </div>
@@ -211,17 +224,19 @@ export function Header() {
                 <KeyRound className="w-4 h-4 mr-2 text-inherit transition-transform duration-200 group-data-[highlighted]:translate-x-0.5" />
                 Change Password
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="group rounded-lg px-3 py-2 data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground"
-                onClick={() => setNavPosition(navPosition === "sidebar" ? "topbar" : "sidebar")}
-              >
-                {navPosition === "sidebar" ? (
-                  <PanelTop className="w-4 h-4 mr-2 text-inherit transition-transform duration-200 group-data-[highlighted]:translate-x-0.5" />
-                ) : (
-                  <PanelLeft className="w-4 h-4 mr-2 text-inherit transition-transform duration-200 group-data-[highlighted]:translate-x-0.5" />
-                )}
-                {navPosition === "sidebar" ? "Switch to Top Navbar" : "Switch to Sidebar"}
-              </DropdownMenuItem>
+              {!isMobile && (
+                <DropdownMenuItem
+                  className="group rounded-lg px-3 py-2 data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground"
+                  onClick={() => setNavPosition(navPosition === "sidebar" ? "topbar" : "sidebar")}
+                >
+                  {navPosition === "sidebar" ? (
+                    <PanelTop className="w-4 h-4 mr-2 text-inherit transition-transform duration-200 group-data-[highlighted]:translate-x-0.5" />
+                  ) : (
+                    <PanelLeft className="w-4 h-4 mr-2 text-inherit transition-transform duration-200 group-data-[highlighted]:translate-x-0.5" />
+                  )}
+                  {navPosition === "sidebar" ? "Switch to Top Navbar" : "Switch to Sidebar"}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 className="group rounded-lg px-3 py-2 data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground"
                 onClick={handleLogout}
