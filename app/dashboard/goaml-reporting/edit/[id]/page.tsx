@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Combobox } from "@/components/ui/combobox"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { RequiredLabel } from "@/components/ui/required-label"
 
 interface Customer {
   id: number
@@ -378,15 +379,11 @@ export default function EditGoamlReportPage() {
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
-                <label className={FIELD_LABEL_CLASS}>
-                  Entity Reference <span className="text-destructive">*</span>
-                </label>
+                <RequiredLabel text="Entity Reference" className={FIELD_LABEL_CLASS} />
                 <input className={FIELD_CLASS} value={formData.entity_reference} onChange={(e) => setFormData({ ...formData, entity_reference: e.target.value })} />
               </div>
               <div>
-                <label className={FIELD_LABEL_CLASS}>
-                  Transaction Type <span className="text-destructive">*</span>
-                </label>
+                <RequiredLabel text="Transaction Type" className={FIELD_LABEL_CLASS} />
                 <select className={FIELD_CLASS} value={formData.transaction_type} onChange={(e) => setFormData({ ...formData, transaction_type: e.target.value })}>
                   <option value="">Select a transaction type</option>
                   <option value="sale">Sale</option>
@@ -402,15 +399,11 @@ export default function EditGoamlReportPage() {
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
-                <label className={FIELD_LABEL_CLASS}>
-                  Item Make <span className="text-destructive">*</span>
-                </label>
+                <RequiredLabel text="Item Make" className={FIELD_LABEL_CLASS} />
                 <input className={FIELD_CLASS} value={formData.item_make} onChange={(e) => setFormData({ ...formData, item_make: e.target.value })} />
               </div>
               <div>
-                <label className={FIELD_LABEL_CLASS}>
-                  Item Type <span className="text-destructive">*</span>
-                </label>
+                <RequiredLabel text="Item Type" className={FIELD_LABEL_CLASS} />
                 <select className={FIELD_CLASS} value={formData.item_type} onChange={(e) => setFormData({ ...formData, item_type: e.target.value })}>
                   <option value="">Select an item type</option>
                   <option value="Gold">Gold</option>
@@ -429,9 +422,7 @@ export default function EditGoamlReportPage() {
             </div>
 
             <div className="mt-4">
-              <label className={FIELD_LABEL_CLASS}>
-                Description <span className="text-destructive">*</span>
-              </label>
+              <RequiredLabel text="Description" className={FIELD_LABEL_CLASS} />
               <textarea
                 className={TEXTAREA_CLASS}
                 rows={3}
@@ -442,9 +433,7 @@ export default function EditGoamlReportPage() {
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
-                <label className={FIELD_LABEL_CLASS}>
-                  Disposed Value <span className="text-destructive">*</span>
-                </label>
+                <RequiredLabel text="Disposed Value" className={FIELD_LABEL_CLASS} />
                 <input
                   type="number"
                   className={FIELD_CLASS}
@@ -460,9 +449,7 @@ export default function EditGoamlReportPage() {
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
-                <label className={FIELD_LABEL_CLASS}>
-                  Estimated Value <span className="text-destructive">*</span>
-                </label>
+                <RequiredLabel text="Estimated Value" className={FIELD_LABEL_CLASS} />
                 <input
                   type="number"
                   className={FIELD_CLASS}
@@ -471,9 +458,7 @@ export default function EditGoamlReportPage() {
                 />
               </div>
               <div>
-                <label className={FIELD_LABEL_CLASS}>
-                  Currency Code <span className="text-destructive">*</span>
-                </label>
+                <RequiredLabel text="Currency Code" className={FIELD_LABEL_CLASS} />
                 <Combobox
                   options={currencyOptions}
                   value={formData.currency_code}

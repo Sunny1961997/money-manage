@@ -5,7 +5,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { RequiredLabel } from "@/components/ui/required-label"
 import { Card, CardContent } from "@/components/ui/card"
 import { useAuthStore } from "@/lib/store"
 import { login } from "@/lib/auth"
@@ -122,9 +122,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className={FIELD_LABEL_CLASS}>
-                  Email
-                </Label>
+                <RequiredLabel htmlFor="email" text="Email" className={FIELD_LABEL_CLASS} />
                 <Input
                   id="email"
                   type="email"
@@ -137,9 +135,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className={FIELD_LABEL_CLASS}>
-                  Password
-                </Label>
+                <RequiredLabel htmlFor="password" text="Password" className={FIELD_LABEL_CLASS} />
                 <div className="relative">
                   <Input
                     id="password"

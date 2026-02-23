@@ -2,9 +2,10 @@
 
 import { Spinner } from "@/components/ui/spinner"
 import { useState, useEffect, useRef } from "react"
+import type { KeyboardEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { RequiredLabel } from "@/components/ui/required-label"
 import { Combobox } from "@/components/ui/combobox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
@@ -42,6 +43,12 @@ const TEXTAREA_CLASS =
 const TABS_GRID_LIST_CLASS = "grid h-auto w-full grid-cols-2 gap-1 bg-transparent p-0 md:grid-cols-3 lg:grid-cols-5"
 const TABS_GRID_TRIGGER_CLASS =
   "h-10 w-full rounded-xl px-2 text-center text-sm whitespace-nowrap justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+
+const blockExponentInput = (e: KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === "e" || e.key === "E") {
+    e.preventDefault()
+  }
+}
 
 type CustomerType = "individual" | "corporate"
 
@@ -515,19 +522,19 @@ function IndividualForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>First Name <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="First Name" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter first name" value={firstName} onChange={e => setFirstName(e.target.value)} />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Last Name <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Last Name" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter last name" value={lastName} onChange={e => setLastName(e.target.value)} />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Date of Birth <span className="text-destructive">*</span></label>
-                    <input type="date" className={FIELD_CLASS} placeholder="mm/dd/yyyy" value={dob} onChange={e => setDob(e.target.value)} />
+                    <RequiredLabel text="Date of Birth" className={FIELD_LABEL_CLASS} />
+                    <Input type="date" className={FIELD_CLASS} value={dob} onChange={e => setDob(e.target.value)} />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Residential Status <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Residential Status" className={FIELD_LABEL_CLASS} />
                     <select className={FIELD_CLASS} value={residentialStatus} onChange={e => setResidentialStatus(e.target.value)}>
                       <option value="resident">Resident</option>
                       <option value="non-resident">Non-Resident</option>
@@ -550,15 +557,15 @@ function IndividualForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="md:col-span-2">
-                    <label className={FIELD_LABEL_CLASS}>Address <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Address" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter address" value={address} onChange={e => setAddress(e.target.value)} />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>City <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="City" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter city" value={city} onChange={e => setCity(e.target.value)} />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Country <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Country" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={countries}
                       value={country}
@@ -569,7 +576,7 @@ function IndividualForm({
                     />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Nationality <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Nationality" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={countries}
                       value={nationality}
@@ -596,7 +603,7 @@ function IndividualForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Country Code <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Country Code" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={countryCodes}
                       value={countryCode}
@@ -607,11 +614,11 @@ function IndividualForm({
                     />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Contact No <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Contact No" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter contact number" value={contactNo} onChange={e => setContactNo(formatContactNumber(e.target.value))} />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Email <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Email" className={FIELD_LABEL_CLASS} />
                     <input type="email" className={FIELD_CLASS} placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} />
                   </div>
                 </div>
@@ -631,7 +638,7 @@ function IndividualForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Gender <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Gender" className={FIELD_LABEL_CLASS} />
                     <select className={FIELD_CLASS} value={gender} onChange={e => setGender(e.target.value)}>
                       <option value="">Select gender</option>
                       <option value="Male">Male</option>
@@ -640,7 +647,7 @@ function IndividualForm({
                     </select>
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Politically Exposed Person (PEP)? <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Politically Exposed Person (PEP)?" className={FIELD_LABEL_CLASS} />
                     <select className={FIELD_CLASS} value={isPep ? "yes" : "no"} onChange={e => setIsPep(e.target.value === "yes")}>
                       <option value="no">No</option>
                       <option value="yes">Yes</option>
@@ -663,7 +670,7 @@ function IndividualForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Occupation <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Occupation" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={occupations}
                       value={occupation}
@@ -674,7 +681,7 @@ function IndividualForm({
                     />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Source of Income <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Source of Income" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={sourceOfIncome}
                       value={sourceIncome}
@@ -701,7 +708,7 @@ function IndividualForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Purpose <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Purpose" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={purposes}
                       value={purpose}
@@ -712,7 +719,7 @@ function IndividualForm({
                     />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Payment Mode <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Payment Mode" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={paymentMethods}
                       value={paymentMethod}
@@ -739,7 +746,7 @@ function IndividualForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Product Type <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Product Type" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={products}
                       value={productTypes}
@@ -751,7 +758,7 @@ function IndividualForm({
                     />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Mode of Approach <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Mode of Approach" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={modeOfApproach}
                       value={approach}
@@ -769,6 +776,7 @@ function IndividualForm({
                       placeholder="0"
                       value={expectedNoOfTransactions}
                       onChange={e => setExpectedNoOfTransactions(e.target.value)}
+                      onKeyDown={blockExponentInput}
                     />
                   </div>
                   <div>
@@ -779,6 +787,7 @@ function IndividualForm({
                       placeholder="0"
                       value={expectedVolume}
                       onChange={e => setExpectedVolume(e.target.value)}
+                      onKeyDown={blockExponentInput}
                     />
                   </div>
                 </div>
@@ -798,7 +807,7 @@ function IndividualForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>ID Type <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="ID Type" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={idTypes}
                       value={idType}
@@ -809,15 +818,15 @@ function IndividualForm({
                     />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>ID No <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="ID No" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter ID number" value={idNo} onChange={e => setIdNo(e.target.value)} />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>ID Issued By <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="ID Issued By" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter issuing authority" value={issuingAuthority} onChange={e => setIssuingAuthority(e.target.value)} />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>ID Issued At <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="ID Issued At" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={countries}
                       value={idIssueAtCountry}
@@ -828,12 +837,12 @@ function IndividualForm({
                     />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>ID Issued Date <span className="text-destructive">*</span></label>
-                    <input type="date" className={FIELD_CLASS} placeholder="mm/dd/yyyy" value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
+                    <RequiredLabel text="ID Issued Date" className={FIELD_LABEL_CLASS} />
+                    <Input type="date" className={FIELD_CLASS} value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>ID Expiry Date <span className="text-destructive">*</span></label>
-                    <input type="date" className={FIELD_CLASS} placeholder="mm/dd/yyyy" value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
+                    <RequiredLabel text="ID Expiry Date" className={FIELD_LABEL_CLASS} />
+                    <Input type="date" className={FIELD_CLASS} value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
                   </div>
                 </div>
               </CardContent>
@@ -852,7 +861,7 @@ function IndividualForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Place of Birth <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Place of Birth" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={countries}
                       value={placeOfBirth}
@@ -863,7 +872,7 @@ function IndividualForm({
                     />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Country of Residence <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Country of Residence" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={countries}
                       value={countryOfResidence}
@@ -874,7 +883,7 @@ function IndividualForm({
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className={FIELD_LABEL_CLASS}>Dual Nationality <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Dual Nationality" className={FIELD_LABEL_CLASS} />
                     <div className="mt-2 flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="dualNationality" value="yes" checked={dualNationality} onChange={() => setDualNationality(true)} className="accent-primary" />
@@ -887,7 +896,7 @@ function IndividualForm({
                     </div>
                   </div>
                   <div className="md:col-span-2">
-                    <label className={FIELD_LABEL_CLASS}>Is Customer Facing any adverse event? <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Is Customer Facing any adverse event?" className={FIELD_LABEL_CLASS} />
                     <p className="text-xs text-primary/80 mb-3">We don't Check adverse news feed</p>
                     <div className="flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -1440,19 +1449,19 @@ function CorporateForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>Company Name <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Company Name" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter the Company Name" value={companyName} onChange={e => setCompanyName(e.target.value)} />
                   </div>
                   <div className="md:col-span-2">
-                    <label className={FIELD_LABEL_CLASS}>Company Address <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Company Address" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter the Company address" value={companyAddress} onChange={e => setCompanyAddress(e.target.value)} />
                   </div>
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>City <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="City" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter the city" value={city} onChange={e => setCity(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Country of Incorporation <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Country of Incorporation" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={countries}
                       value={companyCountry}
@@ -1467,7 +1476,7 @@ function CorporateForm({
                     <input className={FIELD_CLASS} placeholder="Enter the PO Box No" value={poBox} onChange={e => setPoBox(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Customer Type <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Customer Type" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={corporate_customer_type}
                       value={corporateCustomerType}
@@ -1512,7 +1521,7 @@ function CorporateForm({
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Country Code <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="Country Code" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={countryCodes}
                         value={mobileCountryCode}
@@ -1523,12 +1532,12 @@ function CorporateForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Contact Mobile No <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="Contact Mobile No" className={FIELD_LABEL_CLASS} />
                       <input className={FIELD_CLASS} placeholder="Enter the Contact Mobile No" value={mobileNo} onChange={e => setMobileNo(formatContactNumber(e.target.value))} />
                     </div>
                   </div>
                   <div className="md:col-span-2 space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Email <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Email" className={FIELD_LABEL_CLASS} />
                     <input type="email" className={FIELD_CLASS} placeholder="Enter your email (abc@dom.com)" value={email} onChange={e => setEmail(e.target.value)} />
                   </div>
                 </div>
@@ -1548,11 +1557,11 @@ function CorporateForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Trade License/CR No <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Trade License/CR No" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter Trade License/CR No" value={tradeLicenseNo} onChange={e => setTradeLicenseNo(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Trade License/CR Issued At <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Trade License/CR Issued At" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={[
                         ...countries,
@@ -1566,7 +1575,7 @@ function CorporateForm({
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Trade License/COI Issued By <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Trade License/COI Issued By" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={licance_issue_authorities}
                       value={tradeLicenseIssuedBy}
@@ -1577,20 +1586,20 @@ function CorporateForm({
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Trade License/CR Issued Date <span className="text-destructive">*</span></label>
-                    <input type="date" className={FIELD_CLASS} placeholder="mm/dd/yyyy" value={licenseIssueDate} onChange={e => setLicenseIssueDate(e.target.value)} />
+                    <RequiredLabel text="Trade License/CR Issued Date" className={FIELD_LABEL_CLASS} />
+                    <Input type="date" className={FIELD_CLASS} value={licenseIssueDate} onChange={e => setLicenseIssueDate(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Trade License/CR Expiry Date <span className="text-destructive">*</span></label>
-                    <input type="date" className={FIELD_CLASS} placeholder="mm/dd/yyyy" value={licenseExpiryDate} onChange={e => setLicenseExpiryDate(e.target.value)} />
+                    <RequiredLabel text="Trade License/CR Expiry Date" className={FIELD_LABEL_CLASS} />
+                    <Input type="date" className={FIELD_CLASS} value={licenseExpiryDate} onChange={e => setLicenseExpiryDate(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <label className={FIELD_LABEL_CLASS}>VAT Registration Number </label>
                     <input className={FIELD_CLASS} placeholder="Enter VAT Registration Number" value={vatRegistrationNo} onChange={e => setVatRegistrationNo(e.target.value)} />
                   </div>
                   <div className="md:col-span-2 space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Tenancy Contract Expiry Date <span className="text-destructive">*</span></label>
-                    <input type="date" className={FIELD_CLASS} placeholder="mm/dd/yyyy" value={tenancyContractExpiryDate} onChange={e => setTenancyContractExpiryDate(e.target.value)} />
+                    <RequiredLabel text="Tenancy Contract Expiry Date" className={FIELD_LABEL_CLASS} />
+                    <Input type="date" className={FIELD_CLASS} value={tenancyContractExpiryDate} onChange={e => setTenancyContractExpiryDate(e.target.value)} />
                   </div>
                 </div>
               </CardContent>
@@ -1609,7 +1618,7 @@ function CorporateForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Entity Type <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Entity Type" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={entity_types}
                       value={entityType}
@@ -1620,7 +1629,7 @@ function CorporateForm({
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Countries of Operation <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Countries of Operation" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={countries}
                       value={countriesOfOperation}
@@ -1632,7 +1641,7 @@ function CorporateForm({
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Business Activity <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Business Activity" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={business_activities}
                       value={businessActivity}
@@ -1651,7 +1660,7 @@ function CorporateForm({
                     )}
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Is entity dealing with Import/Export? <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Is entity dealing with Import/Export?" className={FIELD_LABEL_CLASS} />
                     <div className="mt-2 flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="isImportExport" value="yes" checked={isImportExport} onChange={() => setIsImportExport(true)} className="accent-primary" />
@@ -1690,7 +1699,7 @@ function CorporateForm({
 
                     {/* Right Column: Purpose of Relation */}
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Purpose of Relationship <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="Purpose of Relationship" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={[
                           { value: "Buy", label: "Buy" },
@@ -1726,7 +1735,7 @@ function CorporateForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Product Type <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Product Type" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={products}
                       value={productTypesCorp}
@@ -1738,7 +1747,7 @@ function CorporateForm({
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Product Source <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Product Source" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={product_sources}
                       value={productSource}
@@ -1749,7 +1758,7 @@ function CorporateForm({
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Payment Mode <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Payment Mode" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={payment_modes}
                       value={paymentMode}
@@ -1760,7 +1769,7 @@ function CorporateForm({
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Delivery Channel <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Delivery Channel" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={delivery_channels}
                       value={deliveryChannel}
@@ -1771,15 +1780,15 @@ function CorporateForm({
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Expected No of Transactions <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Expected No of Transactions" className={FIELD_LABEL_CLASS} />
                     <input type="number" className={FIELD_CLASS} placeholder="0" value={expectedNoOfTransactions} onChange={e => setExpectedNoOfTransactions(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Expected Volume <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Expected Volume" className={FIELD_LABEL_CLASS} />
                     <input type="number" className={FIELD_CLASS} placeholder="0" value={expectedVolume} onChange={e => setExpectedVolume(e.target.value)} />
                   </div>
                   <div className="md:col-span-2 space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Deal with Dual-used Goods? <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Deal with Dual-used Goods?" className={FIELD_LABEL_CLASS} />
                     <div className="mt-2 flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="dealWithGoods" value="yes" checked={dealWithGoods} onChange={() => setDealWithGoods(true)} className="accent-primary" />
@@ -1808,7 +1817,7 @@ function CorporateForm({
                 </div>
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <label className={FIELD_LABEL_CLASS}>Is entity registered in GOAML <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Is entity registered in GOAML" className={FIELD_LABEL_CLASS} />
                     <div className="flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="isRegisteredGoAML" value="yes" checked={isRegisteredGoAML} onChange={() => setIsRegisteredGoAML(true)} className="accent-primary" />
@@ -1821,7 +1830,7 @@ function CorporateForm({
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <label className={FIELD_LABEL_CLASS}>KYC documents collected with form <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="KYC documents collected with form" className={FIELD_LABEL_CLASS} />
                     <div className="flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="kycCollected" value="yes" checked={kycCollected} onChange={() => setKycCollected(true)} className="accent-primary" />
@@ -1834,7 +1843,7 @@ function CorporateForm({
                     </div>
                   </div>
                   <div className="space-y-3 hidden">
-                    <label className={FIELD_LABEL_CLASS}>Is Entity Having Material Match <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Is Entity Having Material Match" className={FIELD_LABEL_CLASS} />
                     <p className="text-xs text-primary/80 mb-3">We don't Check adverse news feed</p>
                     <div className="flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -1915,7 +1924,7 @@ function CorporateForm({
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-2">
                       <div className="space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>Type <span className="text-destructive">*</span></label>
+                        <RequiredLabel text="Type" className={FIELD_LABEL_CLASS} />
                         <Combobox
                           options={[
                             { value: "Individual", label: "Individual" },
@@ -1929,11 +1938,11 @@ function CorporateForm({
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>Name <span className="text-destructive">*</span></label>
+                        <RequiredLabel text="Name" className={FIELD_LABEL_CLASS} />
                         <input className={FIELD_CLASS} placeholder="Enter Name" value={ubo.name} onChange={e => setUboField(ubo.id, "name", e.target.value)} />
                       </div>
                       <div className="md:col-span-2 space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>Politically Exposed Person (PEP)? <span className="text-destructive">*</span></label>
+                        <RequiredLabel text="Politically Exposed Person (PEP)?" className={FIELD_LABEL_CLASS} />
                         <div className="mt-2 flex items-center gap-6">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name={`pep-${ubo.id}`} value="yes" checked={ubo.isPep} onChange={() => setUboField(ubo.id, 'isPep', true)} className="accent-primary" />
@@ -1957,7 +1966,7 @@ function CorporateForm({
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>ID Type <span className="text-destructive">*</span></label>
+                        <RequiredLabel text="ID Type" className={FIELD_LABEL_CLASS} />
                         <Combobox
                           options={idTypes}
                           value={ubo.idType}
@@ -1968,23 +1977,23 @@ function CorporateForm({
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>ID No/License No <span className="text-destructive">*</span></label>
+                        <RequiredLabel text="ID No/License No" className={FIELD_LABEL_CLASS} />
                         <input className={FIELD_CLASS} placeholder="Enter ID License No" value={ubo.idNo} onChange={e => setUboField(ubo.id, "idNo", e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>ID Issue Date <span className="text-destructive">*</span></label>
-                        <input type="date" className={FIELD_CLASS} placeholder="mm/dd/yyyy" value={ubo.idIssue} onChange={e => setUboField(ubo.id, "idIssue", e.target.value)} />
+                        <RequiredLabel text="ID Issue Date" className={FIELD_LABEL_CLASS} />
+                        <Input type="date" className={FIELD_CLASS} value={ubo.idIssue} onChange={e => setUboField(ubo.id, "idIssue", e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>ID Expiry Date <span className="text-destructive">*</span></label>
-                        <input type="date" className={FIELD_CLASS} placeholder="mm/dd/yyyy" value={ubo.idExpiry} onChange={e => setUboField(ubo.id, "idExpiry", e.target.value)} />
+                        <RequiredLabel text="ID Expiry Date" className={FIELD_LABEL_CLASS} />
+                        <Input type="date" className={FIELD_CLASS} value={ubo.idExpiry} onChange={e => setUboField(ubo.id, "idExpiry", e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>Date of Birth <span className="text-destructive">*</span></label>
-                        <input type="date" className={FIELD_CLASS} placeholder="mm/dd/yyyy" value={ubo.dob} onChange={e => setUboField(ubo.id, "dob", e.target.value)} />
+                        <RequiredLabel text="Date of Birth" className={FIELD_LABEL_CLASS} />
+                        <Input type="date" className={FIELD_CLASS} value={ubo.dob} onChange={e => setUboField(ubo.id, "dob", e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>Role <span className="text-destructive">*</span></label>
+                        <RequiredLabel text="Role" className={FIELD_LABEL_CLASS} />
                         <Combobox
                           options={roles}
                           value={ubo.role}
@@ -1995,7 +2004,7 @@ function CorporateForm({
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>Percentage of Share <span className="text-destructive">*</span></label>
+                        <RequiredLabel text="Percentage of Share" className={FIELD_LABEL_CLASS} />
                         <input className={FIELD_CLASS} placeholder="Enter Percentage (0-100)" value={ubo.ownershipPercentage as string} onChange={e => setUboField(ubo.id, "ownershipPercentage", e.target.value)} />
                       </div>
                     </div>
@@ -2066,7 +2075,7 @@ function CorporateForm({
                 </div>
                 <div className="space-y-4">
                   {/* <div className="space-y-2">
-                    <label className={FIELD_LABEL_CLASS}>Screening Fuzziness <span className="text-destructive">*</span></label>
+                    <RequiredLabel text="Screening Fuzziness" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={screeningFuzziness}
                       value={corpFuzziness}

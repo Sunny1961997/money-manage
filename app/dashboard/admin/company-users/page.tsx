@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { RequiredLabel } from "@/components/ui/required-label"
 import { Users, Search, Plus, Building2, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { Combobox } from "@/components/ui/combobox"
@@ -270,15 +271,11 @@ export default function CompanyUsersPage() {
                 <form onSubmit={handleSubmit} className="space-y-5 px-6 py-5">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className={FIELD_GROUP_CLASS}>
-                      <Label htmlFor="name" className={FIELD_LABEL_CLASS}>
-                        Name *
-                      </Label>
+                      <RequiredLabel htmlFor="name" text="Name" className={FIELD_LABEL_CLASS} />
                       <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter name" className={FIELD_CLASS} required />
                     </div>
                     <div className={FIELD_GROUP_CLASS}>
-                      <Label htmlFor="email" className={FIELD_LABEL_CLASS}>
-                        Email *
-                      </Label>
+                      <RequiredLabel htmlFor="email" text="Email" className={FIELD_LABEL_CLASS} />
                       <Input
                         id="email"
                         type="email"
@@ -293,9 +290,7 @@ export default function CompanyUsersPage() {
 
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className={FIELD_GROUP_CLASS}>
-                      <Label htmlFor="password" className={FIELD_LABEL_CLASS}>
-                        Password *
-                      </Label>
+                      <RequiredLabel htmlFor="password" text="Password" className={FIELD_LABEL_CLASS} />
                       <Input
                         id="password"
                         type="password"
@@ -307,9 +302,7 @@ export default function CompanyUsersPage() {
                       />
                     </div>
                     <div className={FIELD_GROUP_CLASS}>
-                      <Label htmlFor="passwordConfirmation" className={FIELD_LABEL_CLASS}>
-                        Confirm Password *
-                      </Label>
+                      <RequiredLabel htmlFor="passwordConfirmation" text="Confirm Password" className={FIELD_LABEL_CLASS} />
                       <Input
                         id="passwordConfirmation"
                         type="password"
@@ -330,9 +323,7 @@ export default function CompanyUsersPage() {
                       <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" className={FIELD_CLASS} />
                     </div>
                     <div className={FIELD_GROUP_CLASS}>
-                      <Label htmlFor="company" className={FIELD_LABEL_CLASS}>
-                        Company *
-                      </Label>
+                      <RequiredLabel htmlFor="company" text="Company" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={companyOptions}
                         value={companyId}
@@ -346,9 +337,7 @@ export default function CompanyUsersPage() {
                   </div>
 
                   <div className={FIELD_GROUP_CLASS}>
-                    <Label htmlFor="role" className={FIELD_LABEL_CLASS}>
-                      Role *
-                    </Label>
+                    <RequiredLabel htmlFor="role" text="Role" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={userRoles}
                       value={role}

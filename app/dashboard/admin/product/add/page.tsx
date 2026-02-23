@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { RequiredLabel } from "@/components/ui/required-label"
 import { Switch } from "@/components/ui/switch"
 import { PackagePlus, ArrowLeft, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
@@ -121,9 +122,7 @@ export default function AddProductPage() {
             </div>
 
             <div className={FIELD_GROUP_CLASS}>
-              <Label htmlFor="name" className={FIELD_LABEL_CLASS}>
-                Product Name
-              </Label>
+              <RequiredLabel htmlFor="name" text="Product Name" className={FIELD_LABEL_CLASS} />
               <Input
                 id="name"
                 value={formData.name}
@@ -135,9 +134,7 @@ export default function AddProductPage() {
             </div>
 
             <div className={FIELD_GROUP_CLASS}>
-              <Label htmlFor="risk_level" className={FIELD_LABEL_CLASS}>
-                Risk Level
-              </Label>
+              <RequiredLabel htmlFor="risk_level" text="Risk Level" className={FIELD_LABEL_CLASS} />
               <Select value={formData.risk_level} onValueChange={(val) => setFormData({ ...formData, risk_level: val })}>
                 <SelectTrigger className={SELECT_TRIGGER_CLASS}>
                   <SelectValue placeholder="Select risk level" />
@@ -153,9 +150,7 @@ export default function AddProductPage() {
             </div>
 
             <div className={FIELD_GROUP_CLASS}>
-              <Label htmlFor="description" className={FIELD_LABEL_CLASS}>
-                Description
-              </Label>
+              <RequiredLabel htmlFor="description" text="Description" className={FIELD_LABEL_CLASS} />
               <Textarea
                 id="description"
                 value={formData.description}

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/ui/required-label";
 import { Textarea } from "@/components/ui/textarea";
 import { Combobox } from "@/components/ui/combobox";
 import { fallbackCountries } from "@/lib/countries";
@@ -158,7 +159,7 @@ export default function ContactUs() {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="first_name">First Name *</Label>
+                <RequiredLabel htmlFor="first_name" text="First Name" />
                 <Input
                   id="first_name"
                   name="first_name"
@@ -170,7 +171,7 @@ export default function ContactUs() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="last_name">Last Name *</Label>
+                <RequiredLabel htmlFor="last_name" text="Last Name" />
                 <Input
                   id="last_name"
                   name="last_name"
@@ -184,7 +185,7 @@ export default function ContactUs() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Work Email *</Label>
+              <RequiredLabel htmlFor="email" text="Work Email" />
               <Input
                 id="email"
                 type="email"
@@ -198,7 +199,7 @@ export default function ContactUs() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="company_name">Company Name *</Label>
+              <RequiredLabel htmlFor="company_name" text="Company Name" />
               <Input
                 id="company_name"
                 name="company_name"

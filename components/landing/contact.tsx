@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/ui/required-label";
 import { Card, CardContent } from "@/components/ui/card";
 
 export function Contact() {
@@ -150,6 +150,7 @@ export function Contact() {
                 <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
                   <div className="grid md:grid-cols-2 gap-6 md:gap-8">
                     <div className="space-y-2.5">
+                      <RequiredLabel htmlFor="firstName" text="First Name" className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500" />
                       <Input
                         id="firstName"
                         placeholder="First Name"
@@ -160,6 +161,7 @@ export function Contact() {
                       />
                     </div>
                     <div className="space-y-2.5">
+                      <RequiredLabel htmlFor="lastName" text="Last Name" className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500" />
                       <Input
                         id="lastName"
                         placeholder="Last Name"
@@ -172,6 +174,7 @@ export function Contact() {
                   </div>
 
                   <div className="space-y-2.5">
+                    <RequiredLabel htmlFor="email" text="Email" className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500" />
                     <Input
                       id="email"
                       type="email"
@@ -184,6 +187,7 @@ export function Contact() {
                   </div>
 
                   <div className="space-y-2.5">
+                    <RequiredLabel htmlFor="message" text="Message" className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500" />
                     <Textarea
                       id="message"
                       placeholder="Your Message"

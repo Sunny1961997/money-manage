@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import type { KeyboardEvent } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, FilePenLine, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { Combobox } from "@/components/ui/combobox"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { RequiredLabel } from "@/components/ui/required-label"
 
 interface Customer {
   id: number
@@ -61,6 +63,12 @@ const TEXTAREA_CLASS =
   "w-full rounded-xl border border-border/70 bg-background/90 px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20"
 const READONLY_FIELD_CLASS =
   "rounded-xl border border-border/80 bg-muted/60 px-3 py-2 text-sm text-foreground/80 cursor-not-allowed select-none"
+
+const blockExponentInput = (e: KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === "e" || e.key === "E") {
+    e.preventDefault()
+  }
+}
 
 const INITIAL_FORM_DATA: ReportFormData = {
   entity_reference: "",
@@ -279,7 +287,7 @@ export default function CreateGoamlReportPage() {
             <p className={SECONDARY_LABEL_CLASS}>Customer Selection</p>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
-                <label className={FIELD_LABEL_CLASS}>Customer Type</label>
+                <RequiredLabel text="Customer Type" className={FIELD_LABEL_CLASS} />
                 <select
                   className={FIELD_CLASS}
                   value={customerType}
@@ -298,7 +306,7 @@ export default function CreateGoamlReportPage() {
               </div>
 
               <div>
-                <label className={FIELD_LABEL_CLASS}>Pick Customer</label>
+                <RequiredLabel text="Pick Customer" className={FIELD_LABEL_CLASS} />
                 <Combobox
                   options={customerOptions}
                   value={selectedCustomerId}
@@ -389,9 +397,7 @@ export default function CreateGoamlReportPage() {
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <label className={FIELD_LABEL_CLASS}>
-                        Entity Reference <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel text="Entity Reference" className={FIELD_LABEL_CLASS} />
                       <input
                         className={FIELD_CLASS}
                         value={formData.entity_reference}
@@ -399,9 +405,7 @@ export default function CreateGoamlReportPage() {
                       />
                     </div>
                     <div>
-                      <label className={FIELD_LABEL_CLASS}>
-                        Transaction Type <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel text="Transaction Type" className={FIELD_LABEL_CLASS} />
                       <select
                         className={FIELD_CLASS}
                         value={formData.transaction_type}
@@ -421,15 +425,11 @@ export default function CreateGoamlReportPage() {
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <label className={FIELD_LABEL_CLASS}>
-                        Item Make <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel text="Item Make" className={FIELD_LABEL_CLASS} />
                       <input className={FIELD_CLASS} value={formData.item_make} onChange={(e) => setFormData({ ...formData, item_make: e.target.value })} />
                     </div>
                     <div>
-                      <label className={FIELD_LABEL_CLASS}>
-                        Item Type <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel text="Item Type" className={FIELD_LABEL_CLASS} />
                       <select className={FIELD_CLASS} value={formData.item_type} onChange={(e) => setFormData({ ...formData, item_type: e.target.value })}>
                         <option value="">Select an item type</option>
                         <option value="Gold">Gold</option>
@@ -448,9 +448,7 @@ export default function CreateGoamlReportPage() {
                   </div>
 
                   <div>
-                    <label className={FIELD_LABEL_CLASS}>
-                      Description <span className="text-destructive">*</span>
-                    </label>
+                    <RequiredLabel text="Description" className={FIELD_LABEL_CLASS} />
                     <textarea
                       className={TEXTAREA_CLASS}
                       rows={3}
@@ -461,14 +459,13 @@ export default function CreateGoamlReportPage() {
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <label className={FIELD_LABEL_CLASS}>
-                        Disposed Value <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel text="Disposed Value" className={FIELD_LABEL_CLASS} />
                       <input
                         type="number"
                         className={FIELD_CLASS}
                         value={formData.disposed_value}
                         onChange={(e) => setFormData({ ...formData, disposed_value: e.target.value })}
+                        onKeyDown={blockExponentInput}
                       />
                     </div>
                     <div>
@@ -483,20 +480,17 @@ export default function CreateGoamlReportPage() {
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <label className={FIELD_LABEL_CLASS}>
-                        Estimated Value <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel text="Estimated Value" className={FIELD_LABEL_CLASS} />
                       <input
                         type="number"
                         className={FIELD_CLASS}
                         value={formData.estimated_value}
                         onChange={(e) => setFormData({ ...formData, estimated_value: e.target.value })}
+                        onKeyDown={blockExponentInput}
                       />
                     </div>
                     <div>
-                      <label className={FIELD_LABEL_CLASS}>
-                        Currency Code <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel text="Currency Code" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={currencyOptions}
                         value={formData.currency_code}
