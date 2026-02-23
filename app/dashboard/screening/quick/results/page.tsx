@@ -1,511 +1,588 @@
 "use client"
 
 import * as React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Download } from "lucide-react"
+import {
+  Download,
+  ExternalLink,
+  FileText,
+  RefreshCcw,
+  Search,
+} from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { generateScreeningPDF } from "@/lib/screening-pdf-generator"
 import { generateScreeningSessionPDF } from "@/lib/screening-session-pdf"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
-
 type Candidate = {
-    id: number
-    source: string
-    subject_type: string
-    name: string
-    confidence: number
-    nationality?: string | null
-    address?: string | null
-    dob?: string | null
-    gender?: string | null
+  id: number
+  source: string
+  subject_type: string
+  name: string
+  confidence: number
+  nationality?: string | null
+  address?: string | null
+  dob?: string | null
+  gender?: string | null
 }
 
 type BestBySourceItem = {
-    source: string
-    best_confidence: boolean
-    data: Array<Candidate | null>
+  source: string
+  best_confidence: boolean
+  data: Array<Candidate | null>
 }
 
 type ScreeningResponse = {
-    status: string
-    message: string
+  status: string
+  message: string
+  user_id?: number | string
+  data?: {
     user_id?: number | string
-    data?: {
-        user_id?: number | string
-        user_company?: string
-        searched_for?: string
-        subject_type?: string
-        screening_log_id?: string
-        total_candidates?: number
-        best_by_source?: BestBySourceItem[]
-        total_search?: number
-        total_found?: number
-        user_name?: string
-    }
+    user_company?: string
+    searched_for?: string
+    subject_type?: string
+    screening_log_id?: string
+    total_candidates?: number
+    best_by_source?: BestBySourceItem[]
+    total_search?: number
+    total_found?: number
+    user_name?: string
+  }
 }
 
 type SourceDecision = "relevant" | "irrelevant" | "Relevant" | "Irrelevant" | "no_sp" | string | null
 
-function band(conf: number) {
-    if (conf >= 90) return { label: "High", cls: "bg-green-100 text-green-800 border-green-200" }
-    if (conf > 30) return { label: "Fair", cls: "bg-blue-200 text-blue-800 border-blue-200" }
-    return { label: "Low", cls: "bg-red-100 text-red-800 border-red-200" }
-}
-
 function confidenceNum(v: unknown) {
-    const n = Number(v)
-    return Number.isFinite(n) ? n : 0
+  const n = Number(v)
+  return Number.isFinite(n) ? n : 0
 }
 
 function resultLabel(conf: number) {
-    if (conf > 90) return "Match Found"
-    if (conf > 30) return "Partial Match Found"
-    return "False Positive"
+  if (conf > 90) return "Match Found"
+  if (conf > 30) return "Partial Match Found"
+  return "False Positive"
 }
 
-function hasRelevantForSource(candidates: Candidate[]) {
-    return candidates.some((c) => confidenceNum(c?.confidence) >= 90)
-}
-
-function hasIrrelevantForSource(candidates: Candidate[]) {
-    return candidates.some((c) => {
-        const v = confidenceNum(c?.confidence)
-        return v > 30 && v < 90
-    })
-}
-
-function hasNoSpForSource(candidates: Candidate[]) {
-    return candidates.some((c) => confidenceNum(c?.confidence) < 30)
-}
+const PAGE_CLASS =
+  "space-y-8 mx-auto max-w-[1200px] px-4 py-8 sm:px-6 lg:px-8 animate-in fade-in duration-500"
+const CARD_STYLE =
+  "rounded-3xl border border-border/50 bg-card/60 shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] backdrop-blur-sm transition-all"
+const FIELD_LABEL_CLASS = "block text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+const FIELD_GROUP_CLASS = "space-y-2"
+const FIELD_CLASS =
+  "h-10 w-full rounded-xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20"
+const SELECT_TRIGGER_CLASS =
+  "!h-10 w-full rounded-xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20"
 
 const ANNOTATION_OPTIONS = [
-    // { value: "No Annotation", label: "Select Annotation" },
-    { value: "True Match", label: "True Match" },
-    { value: "Potential Match", label: "Potential Match" },
-    { value: "No Match", label: "No Match" },
-    // { value: "Potential Name Match", label: "Potential Name Match" },
-    { value: "Insufficient Data", label: "Insufficient Data" },
-    // { value: "Escalation Required", label: "Escalation Required" },
-    // { value: "Name matched", label: "Name matched" },
-    // { value: "Other", label: "Other (type below)" },
+  { value: "No Annotation", label: "Select annotation" },
+  { value: "True Match", label: "True Match" },
+  { value: "Potential Match", label: "Potential Match" },
+  { value: "No Match", label: "No Match" },
+  { value: "Insufficient Data", label: "Insufficient Data" },
 ] as const
 
 type EntityDetailsResponse = {
-    data?: Record<string, any>
+  data?: Record<string, any>
 }
 
 export default function QuickScreeningResultsPage() {
-    const [payload, setPayload] = React.useState<ScreeningResponse | null>(null)
-    const [detailsById, setDetailsById] = React.useState<Record<string, any>>({})
-    const [savedByCandidate, setSavedByCandidate] = React.useState<
-        Record<string, { decision: SourceDecision; annotationChoice: string; annotationText: string }>
-    >({})
-    const [savedTypedByCandidate, setSavedTypedByCandidate] = React.useState<Record<string, string>>({})
+  const [payload, setPayload] = React.useState<ScreeningResponse | null>(null)
+  const [detailsById, setDetailsById] = React.useState<Record<string, any>>({})
+  const [savedByCandidate, setSavedByCandidate] = React.useState<
+    Record<string, { decision: SourceDecision; annotationChoice: string; annotationText: string }>
+  >({})
 
-    React.useEffect(() => {
-        const raw = sessionStorage.getItem("screening_results")
-        if (!raw) return
-        try {
-            const parsed = JSON.parse(raw)
-            console.log("Full payload:", parsed)
-            console.log("User ID from payload:", parsed?.data?.user_id)
-            console.log("User ID from company name:", parsed?.data?.user_company)
-            setPayload(parsed)
-        } catch {
-            setPayload(null)
-        }
-    }, [])
-    const userId = String(payload?.data?.user_id || payload?.user_id || "N/A")
-    const userName = String(payload?.data?.user_name || "N/A")
-    const userCompany = String(payload?.data?.user_company || "N/A")
-    const searchedFor = payload?.data?.searched_for || "-"
-    const screening_log_id = payload?.data?.screening_log_id || "N/A"
-    const customerType = payload?.data?.subject_type || "individual"
-    const bestBySource = payload?.data?.best_by_source || [];
-    const totalSearch = payload?.data?.total_search || 0;
-    const totalFound = payload?.data?.total_found || 0;
+  React.useEffect(() => {
+    const raw = sessionStorage.getItem("screening_results")
+    if (!raw) return
+    try {
+      const parsed = JSON.parse(raw)
+      setPayload(parsed)
+    } catch {
+      setPayload(null)
+    }
+  }, [])
 
-    const [sourceDecision, setSourceDecision] = React.useState<Record<string, SourceDecision>>({})
-    const [sourceAnnotationChoice, setSourceAnnotationChoice] = React.useState<Record<string, string>>({})
-    const [sourceAnnotationText, setSourceAnnotationText] = React.useState<Record<string, string>>({})
-    const [downloadingKey, setDownloadingKey] = React.useState<string | null>(null)
+  const userId = String(payload?.data?.user_id || payload?.user_id || "N/A")
+  const userName = String(payload?.data?.user_name || "N/A")
+  const userCompany = String(payload?.data?.user_company || "N/A")
+  const searchedFor = payload?.data?.searched_for || "-"
+  const screeningLogId = payload?.data?.screening_log_id || "N/A"
+  const customerType = payload?.data?.subject_type || "individual"
+  const bestBySource = payload?.data?.best_by_source || []
+  const totalSearch = payload?.data?.total_search || 0
+  const totalFound = payload?.data?.total_found || 0
+  const hitRate = totalSearch > 0 ? ((totalFound / totalSearch) * 100).toFixed(1) : "0.0"
 
-    React.useEffect(() => {
-        const nextDecision: Record<string, SourceDecision> = {}
-        const nextAnnoChoice: Record<string, string> = {}
-        const nextAnnoText: Record<string, string> = {}
+  const [sourceDecision, setSourceDecision] = React.useState<Record<string, SourceDecision>>({})
+  const [sourceAnnotationChoice, setSourceAnnotationChoice] = React.useState<Record<string, string>>({})
+  const [sourceAnnotationText, setSourceAnnotationText] = React.useState<Record<string, string>>({})
+  const [downloadingKey, setDownloadingKey] = React.useState<string | null>(null)
 
-        for (const src of bestBySource) {
-            nextDecision[src.source] = null // Don't pre-select
-            nextAnnoChoice[src.source] = "No Annotation"
-            nextAnnoText[src.source] = ""
-        }
+  React.useEffect(() => {
+    const nextDecision: Record<string, SourceDecision> = {}
+    const nextAnnoChoice: Record<string, string> = {}
+    const nextAnnoText: Record<string, string> = {}
 
-        setSourceDecision(nextDecision)
-        setSourceAnnotationChoice(nextAnnoChoice)
-        setSourceAnnotationText(nextAnnoText)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [payload])
+    for (const src of bestBySource) {
+      nextDecision[src.source] = null
+      nextAnnoChoice[src.source] = "No Annotation"
+      nextAnnoText[src.source] = ""
+    }
 
-    React.useEffect(() => {
-        (async () => {
-            const allDetails: Record<string, any> = {}
-            for (const src of bestBySource) {
-                for (const c of (src.data || []).filter(Boolean) as Candidate[]) {
-                    try {
-                        const res = await fetch(`/api/sanction-entities/${c.id}`, { method: "GET", credentials: "include" })
-                        const detailsPayload: EntityDetailsResponse = await res.json().catch(async () => ({}))
-                        allDetails[`${c.id}`] = (detailsPayload as any)?.data || (detailsPayload as any)?.data?.data || (detailsPayload as any)?.data || {}
-                    } catch {
-                        allDetails[`${c.id}`] = {}
-                    }
-                }
-            }
-            setDetailsById(allDetails)
-        })()
-    }, [payload])
+    setSourceDecision(nextDecision)
+    setSourceAnnotationChoice(nextAnnoChoice)
+    setSourceAnnotationText(nextAnnoText)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payload])
 
-    const downloadPdfForCandidate = async (c: Candidate) => {
-        const key = `${c.source}:${c.id}`
-        setDownloadingKey(key)
-        try {
-            // fetch details via proxy endpoint
+  React.useEffect(() => {
+    ;(async () => {
+      const allDetails: Record<string, any> = {}
+      for (const src of bestBySource) {
+        for (const c of (src.data || []).filter(Boolean) as Candidate[]) {
+          try {
             const res = await fetch(`/api/sanction-entities/${c.id}`, { method: "GET", credentials: "include" })
             const detailsPayload: EntityDetailsResponse = await res.json().catch(async () => ({}))
-            console.log("Details payload:", detailsPayload)
-            if (!res.ok) throw new Error(detailsPayload?.data?.message || "Failed to load entity details")
-
-            const detailData = (detailsPayload as any)?.data || (detailsPayload as any)?.data?.data || (detailsPayload as any)?.data || {}
-
-            // Get decision and annotation for this source
-            const decision = (sourceDecision[c.source] || null) as SourceDecision
-            const annotationChoice = sourceAnnotationChoice[c.source] || "No Annotation"
-            const annotationText = sourceAnnotationText[c.source] || ""
-
-            // Generate PDF with decision and annotation
-            await generateScreeningPDF(c, searchedFor, detailData, decision, annotationChoice, annotationText)
-        } catch (err) {
-            console.error("PDF generation error:", err)
-            alert("Failed to generate PDF: " + (err as Error).message)
-        } finally {
-            setDownloadingKey(null)
+            allDetails[`${c.id}`] =
+              (detailsPayload as any)?.data ||
+              (detailsPayload as any)?.data?.data ||
+              (detailsPayload as any)?.data ||
+              {}
+          } catch {
+            allDetails[`${c.id}`] = {}
+          }
         }
+      }
+      setDetailsById(allDetails)
+    })()
+  }, [payload, bestBySource])
+
+  const downloadPdfForCandidate = async (c: Candidate) => {
+    const key = `${c.source}:${c.id}`
+    setDownloadingKey(key)
+    try {
+      const res = await fetch(`/api/sanction-entities/${c.id}`, { method: "GET", credentials: "include" })
+      const detailsPayload: EntityDetailsResponse = await res.json().catch(async () => ({}))
+      if (!res.ok) throw new Error(detailsPayload?.data?.message || "Failed to load entity details")
+
+      const detailData =
+        (detailsPayload as any)?.data ||
+        (detailsPayload as any)?.data?.data ||
+        (detailsPayload as any)?.data ||
+        {}
+
+      const decision = (sourceDecision[c.source] || null) as SourceDecision
+      const annotationChoice = sourceAnnotationChoice[c.source] || "No Annotation"
+      const annotationText = sourceAnnotationText[c.source] || ""
+
+      await generateScreeningPDF(c, searchedFor, detailData, decision, annotationChoice, annotationText)
+    } catch (err) {
+      console.error("PDF generation error:", err)
+      alert("Failed to generate PDF: " + (err as Error).message)
+    } finally {
+      setDownloadingKey(null)
     }
+  }
 
-    const saveForCandidate = (source: string, candidateId: number) => {
-        const key = `${source}:${candidateId}`
-        setSavedByCandidate((prev) => ({
-            ...prev,
-            [key]: {
-                decision: sourceDecision[source] ?? null,
-                annotationChoice: sourceAnnotationChoice[source] || "",
-                annotationText: sourceAnnotationText[source] || "",
-            },
-        }))
-    }
+  const saveForCandidate = (source: string, candidateId: number) => {
+    const key = `${source}:${candidateId}`
+    setSavedByCandidate((prev) => ({
+      ...prev,
+      [key]: {
+        decision: sourceDecision[source] ?? null,
+        annotationChoice: sourceAnnotationChoice[source] || "",
+        annotationText: sourceAnnotationText[source] || "",
+      },
+    }))
+  }
 
-    const editForCandidate = (source: string, candidateId: number) => {
-        const key = `${source}:${candidateId}`
-        setSavedByCandidate((prev) => {
-            const next = { ...prev }
-            delete next[key]
-            return next
-        })
-    }
+  const editForCandidate = (source: string, candidateId: number) => {
+    const key = `${source}:${candidateId}`
+    setSavedByCandidate((prev) => {
+      const next = { ...prev }
+      delete next[key]
+      return next
+    })
+  }
 
-    const handleDownloadSessionPDF = async () => {
-        // Build per-source maps from saved per-candidate data
-        const pdfDecision: Record<string, string | null> = {}
-        const pdfChoice: Record<string, string> = {}
-        const pdfText: Record<string, string> = {}
+  const handleDownloadSessionPDF = async () => {
+    const pdfDecision: Record<string, string | null> = {}
+    const pdfChoice: Record<string, string> = {}
+    const pdfText: Record<string, string> = {}
 
-        Object.entries(savedByCandidate).forEach(([key, v]) => {
-            const source = key.split(":")[0]
-            if (v.decision) {
-                pdfDecision[source] = v.decision
-                pdfDecision[key] = v.decision  // per-candidate decision
-            }
-            if (v.annotationChoice) {
-                pdfChoice[source] = v.annotationChoice
-                pdfChoice[key] = v.annotationChoice  // per-candidate result type
-            }
-            if (v.annotationText) pdfText[source] = v.annotationText
-            pdfText[key] = v.annotationText
-        })
+    Object.entries(savedByCandidate).forEach(([key, v]) => {
+      const source = key.split(":")[0]
+      if (v.decision) {
+        pdfDecision[source] = v.decision
+        pdfDecision[key] = v.decision
+      }
+      if (v.annotationChoice) {
+        pdfChoice[source] = v.annotationChoice
+        pdfChoice[key] = v.annotationChoice
+      }
+      if (v.annotationText) pdfText[source] = v.annotationText
+      pdfText[key] = v.annotationText
+    })
 
-        // Pass ALL sources for Match Summary, saved keys for Evidence filtering
-        const savedKeys = Object.keys(savedByCandidate)
+    const savedKeys = Object.keys(savedByCandidate)
 
-        // Count relevant and irrelevant from saved candidates
-        let relCount = 0
-        let irrelCount = 0
-        Object.values(savedByCandidate).forEach((v) => {
-            if (v.decision === "Relevant" || v.decision === "relevant") relCount++
-            else if (v.decision === "Irrelevant" || v.decision === "irrelevant") irrelCount++
-        })
+    let relCount = 0
+    let irrelCount = 0
+    Object.values(savedByCandidate).forEach((v) => {
+      if (v.decision === "Relevant" || v.decision === "relevant") relCount++
+      else if (v.decision === "Irrelevant" || v.decision === "irrelevant") irrelCount++
+    })
 
-        await generateScreeningSessionPDF({
-            searchedFor,
-            customerType,
-            bestBySource,
-            sourceDecision: pdfDecision as any,
-            sourceAnnotationChoice: pdfChoice,
-            sourceAnnotationText: pdfText,
-            detailsById,
-            total_search: totalSearch,
-            total_found: totalFound,
-            user_id: userId,
-            user_name: userName,
-            user_company: userCompany,
-            savedCandidateKeys: savedKeys,
-            relevantCount: relCount,
-            irrelevantCount: irrelCount,
-            screening_log_id: screening_log_id,
-        })
-    }
+    await generateScreeningSessionPDF({
+      searchedFor,
+      customerType,
+      bestBySource,
+      sourceDecision: pdfDecision as any,
+      sourceAnnotationChoice: pdfChoice,
+      sourceAnnotationText: pdfText,
+      detailsById,
+      total_search: totalSearch,
+      total_found: totalFound,
+      user_id: userId,
+      user_name: userName,
+      user_company: userCompany,
+      savedCandidateKeys: savedKeys,
+      relevantCount: relCount,
+      irrelevantCount: irrelCount,
+      screening_log_id: screeningLogId,
+    })
+  }
 
-    const getConfidenceColor = (percentage: number) => {
-        if (percentage >= 80) return 'bg-green-100 text-green-800 border-green-200';
-        if (percentage >= 50) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-        return 'bg-red-100 text-red-800 border-red-200';
-    };
+  const getConfidenceColor = (percentage: number) => {
+    if (percentage >= 80) return "bg-emerald-100 text-emerald-800 border-emerald-200"
+    if (percentage >= 50) return "bg-amber-100 text-amber-800 border-amber-200"
+    return "bg-red-100 text-red-800 border-red-200"
+  }
 
-    const renderDetailValue = (value: any): React.ReactNode => {
-        if (value === null || value === undefined) return <span className="text-muted-foreground">-</span>;
-        if (typeof value === 'boolean') return value ? "Yes" : "No";
-        
-        if (Array.isArray(value)) {
-            if (value.length === 0) return <span className="text-muted-foreground">Empty</span>;
-            return (
-                <ul className="list-disc pl-4 space-y-1">
-                    {value.map((item, i) => (
-                        <li key={i} className="text-sm">{renderDetailValue(item)}</li>
-                    ))}
-                </ul>
-            );
-        }
+  const getSubjectTypeLabel = (value: string) => {
+    const normalized = value.toLowerCase()
+    if (normalized === "entity" || normalized === "corporate") return "Corporate"
+    if (normalized === "vessel") return "Vessel"
+    return "Individual"
+  }
 
-        if (typeof value === 'object') {
-            return (
-                <div className="pl-3 border-l-2 border-muted space-y-1 mt-1">
-                    {Object.entries(value).map(([k, v]) => (
-                        <div key={k} className="grid grid-cols-[140px_1fr] gap-2 text-sm">
-                            <span className="font-medium text-muted-foreground capitalize">{k.replace(/_/g, ' ')}:</span>
-                            <span>{renderDetailValue(v)}</span>
-                        </div>
-                    ))}
-                </div>
-            );
-        }
-
-        return String(value);
-    };
-
-    if (!payload) {
-        return (
-            <div className="max-w-6xl mx-auto p-6">
-                <Card>
-                    <CardContent className="pt-6 space-y-3">
-                        <div className="text-sm text-muted-foreground">No results found in session. Run a search first.</div>
-                        <Button onClick={() => (window.location.href = "/dashboard/screening/quick")}>Back to Name Screening</Button>
-                    </CardContent>
-                </Card>
-            </div>
-        )
-    }
-
+  if (!payload) {
     return (
-        <div className="max-w-6xl mx-auto space-y-6 p-6">
-            <div className="flex items-center justify-between gap-6">
-                <div className="border p-4 rounded-lg flex-1 min-w-0">
-                    <div className="flex items-baseline justify-start text-left gap-2">
-                        <span className="text-2xl font-bold text-foreground shrink-0">Subject:</span>
-                        {/* Added truncate and overflow-hidden to handle long names gracefully */}
-                        <span className="text-2xl font-semibold truncate" title={searchedFor}>
-                            {searchedFor}
-                        </span>
-                    </div>
-                </div>
-
-                <div className="flex gap-2 shrink-0">
-                    <Button variant="outline" onClick={handleDownloadSessionPDF}>
-                        <Download className="w-4 h-4 mr-2" />
-                        Download Full Report
-                    </Button>
-                    <Button 
-                        variant="outline" 
-                        onClick={() => (window.location.href = "/dashboard/screening/quick")}
-                    >
-                        New Search
-                    </Button>
-                </div>
-            </div>
-
-            {/* List view for results */}
-            <div className="bg-white rounded shadow p-4">
-                {totalSearch === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground text-lg">No results found.</div>
-                ) : (
-                    <ul className="space-y-4">
-                        {bestBySource.map((src) => (
-                            (src.data || []).map((c) => {
-                                if (!c) return null
-                                const candidateKey = `${src.source}:${c.id}`
-                                const isSaved = !!savedByCandidate[candidateKey]
-                                const canSave = !!(sourceDecision[src.source] && sourceAnnotationChoice[src.source] && sourceAnnotationChoice[src.source] !== "No Annotation")
-
-                                return (
-                                    <li key={candidateKey} className="border rounded p-4 flex flex-col gap-2 shadow-lg">
-                                        <div className="flex items-center justify-between p-2">
-                                            <div>
-                                                <a
-                                                    href={`/dashboard/screening/entity/${c.id}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-xl font-semibold text-base text-primary hover:underline cursor-pointer flex items-center gap-2"
-                                                >
-                                                    {c.name || '-'}
-                                                    <span className="text-xs font-normal text-muted-foreground no-underline">(view details)</span>
-                                                </a>
-                                            </div>
-                                            <div className="flex flex-col items-end">
-                                                <span className={`text-[15px] font-bold px-2 py-0.5 rounded-full border ${getConfidenceColor(c.confidence)}`}>
-                                                    Confidence Level: {c.confidence !== 0 ? (c.confidence / 100).toFixed(2) : c.confidence}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col gap-1 p-2 text-xs text-muted-foreground">
-                                            {c.nationality && <span>Country: {c.nationality}</span>}
-                                            {c.address && <span>Address: {c.address}</span>}
-                                            {c.dob && <span>Date Of Birth: {c.dob}</span>}
-                                            {c.gender && <span>Gender: {c.gender}</span>}
-                                        </div>
-                                        {/* Interactive annotation and decision system */}
-                                        <div className="mt-2 text-xls space-y-2">
-                                            <div className="p-2 flex items-center gap-4">
-                                                <Label className="text-xls whitespace-nowrap">
-                                                    Decision:
-                                                </Label>
-
-                                                <RadioGroup
-                                                    className="flex items-center gap-4"
-                                                    value={sourceDecision[src.source] || ''}
-                                                    disabled={isSaved}
-                                                    onValueChange={(val) =>
-                                                        setSourceDecision((prev) => ({
-                                                            ...prev,
-                                                            [src.source]: val as SourceDecision,
-                                                        }))
-                                                    }
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <RadioGroupItem
-                                                            value="Relevant"
-                                                            id={`decision-relevant-${src.source}`}
-                                                        />
-                                                        <Label htmlFor={`decision-relevant-${src.source}`}>
-                                                            Relevant
-                                                        </Label>
-
-                                                        <RadioGroupItem
-                                                            value="Irrelevant"
-                                                            id={`decision-irrelevant-${src.source}`}
-                                                        />
-                                                        <Label htmlFor={`decision-irrelevant-${src.source}`}>
-                                                            Irrelevant
-                                                        </Label>
-                                                    </div>
-                                                </RadioGroup>
-                                            </div>
-                                            <div className="p-3">
-                                                <div className="flex flex-wrap items-end gap-6">
-
-                                                    {/* Left: Result Type */}
-                                                    <div className="flex flex-col gap-2">
-                                                        <Label>Result Type:</Label>
-
-                                                        <div className="flex items-center gap-3">
-                                                            <Select
-                                                                value={sourceAnnotationChoice[src.source] || ''}
-                                                                disabled={isSaved}
-                                                                onValueChange={(val) =>
-                                                                    setSourceAnnotationChoice((prev) => ({
-                                                                        ...prev,
-                                                                        [src.source]: val,
-                                                                    }))
-                                                                }
-                                                            >
-                                                                <SelectTrigger className="w-56">
-                                                                    <SelectValue placeholder="No Annotation" />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    {ANNOTATION_OPTIONS.map((opt) => (
-                                                                        <SelectItem key={opt.value} value={opt.value}>
-                                                                            {opt.label}
-                                                                        </SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Input field */}
-                                                    <div className="flex flex-col gap-2 min-w-[280px]">
-                                                        <Label htmlFor={`annotation-input-${src.source}`}>
-                                                            Annotation:
-                                                        </Label>
-
-                                                        <Input
-                                                            id={`annotation-input-${src.source}`}
-                                                            className={`w-70 ${isSaved ? 'text-gray-400' : ''}`}
-                                                            value={sourceAnnotationText[src.source] || ''}
-                                                            disabled={isSaved}
-                                                            onChange={(e) =>
-                                                                setSourceAnnotationText((prev) => ({
-                                                                    ...prev,
-                                                                    [src.source]: e.target.value,
-                                                                }))
-                                                            }
-                                                            placeholder="Type your annotation details here..."
-                                                        />
-                                                    </div>
-
-                                                    {/* Save / Edit button */}
-                                                    {isSaved ? (
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            className="self-end bg-primary text-white hover:bg-primary/90"
-                                                            onClick={() => editForCandidate(src.source, c.id)}
-                                                        >
-                                                            Edit
-                                                        </Button>
-                                                    ) : (
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            className="self-end bg-primary text-white hover:bg-primary/90"
-                                                            disabled={!canSave}
-                                                            onClick={() => saveForCandidate(src.source, c.id)}
-                                                        >
-                                                            Save
-                                                        </Button>
-                                                    )}
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                )
-                            })
-                        ))}
-                    </ul>
-                )}
-            </div>
-        </div>
+      <div className={PAGE_CLASS}>
+        <Card className={CARD_STYLE}>
+          <CardContent className="space-y-4 p-5 sm:p-6">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Quick Screening Results</h1>
+            <p className="text-sm text-muted-foreground">No results found in session. Run a search first.</p>
+            <Button
+              variant="outline"
+              className="h-10 rounded-xl px-4"
+              onClick={() => (window.location.href = "/dashboard/screening/quick")}
+            >
+              <RefreshCcw className="mr-2 h-4 w-4" />
+              Back to Name Screening
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     )
+  }
+
+  return (
+    <div className={PAGE_CLASS}>
+      <Card
+        className={`${CARD_STYLE} relative overflow-hidden border-border/60 bg-gradient-to-br from-background via-background to-primary/10`}
+      >
+        <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+        <CardContent className="relative p-5 sm:p-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-5">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+                  <Search className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">Quick Screening Results</h1>
+                  <p className="text-sm text-muted-foreground">
+                    Review and annotate candidate matches before exporting your report.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className={FIELD_LABEL_CLASS}>Subject</p>
+                <p className="truncate text-3xl font-semibold tracking-tight text-foreground" title={searchedFor}>
+                  {searchedFor}
+                </p>
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="rounded-full border border-border/60 bg-background/90 px-3 py-1.5 text-foreground">
+                    {getSubjectTypeLabel(customerType)}
+                  </span>
+                  <span className="rounded-full border border-border/60 bg-background/90 px-3 py-1.5 text-muted-foreground">
+                    Log ID: {screeningLogId}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" className="h-10 rounded-xl px-4" onClick={handleDownloadSessionPDF}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Full Report
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-10 rounded-xl px-4"
+                  onClick={() => (window.location.href = "/dashboard/screening/quick")}
+                >
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  New Search
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-background/85 p-4 shadow-sm">
+              <p className={FIELD_LABEL_CLASS}>Screening Snapshot</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-xl bg-muted/30 px-3 py-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Sources Checked</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{bestBySource.length}</p>
+                </div>
+                <div className="rounded-xl bg-muted/30 px-3 py-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Candidates Reviewed</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{totalSearch}</p>
+                </div>
+                <div className="rounded-xl bg-muted/30 px-3 py-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Matches Found</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{totalFound}</p>
+                </div>
+                <div className="rounded-xl bg-muted/30 px-3 py-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Hit Rate</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{hitRate}%</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className={CARD_STYLE}>
+        <CardContent className="p-5 sm:p-6">
+          <div className="mb-6 border-b border-border/50 pb-4">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">Candidate Review</h2>
+              <p className="text-sm text-muted-foreground">
+                Save a decision and annotation for each candidate before exporting. Reviewing {totalFound} possible
+                match{totalFound === 1 ? "" : "es"} from {totalSearch} screened records.
+              </p>
+            </div>
+          </div>
+
+          {totalSearch === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-10 text-center">
+              <p className="text-base font-medium text-foreground">No matches found for this search.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Run a new screening with additional details.</p>
+            </div>
+          ) : (
+            <ul className="space-y-4">
+              {bestBySource.map((src) =>
+                (src.data || []).map((candidate) => {
+                  if (!candidate) return null
+
+                  const c = candidate
+                  const candidateKey = `${src.source}:${c.id}`
+                  const isSaved = !!savedByCandidate[candidateKey]
+                  const canSave = !!(
+                    sourceDecision[src.source] &&
+                    sourceAnnotationChoice[src.source] &&
+                    sourceAnnotationChoice[src.source] !== "No Annotation"
+                  )
+                  const isDownloading = downloadingKey === candidateKey
+                  const confidence = confidenceNum(c.confidence)
+
+                  return (
+                    <li
+                      key={candidateKey}
+                      className="rounded-2xl border border-border/60 bg-background/70 p-4 shadow-sm transition hover:border-primary/30 sm:p-5"
+                    >
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0 space-y-2">
+                          <div className="flex flex-wrap items-center gap-2 text-xs">
+                            <span className="rounded-full border border-border/60 bg-muted/30 px-2.5 py-1 font-medium uppercase tracking-wide text-muted-foreground">
+                              {src.source}
+                            </span>
+                            <span className="rounded-full border border-border/60 bg-background/90 px-2.5 py-1 font-medium text-foreground">
+                              {resultLabel(confidence)}
+                            </span>
+                          </div>
+
+                          <a
+                            href={`/dashboard/screening/entity/${c.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex max-w-full items-center gap-2 truncate text-xl font-semibold tracking-tight text-primary hover:underline"
+                          >
+                            <span className="truncate">{c.name || "-"}</span>
+                            <ExternalLink className="h-4 w-4 shrink-0" />
+                          </a>
+
+                          <p className="text-sm text-muted-foreground">Candidate ID: #{c.id}</p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${getConfidenceColor(confidence)}`}
+                          >
+                            Confidence: {confidence !== 0 ? (confidence / 100).toFixed(2) : confidence}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-10 rounded-xl px-3"
+                            disabled={isDownloading}
+                            onClick={() => downloadPdfForCandidate(c)}
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            {isDownloading ? "Generating..." : "PDF"}
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+                        <div>
+                          <p className={FIELD_LABEL_CLASS}>Country</p>
+                          <p className="mt-1 text-foreground">{c.nationality || "-"}</p>
+                        </div>
+                        <div>
+                          <p className={FIELD_LABEL_CLASS}>Date of Birth</p>
+                          <p className="mt-1 text-foreground">{c.dob || "-"}</p>
+                        </div>
+                        <div>
+                          <p className={FIELD_LABEL_CLASS}>Gender</p>
+                          <p className="mt-1 text-foreground">{c.gender || "-"}</p>
+                        </div>
+                        <div>
+                          <p className={FIELD_LABEL_CLASS}>Address</p>
+                          <p className="mt-1 truncate text-foreground" title={c.address || "-"}>
+                            {c.address || "-"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 rounded-xl border border-border/60 bg-card/80 p-4">
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.15fr_1fr_1.8fr_auto] xl:items-end">
+                          <div className={FIELD_GROUP_CLASS}>
+                            <Label className={FIELD_LABEL_CLASS}>Decision</Label>
+                            <RadioGroup
+                              className="flex h-10 items-center gap-5 rounded-xl border border-border/60 bg-background/90 px-3"
+                              value={sourceDecision[src.source] || ""}
+                              disabled={isSaved}
+                              onValueChange={(val) =>
+                                setSourceDecision((prev) => ({
+                                  ...prev,
+                                  [src.source]: val as SourceDecision,
+                                }))
+                              }
+                            >
+                              <div className="flex items-center gap-2">
+                                <RadioGroupItem value="Relevant" id={`decision-relevant-${src.source}-${c.id}`} />
+                                <Label
+                                  htmlFor={`decision-relevant-${src.source}-${c.id}`}
+                                  className="text-sm font-medium text-foreground"
+                                >
+                                  Relevant
+                                </Label>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <RadioGroupItem value="Irrelevant" id={`decision-irrelevant-${src.source}-${c.id}`} />
+                                <Label
+                                  htmlFor={`decision-irrelevant-${src.source}-${c.id}`}
+                                  className="text-sm font-medium text-foreground"
+                                >
+                                  Irrelevant
+                                </Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
+
+                          <div className={FIELD_GROUP_CLASS}>
+                            <Label className={FIELD_LABEL_CLASS}>Result Type</Label>
+                            <Select
+                              value={sourceAnnotationChoice[src.source] || "No Annotation"}
+                              disabled={isSaved}
+                              onValueChange={(val) =>
+                                setSourceAnnotationChoice((prev) => ({
+                                  ...prev,
+                                  [src.source]: val,
+                                }))
+                              }
+                            >
+                              <SelectTrigger className={SELECT_TRIGGER_CLASS}>
+                                <SelectValue placeholder="Select annotation" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ANNOTATION_OPTIONS.map((opt) => (
+                                  <SelectItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className={FIELD_GROUP_CLASS}>
+                            <Label className={FIELD_LABEL_CLASS} htmlFor={`annotation-input-${src.source}-${c.id}`}>
+                              Annotation
+                            </Label>
+                            <Input
+                              id={`annotation-input-${src.source}-${c.id}`}
+                              className={FIELD_CLASS}
+                              value={sourceAnnotationText[src.source] || ""}
+                              disabled={isSaved}
+                              onChange={(e) =>
+                                setSourceAnnotationText((prev) => ({
+                                  ...prev,
+                                  [src.source]: e.target.value,
+                                }))
+                              }
+                              placeholder="Type annotation details..."
+                            />
+                          </div>
+
+                          {isSaved ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-10 rounded-xl bg-primary px-4 text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                              onClick={() => editForCandidate(src.source, c.id)}
+                            >
+                              Edit
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-10 rounded-xl bg-primary px-4 text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                              disabled={!canSave}
+                              onClick={() => saveForCandidate(src.source, c.id)}
+                            >
+                              Save
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  )
+                })
+              )}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
 }

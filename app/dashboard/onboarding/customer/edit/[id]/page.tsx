@@ -1,5 +1,6 @@
 "use client"
 
+import { Spinner } from "@/components/ui/spinner"
 import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -24,9 +25,14 @@ import {
   Upload,
   Plus,
   Trash2,
+  Globe,
+  ShieldCheck,
+  Users,
+  Package,
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { formatContactNumber } from "@/lib/utils"
 
 type CustomerType = "individual" | "corporate"
 
@@ -38,7 +44,7 @@ const occupations = [
   { value: "Banking/Financial Institutions", label: "Banking/Financial Institutions" },
   { value: "Business Services Other", label: "Business Services Other" },
   { value: "Charitable Organizations and Foundations", label: "Charitable Organizations and Foundations" },
-  { value: "Counsulting/Freelancer", label: "Counsulting/Freelancer" },
+  { value: "Consulting/Freelancer", label: "Consulting/Freelancer" },
   { value: "Data Analytics, Management and Internet", label: "Data Analytics, Management and Internet" },
   { value: "Defense", label: "Defense" },
   { value: "Education", label: "Education" },
@@ -86,7 +92,7 @@ const paymentMethods = [
   { value: "Cash", label: "Cash" },
   { value: "Debit/Credit Card", label: "Debit/Credit Card" },
   { value: "Bank Transfer - Inside UAE", label: "Bank Transfer - Inside UAE" },
-  { value: "Bank Transfer _ Outside UAE", label: "Bank Transfer _ Outside UAE" },
+  { value: "Bank Transfer - Outside UAE", label: "Bank Transfer _ Outside UAE" },
   { value: "Parial Cash/Card/Online trs", label: "Parial Cash/Card/Online trs" },
   { value: "Crypto/Prepaid Cards", label: "Crypto/Prepaid Cards" },
   { value: "Old Gold Exchange", label: "Old Gold Exchange" },
@@ -97,7 +103,7 @@ const modeOfApproach = [
   { value: "Walk-In Customer", label: "Walk-In Customer" },
   { value: "Non Face to Face", label: "Non Face to Face" },
   { value: "Online/Social Media Portal", label: "Online/Social Media Portal" },
-  { value: "Thirdparty Referal", label: "Thirdparty Referral" },
+  { value: "Thirdparty Referral", label: "Thirdparty Referral" },
 ]
 
 const screeningFuzziness = [
@@ -106,26 +112,32 @@ const screeningFuzziness = [
   { value: "Level 2", label: "Level 2" },
 ]
 
-const PAGE_CONTAINER_CLASS = "max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-in fade-in duration-500"
+const PAGE_CONTAINER_CLASS = "space-y-8 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
 const HEADER_CARD_CLASS =
-  "relative overflow-hidden rounded-3xl border-border/50 bg-gradient-to-br from-background via-background to-primary/10 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)]"
+  "relative overflow-hidden rounded-3xl border-border/50 bg-card/60 bg-gradient-to-br from-background via-background to-primary/10 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
 const FORM_SECTION_CARD_CLASS =
-  "rounded-2xl border border-border/60 bg-background/80 p-5 sm:p-6 shadow-[0_12px_32px_-20px_oklch(0.28_0.06_260/0.4)]"
+  "rounded-3xl border border-border/50 bg-card/60 backdrop-blur-sm p-5 sm:p-6 shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
 const TABS_BAR_CLASS =
-  "sticky top-0 z-20 mb-4 border-b border-border/60 bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80"
-const TABS_LIST_CLASS = "h-auto w-full flex-wrap justify-start gap-2 rounded-2xl border border-border/60 bg-card/70 p-2"
+  "sticky top-0 z-20 mb-4 rounded-2xl border border-border/50 bg-background/80 px-2 py-3 backdrop-blur-md"
+const TABS_LIST_CLASS = "grid h-auto w-full grid-cols-2 gap-1 bg-transparent p-0 md:grid-cols-3 lg:grid-cols-5"
 const TABS_TRIGGER_CLASS =
-  "h-9 rounded-xl border border-transparent px-3 text-xs font-medium text-muted-foreground transition data-[state=active]:border-primary/30 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-const SECONDARY_LABEL_CLASS = "text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground"
+  "h-10 w-full justify-center rounded-xl px-2 text-center text-sm whitespace-nowrap transition data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+const SECONDARY_LABEL_CLASS = "text-xs font-extrabold uppercase tracking-[0.14em] text-foreground"
+const FIELD_LABEL_CLASS = "mb-1 block text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+const FIELD_CLASS =
+  "h-10 w-full rounded-xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground"
+const TEXTAREA_CLASS =
+  "w-full rounded-xl border border-border/70 bg-background/90 px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground"
 const FORM_SECTION_HEADING_CLASS = "text-sm font-semibold tracking-tight"
 const FORM_SUPPORT_TEXT_CLASS = "text-xs text-muted-foreground"
 const FORM_QUESTION_GROUP_TITLE_CLASS = "mb-2 text-sm font-semibold tracking-tight"
 const FORM_QUESTION_TEXT_CLASS = "text-sm font-medium text-foreground"
+const ACTION_BAR_CLASS =
+  "sticky bottom-0 z-10 mt-6 border-t border-border/60 bg-background/95 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80"
 const CANCEL_BUTTON_CLASS =
-  "h-10 rounded-full border-zinc-300 !bg-white px-6 text-zinc-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-zinc-400 hover:!bg-zinc-100 hover:text-zinc-900 active:!bg-zinc-200 focus-visible:ring-2 focus-visible:ring-zinc-300 dark:border-zinc-600 dark:!bg-zinc-900 dark:text-zinc-100 dark:hover:!bg-zinc-800 dark:active:!bg-zinc-700 hover:shadow-md"
-const SAVE_BUTTON_CLASS = "h-10 rounded-full px-6 text-sm font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-const CORPORATE_GRID_CLASS =
-  "grid grid-cols-1 gap-4 md:grid-cols-2 [&_[data-slot=input]]:mt-2 [&_[data-slot=input]]:h-11 [&_[data-slot=input]]:rounded-xl [&_[data-slot=input]]:border-border/70 [&_[data-slot=input]]:bg-background/90 [&_[data-slot=input]]:transition-colors [&_[data-slot=input]:focus-visible]:border-primary/80 [&_[data-slot=input]:focus-visible]:ring-0 [&_[data-slot=input]:focus-visible]:ring-transparent [&_[data-slot=input]:focus-visible]:ring-offset-0 [&_[data-slot=button][role=combobox]]:mt-2 [&_[data-slot=button][role=combobox]]:h-11 [&_[data-slot=button][role=combobox]]:rounded-xl [&_[data-slot=button][role=combobox]]:border-border/70 [&_[data-slot=button][role=combobox]]:bg-background/90 [&_[data-slot=button][role=combobox]]:transition-colors [&_[data-slot=button][role=combobox]:focus-visible]:border-primary/80 [&_[data-slot=button][role=combobox]:focus-visible]:ring-0 [&_[data-slot=button][role=combobox]:focus-visible]:ring-transparent [&_[data-slot=button][role=combobox]:focus-visible]:ring-offset-0"
+  "h-12 rounded-full border-zinc-300 !bg-white px-8 text-base font-semibold text-zinc-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-zinc-400 hover:!bg-zinc-100 hover:text-zinc-900 active:!bg-zinc-200 focus-visible:ring-2 focus-visible:ring-zinc-300 dark:border-zinc-600 dark:!bg-zinc-900 dark:text-zinc-100 dark:hover:!bg-zinc-800 dark:active:!bg-zinc-700 hover:shadow-md"
+const SAVE_BUTTON_CLASS = "h-12 rounded-full px-8 text-base font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
+const CORPORATE_GRID_CLASS = "grid grid-cols-1 gap-6 md:grid-cols-2"
 const RELATED_PERSON_GRID_CLASS =
   "grid grid-cols-1 gap-3 md:grid-cols-2 [&_[data-slot=input]]:mt-1.5 [&_[data-slot=input]]:h-10 [&_[data-slot=input]]:rounded-xl [&_[data-slot=input]]:border-border/70 [&_[data-slot=input]]:bg-background/90 [&_[data-slot=input]]:transition-colors [&_[data-slot=input]:focus-visible]:border-primary/80 [&_[data-slot=input]:focus-visible]:ring-0 [&_[data-slot=input]:focus-visible]:ring-transparent [&_[data-slot=input]:focus-visible]:ring-offset-0 [&_[data-slot=button][role=combobox]]:mt-1.5 [&_[data-slot=button][role=combobox]]:h-10 [&_[data-slot=button][role=combobox]]:rounded-xl [&_[data-slot=button][role=combobox]]:border-border/70 [&_[data-slot=button][role=combobox]]:bg-background/90 [&_[data-slot=button][role=combobox]]:transition-colors [&_[data-slot=button][role=combobox]:focus-visible]:border-primary/80 [&_[data-slot=button][role=combobox]:focus-visible]:ring-0 [&_[data-slot=button][role=combobox]:focus-visible]:ring-transparent [&_[data-slot=button][role=combobox]:focus-visible]:ring-offset-0"
 const ID_BADGE_CLASS = "inline-flex items-center rounded-full border border-border/70 bg-background/80 px-2.5 py-1 text-xs font-semibold text-muted-foreground"
@@ -151,7 +163,7 @@ export default function EditCustomerPage() {
         // Fetch meta data
         const metaRes = await fetch("/api/onboarding/meta", { credentials: "include" })
         const metaJson = await metaRes.json()
-        
+
         const countryList = metaJson.data.countries.countries.map((c: any) => ({
           value: c.name,
           label: c.name,
@@ -174,7 +186,7 @@ export default function EditCustomerPage() {
         // Fetch customer data
         const customerRes = await fetch(`/api/onboarding/customers/${id}`, { credentials: "include" })
         const customerJson = await customerRes.json()
-        
+
         if (customerJson.status) {
           const customer = customerJson.data
           setCustomerData(customer)
@@ -191,13 +203,13 @@ export default function EditCustomerPage() {
         toast({
           title: "Error",
           description: "Failed to load customer data",
-        //   variant: "destructive",
+          //   variant: "destructive",
         })
       } finally {
         setLoading(false)
       }
     }
-    
+
     if (id) {
       fetchData()
     }
@@ -205,11 +217,9 @@ export default function EditCustomerPage() {
 
   if (loading) {
     return (
-      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
-        <div className="relative flex h-14 w-14 items-center justify-center">
-          <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
-          <Loader2 className="relative z-10 h-10 w-10 animate-spin text-primary" aria-hidden="true" />
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Spinner className="w-8 h-8 text-primary" />
+        <p className="text-sm text-muted-foreground animate-pulse">Loading form data...</p>
       </div>
     )
   }
@@ -229,8 +239,8 @@ export default function EditCustomerPage() {
       <Card className={HEADER_CARD_CLASS}>
         <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary/15 blur-3xl" />
         <div className="pointer-events-none absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-primary/10 blur-2xl" />
-        <div className="relative p-5 sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="relative p-6 sm:p-8">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
             <div className="min-w-0">
               <Button
                 type="button"
@@ -242,59 +252,68 @@ export default function EditCustomerPage() {
                 <ArrowLeft className="h-4 w-4" />
                 Back to Customers
               </Button>
-              <div className="mt-3 flex min-w-0 items-start gap-3">
-                <div className="h-11 w-11 shrink-0 rounded-xl border border-primary/20 bg-primary/10 text-primary flex items-center justify-center">
+
+              <div className="mt-5 flex min-w-0 items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
                   {customerType === "individual" ? <User className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 space-y-2.5">
                   <p className={SECONDARY_LABEL_CLASS}>Compliance Dashboard</p>
-                  <h1 className="mt-0.5 text-xl font-semibold tracking-tight text-foreground break-words sm:text-2xl">{customerTitle}</h1>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <span className={ID_BADGE_CLASS}>Customer ID: {id}</span>
-                    <span
-                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                        customerType === "individual" ? INDIVIDUAL_BADGE_CLASS : CORPORATE_BADGE_CLASS
-                      }`}
-                    >
-                      {customerType === "individual" ? "Individual" : "Corporate"}
-                    </span>
-                  </div>
-                  {customerEmail ? <p className="mt-2 text-sm text-muted-foreground break-all">{customerEmail}</p> : null}
+                  <h1 className="break-words text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{customerTitle}</h1>
+                  <p className="text-sm text-muted-foreground">Customer onboarding profile</p>
                 </div>
               </div>
             </div>
-            <div className="grid w-full max-w-sm grid-cols-2 gap-2">
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-3">
-                <p className={SECONDARY_LABEL_CLASS}>Record Type</p>
-                <p className="mt-1 text-sm font-semibold">{customerType === "individual" ? "Individual" : "Corporate"}</p>
+
+            <aside className="rounded-2xl border border-border/60 bg-background/75 p-4 shadow-[0_10px_28px_-22px_oklch(0.28_0.06_260/0.5)]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Record Details</p>
+              <div className="mt-3 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-muted-foreground">Customer ID</span>
+                  <span className={ID_BADGE_CLASS}>#{id}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-muted-foreground">Type</span>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${customerType === "individual" ? INDIVIDUAL_BADGE_CLASS : CORPORATE_BADGE_CLASS
+                      }`}
+                  >
+                    {customerType === "individual" ? "Individual" : "Corporate"}
+                  </span>
+                </div>
+                <div className="border-t border-border/60 pt-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Email</p>
+                  <p className="mt-1 break-all text-sm text-foreground/90">{customerEmail || "Not provided"}</p>
+                </div>
+                <div className="border-t border-border/60 pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    Update onboarding details across the tabs below, then save with <span className="font-medium text-foreground">Update Information</span>.
+                  </p>
+                </div>
               </div>
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-3">
-                <p className={SECONDARY_LABEL_CLASS}>Edit Mode</p>
-                <p className="mt-1 text-sm font-semibold">Customer Profile</p>
-              </div>
-            </div>
+            </aside>
           </div>
         </div>
       </Card>
 
       {/* Forms */}
       {customerType === "individual" ? (
-        <IndividualEditForm 
-          countries={countries} 
-          countryCodes={countryCodes} 
-          occupations={occupations} 
-          idTypes={idTypes} 
-          products={products} 
+        <IndividualEditForm
+          countries={countries}
+          countryCodes={countryCodes}
+          occupations={occupations}
+          idTypes={idTypes}
+          products={products}
           sourceOfIncome={sourceOfIncome}
           customerData={customerData}
           customerId={id}
         />
       ) : (
-        <CorporateEditForm 
-          countries={countries} 
-          countryCodes={countryCodes} 
-          occupations={occupations} 
-          idTypes={idTypes} 
+        <CorporateEditForm
+          countries={countries}
+          countryCodes={countryCodes}
+          occupations={occupations}
+          idTypes={idTypes}
           products={products}
           customerData={customerData}
           customerId={id}
@@ -328,7 +347,7 @@ function IndividualEditForm({
   const { toast } = useToast()
 
   const ind = customerData.individual_detail || {}
-  
+
   // Pre-fill form fields from customerData
   const [firstName, setFirstName] = useState(ind.first_name || "")
   const [lastName, setLastName] = useState(ind.last_name || "")
@@ -370,7 +389,7 @@ function IndividualEditForm({
   const [remarks, setRemarks] = useState(customerData.remarks || "")
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  
+
   const [activeTab, setActiveTab] = useState("personal")
   const [submitting, setSubmitting] = useState(false)
 
@@ -444,17 +463,17 @@ function IndividualEditForm({
       products: productTypes,
       country_operations: operationCountries,
     }
-    
+
     console.log("Individual Update Payload:", payload)
-    
+
     const formData = new FormData()
     formData.append("data", JSON.stringify(payload))
     files.forEach((file) => {
       formData.append("documents[]", file)
     })
-    
+
     console.log("FormData entries:", Array.from(formData.entries()).map(([key, value]) => [key, value instanceof File ? `File: ${value.name}` : value]))
-    
+
     try {
       const res = await fetch(`/api/onboarding/customers/${customerId}`, {
         method: "POST", // Use POST with _method=PUT for FormData
@@ -522,35 +541,31 @@ function IndividualEditForm({
           {/* Personal Information Tab */}
           <TabsContent value="personal" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-primary" />
-                <h4 className={FORM_SECTION_HEADING_CLASS}>Personal Information</h4>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <User className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Personal Information</h4>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <RequiredLabel text="First Name" />
-                  <Input placeholder="Enter first name" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>First Name <span className="text-destructive">*</span></label>
+                  <Input className={FIELD_CLASS} placeholder="Enter first name" value={firstName} onChange={e => setFirstName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Last Name" />
-                  <Input placeholder="Enter last name" value={lastName} onChange={e => setLastName(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>Last Name <span className="text-destructive">*</span></label>
+                  <Input className={FIELD_CLASS} placeholder="Enter last name" value={lastName} onChange={e => setLastName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Date of Birth" />
-                  <Input type="date" placeholder="mm/dd/yyyy" value={dob} onChange={e => setDob(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>Date of Birth <span className="text-destructive">*</span></label>
+                  <Input className={FIELD_CLASS} type="date" value={dob} onChange={e => setDob(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Residential Status" />
-                  <RadioGroup value={residentialStatus} onValueChange={setResidentialStatus} className="flex gap-6 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="resident" id="resident" />
-                      <Label htmlFor="resident">Resident</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="non-resident" id="non-resident" />
-                      <Label htmlFor="non-resident">Non-Resident</Label>
-                    </div>
-                  </RadioGroup>
+                  <label className={FIELD_LABEL_CLASS}>Residential Status <span className="text-destructive">*</span></label>
+                  <select className={FIELD_CLASS} value={residentialStatus} onChange={e => setResidentialStatus(e.target.value)}>
+                    <option value="resident">Resident</option>
+                    <option value="non-resident">Non-Resident</option>
+                  </select>
                 </div>
               </div>
             </Card>
@@ -558,37 +573,41 @@ function IndividualEditForm({
 
           <TabsContent value="address" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className="w-5 h-5 text-primary" />
-                <h4 className={FORM_SECTION_HEADING_CLASS}>Address Information</h4>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Address Information</h4>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="md:col-span-2 space-y-2">
-                  <RequiredLabel text="Address" />
-                  <Input placeholder="Enter address" value={address} onChange={e => setAddress(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>Address <span className="text-destructive">*</span></label>
+                  <Input className={FIELD_CLASS} placeholder="Enter address" value={address} onChange={e => setAddress(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="City" />
-                  <Input placeholder="Enter city" value={city} onChange={e => setCity(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>City <span className="text-destructive">*</span></label>
+                  <Input className={FIELD_CLASS} placeholder="Enter city" value={city} onChange={e => setCity(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Country" />
+                  <label className={FIELD_LABEL_CLASS}>Country <span className="text-destructive">*</span></label>
                   <Combobox
                     options={countries}
                     value={country}
                     onValueChange={handleSingleSelect(setCountry)}
                     placeholder="Select a country"
                     searchPlaceholder="Search country..."
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Nationality" />
+                  <label className={FIELD_LABEL_CLASS}>Nationality <span className="text-destructive">*</span></label>
                   <Combobox
                     options={countries}
                     value={nationality}
                     onValueChange={handleSingleSelect(setNationality)}
                     placeholder="Select a nationality"
                     searchPlaceholder="Search nationality..."
+                    className={FIELD_CLASS}
                   />
                 </div>
               </div>
@@ -597,28 +616,31 @@ function IndividualEditForm({
 
           <TabsContent value="contact" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div className="flex items-center gap-2 mb-4">
-                <Phone className="w-5 h-5 text-primary" />
-                <h4 className={FORM_SECTION_HEADING_CLASS}>Contact Information</h4>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Phone className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Contact Information</h4>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <RequiredLabel text="Country Code" />
+                  <label className={FIELD_LABEL_CLASS}>Country Code <span className="text-destructive">*</span></label>
                   <Combobox
                     options={countryCodes}
                     value={countryCode}
                     onValueChange={handleSingleSelect(setCountryCode)}
                     placeholder="Select"
                     searchPlaceholder="Search code..."
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Contact No" />
-                  <Input placeholder="Enter contact number" value={contactNo} onChange={e => setContactNo(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>Contact No <span className="text-destructive">*</span></label>
+                  <Input className={FIELD_CLASS} placeholder="Enter contact number" value={contactNo} onChange={e => setContactNo(formatContactNumber(e.target.value))} />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Email" />
-                  <Input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>Email <span className="text-destructive">*</span></label>
+                  <Input className={FIELD_CLASS} type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} />
                 </div>
               </div>
             </Card>
@@ -626,13 +648,15 @@ function IndividualEditForm({
 
           <TabsContent value="gender-pep" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-primary" />
-                <h4 className={FORM_SECTION_HEADING_CLASS}>Gender and PEP Status</h4>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <User className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Gender and PEP Status</h4>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <RequiredLabel text="Gender" />
+                  <label className={FIELD_LABEL_CLASS}>Gender <span className="text-destructive">*</span></label>
                   <RadioGroup value={gender} onValueChange={handleGenderRadio} className="flex flex-col gap-2 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="Male" id="male" />
@@ -649,7 +673,7 @@ function IndividualEditForm({
                   </RadioGroup>
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Politically Exposed Person (PEP)?" />
+                  <label className={FIELD_LABEL_CLASS}>Politically Exposed Person (PEP)? <span className="text-destructive">*</span></label>
                   <RadioGroup value={isPep ? "yes" : "no"} onValueChange={handlePepRadio} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="pep-yes" />
@@ -667,29 +691,33 @@ function IndividualEditForm({
 
           <TabsContent value="occupation" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div className="flex items-center gap-2 mb-4">
-                <Briefcase className="w-5 h-5 text-primary" />
-                <h4 className={FORM_SECTION_HEADING_CLASS}>Occupation and Income</h4>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Briefcase className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Occupation and Income</h4>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <RequiredLabel text="Occupation" />
+                  <label className={FIELD_LABEL_CLASS}>Occupation <span className="text-destructive">*</span></label>
                   <Combobox
                     options={occupations}
                     value={occupation}
                     onValueChange={handleOccupation}
                     placeholder="Select an occupation"
                     searchPlaceholder="Search occupation..."
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Source of Income" />
+                  <label className={FIELD_LABEL_CLASS}>Source of Income <span className="text-destructive">*</span></label>
                   <Combobox
                     options={sourceOfIncome}
                     value={sourceIncome}
                     onValueChange={handleSourceIncome}
                     placeholder="Select a source"
                     searchPlaceholder="Search source..."
+                    className={FIELD_CLASS}
                   />
                 </div>
               </div>
@@ -698,29 +726,33 @@ function IndividualEditForm({
 
           <TabsContent value="financial" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div className="flex items-center gap-2 mb-4">
-                <DollarSign className="w-5 h-5 text-primary" />
-                <h4 className={FORM_SECTION_HEADING_CLASS}>Financial Details</h4>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <DollarSign className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Financial Details</h4>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <RequiredLabel text="Purpose" />
+                  <label className={FIELD_LABEL_CLASS}>Purpose <span className="text-destructive">*</span></label>
                   <Combobox
                     options={purposes}
                     value={purpose}
                     onValueChange={handleSingleSelect(setPurpose)}
                     placeholder="Select a purpose"
                     searchPlaceholder="Search purpose..."
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Payment Mode" />
+                  <label className={FIELD_LABEL_CLASS}>Payment Mode <span className="text-destructive">*</span></label>
                   <Combobox
                     options={paymentMethods}
                     value={paymentMethod}
                     onValueChange={handleSingleSelect(setPaymentMethod)}
                     placeholder="Select a payment mode"
                     searchPlaceholder="Search mode..."
+                    className={FIELD_CLASS}
                   />
                 </div>
               </div>
@@ -729,13 +761,15 @@ function IndividualEditForm({
 
           <TabsContent value="transactions" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-primary" />
-                <h4 className={FORM_SECTION_HEADING_CLASS}>Transactions and ID Details</h4>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Transactions and ID Details</h4>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <RequiredLabel text="Product Type" />
+                  <label className={FIELD_LABEL_CLASS}>Product Type <span className="text-destructive">*</span></label>
                   <Combobox
                     options={products}
                     value={productTypes}
@@ -743,34 +777,38 @@ function IndividualEditForm({
                     multiple
                     placeholder="Select product type"
                     searchPlaceholder="Search type..."
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Mode of Approach" />
+                  <label className={FIELD_LABEL_CLASS}>Mode of Approach <span className="text-destructive">*</span></label>
                   <Combobox
                     options={modeOfApproach}
                     value={approach}
                     onValueChange={handleSingleSelect(setApproach)}
                     placeholder="Select mode of approach"
                     searchPlaceholder="Search approach..."
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Expected No of Transactions</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="0" 
+                  <label className={FIELD_LABEL_CLASS}>Expected No of Transactions</label>
+                  <Input
+                    type="number"
+                    placeholder="0"
                     value={expectedNoOfTransactions}
                     onChange={(e) => setExpectedNoOfTransactions(e.target.value)}
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Expected Volume</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="0" 
+                  <label className={FIELD_LABEL_CLASS}>Expected Volume</label>
+                  <Input
+                    type="number"
+                    placeholder="0"
                     value={expectedVolume}
                     onChange={(e) => setExpectedVolume(e.target.value)}
+                    className={FIELD_CLASS}
                   />
                 </div>
               </div>
@@ -779,46 +817,50 @@ function IndividualEditForm({
 
           <TabsContent value="identification" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div className="flex items-center gap-2 mb-4">
-                <IdCard className="w-5 h-5 text-primary" />
-                <h4 className={FORM_SECTION_HEADING_CLASS}>Identification Details</h4>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <IdCard className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Identification Details</h4>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <RequiredLabel text="ID Type" />
+                  <label className={FIELD_LABEL_CLASS}>ID Type <span className="text-destructive">*</span></label>
                   <Combobox
                     options={idTypes}
                     value={idType}
                     onValueChange={handleSingleSelect(setIdType)}
                     placeholder="Select an ID type"
                     searchPlaceholder="Search type..."
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="ID No" />
-                  <Input placeholder="Enter ID number" value={idNo} onChange={e => setIdNo(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>ID No <span className="text-destructive">*</span></label>
+                  <Input className={FIELD_CLASS} placeholder="Enter ID number" value={idNo} onChange={e => setIdNo(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="ID Issued By" />
-                  <Input placeholder="Enter issuing authority" value={issuingAuthority} onChange={e => setIssuingAuthority(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>ID Issued By <span className="text-destructive">*</span></label>
+                  <Input className={FIELD_CLASS} placeholder="Enter issuing authority" value={issuingAuthority} onChange={e => setIssuingAuthority(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="ID Issued At" />
+                  <label className={FIELD_LABEL_CLASS}>ID Issued At <span className="text-destructive">*</span></label>
                   <Combobox
                     options={countries}
                     value={idIssueAtCountry}
                     onValueChange={handleSingleSelect(setIdIssueAtCountry)}
                     placeholder="Select a country"
                     searchPlaceholder="Search country..."
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="ID Issued Date" />
-                  <Input type="date" placeholder="mm/dd/yyyy" value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>ID Issued Date <span className="text-destructive">*</span></label>
+                  <Input className={FIELD_CLASS} type="date" value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="ID Expiry Date" />
-                  <Input type="date" placeholder="mm/dd/yyyy" value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>ID Expiry Date <span className="text-destructive">*</span></label>
+                  <Input className={FIELD_CLASS} type="date" value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
                 </div>
               </div>
             </Card>
@@ -826,33 +868,37 @@ function IndividualEditForm({
 
           <TabsContent value="additional-info" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-primary" />
-                <h4 className={FORM_SECTION_HEADING_CLASS}>Additional Information</h4>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Additional Information</h4>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <RequiredLabel text="Place of Birth" />
+                  <label className={FIELD_LABEL_CLASS}>Place of Birth <span className="text-destructive">*</span></label>
                   <Combobox
                     options={countries}
                     value={placeOfBirth}
                     onValueChange={handleSingleSelect(setPlaceOfBirth)}
                     placeholder="Select a country"
                     searchPlaceholder="Search country..."
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div className="space-y-2">
-                  <RequiredLabel text="Country of Residence" />
+                  <label className={FIELD_LABEL_CLASS}>Country of Residence <span className="text-destructive">*</span></label>
                   <Combobox
                     options={countries}
                     value={countryOfResidence}
                     onValueChange={handleSingleSelect(setCountryOfResidence)}
                     placeholder="Select a country"
                     searchPlaceholder="Search country..."
+                    className={FIELD_CLASS}
                   />
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <RequiredLabel text="Dual Nationality" />
+                  <label className={FIELD_LABEL_CLASS}>Dual Nationality <span className="text-destructive">*</span></label>
                   <RadioGroup value={dualNationality ? "yes" : "no"} onValueChange={handleBooleanRadio(setDualNationality)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="dual-yes" />
@@ -865,8 +911,8 @@ function IndividualEditForm({
                   </RadioGroup>
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <RequiredLabel text="Is Customer Facing any adverse event?" />
-                  <p className="text-xs text-primary mb-2">We don't Check adverse news feed</p>
+                  <label className={FIELD_LABEL_CLASS}>Is Customer Facing any adverse event? <span className="text-destructive">*</span></label>
+                  <p className="text-xs text-primary/80 mb-2">We don't Check adverse news feed</p>
                   <RadioGroup value={adverseNews ? "yes" : "no"} onValueChange={handleBooleanRadio(setAdverseNews)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="adverse-yes" />
@@ -889,8 +935,8 @@ function IndividualEditForm({
                   />
                 </div> */}
                 <div className="md:col-span-2 space-y-2">
-                  <Label>Remarks</Label>
-                  <Textarea placeholder="Enter any remarks" rows={3} value={remarks} onChange={e => setRemarks(e.target.value)} />
+                  <label className={FIELD_LABEL_CLASS}>Remarks</label>
+                  <Textarea placeholder="Enter any remarks" className={TEXTAREA_CLASS} rows={4} value={remarks} onChange={e => setRemarks(e.target.value)} />
                 </div>
               </div>
             </Card>
@@ -898,33 +944,51 @@ function IndividualEditForm({
 
           <TabsContent value="documents" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div
-                className="border-2 border-dashed border-primary/30 rounded-lg p-8 text-center cursor-pointer"
-                onClick={openFilePicker}
-              >
-                <Upload className="w-8 h-8 mx-auto mb-2 text-primary" />
-                <p className="mb-1 text-sm font-semibold tracking-tight text-primary">Add Documents</p>
-                <p className={FORM_SUPPORT_TEXT_CLASS}>Max 5 files, each up to 2MB (Images, PDFs, Docs)</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,.txt,.gif,.bmp,.tiff,.svg,.webp,.heic"
-                  onChange={handleFileChange}
-                  className="mt-2 hidden"
-                />
-                <div className="mt-2 flex flex-col items-center gap-1">
-                  {files.map((file, idx) => (
-                    <span key={idx} className={`${FORM_SUPPORT_TEXT_CLASS} break-all`}>
-                      {file.name} ({(file.size / 1024).toFixed(1)} KB)
-                    </span>
-                  ))}
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Upload className="w-4 h-4" />
                 </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Upload Documents</h4>
+              </div>
+
+              <div className="space-y-4">
+                <label className={FIELD_LABEL_CLASS}>Attachments</label>
+                <div
+                  className="border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors rounded-2xl p-8 text-center cursor-pointer flex flex-col items-center justify-center"
+                  onClick={openFilePicker}
+                >
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                    <Upload className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground mb-1">Click to Upload Documents</p>
+                  <p className="text-xs text-muted-foreground">Max 5 files, each up to 2MB (Images, PDFs, Docs)</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,.txt,.gif,.bmp,.tiff,.svg,.webp,.heic"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
+
+                {files.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                    {files.map((file, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-background/50">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </Card>
           </TabsContent>
 
-          <div className="sticky bottom-0 mt-6 rounded-2xl border border-border/60 bg-background/95 px-3 py-3 shadow-[0_12px_30px_-24px_oklch(0.28_0.06_260/0.5)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className={ACTION_BAR_CLASS}>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <Button
                 type="button"
@@ -973,9 +1037,9 @@ function CorporateEditForm({
 }) {
   const router = useRouter()
   const { toast } = useToast()
-  
+
   const corp = customerData.corporate_detail || {}
-  
+
   // Pre-fill corporate fields
   const [companyName, setCompanyName] = useState(corp.company_name || "")
   const [companyAddress, setCompanyAddress] = useState(corp.company_address || "")
@@ -1003,7 +1067,7 @@ function CorporateEditForm({
   const [isImportExport, setIsImportExport] = useState(!!corp.is_entity_dealting_with_import_export)
   const [hasSisterConcern, setHasSisterConcern] = useState(!!corp.has_sister_concern)
   const [accountHoldingBankName, setAccountHoldingBankName] = useState(corp.account_holding_bank_name || "")
-  
+
   const [productSource, setProductSource] = useState(corp.product_source || "")
   const [paymentMode, setPaymentMode] = useState(corp.payment_mode || "")
   const [deliveryChannel, setDeliveryChannel] = useState(corp.delivery_channel || "")
@@ -1013,7 +1077,7 @@ function CorporateEditForm({
   const [kycDocumentsCollected, setKycDocumentsCollected] = useState(!!corp.kyc_documents_collected_with_form)
   const [isRegisteredInGoaml, setIsRegisteredInGoaml] = useState(!!corp.is_entity_registered_in_GOAML)
   const [hasAdverseNews, setHasAdverseNews] = useState(!!corp.is_entity_having_adverse_news)
-  
+
   // Dropdown options matching create form
   const entity_types = [
     { value: "LLC", label: "LLC" },
@@ -1067,7 +1131,7 @@ function CorporateEditForm({
     { value: "MANAGER", label: "MANAGER" },
     { value: "REPRESENTATIVE", label: "REPRESENTATIVE" },
   ]
-  
+
   const [productTypes, setProductTypes] = useState<string[]>(
     (customerData.products || []).map((p: any) => p.id.toString())
   )
@@ -1078,11 +1142,11 @@ function CorporateEditForm({
   const [remarks, setRemarks] = useState(customerData.remarks || "")
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  
+
   // Related persons
   const [relatedPersons, setRelatedPersons] = useState<any[]>(
     (corp.related_persons || []).map((rp: any) => ({
-      type: rp.type || "individual",
+      type: rp.type || "Individual",
       name: rp.name || "",
       is_pep: !!rp.is_pep,
       nationality: rp.nationality || "",
@@ -1095,7 +1159,7 @@ function CorporateEditForm({
       ownership_percentage: rp.ownership_percentage || "",
     }))
   )
-  
+
   const [activeTab, setActiveTab] = useState("company")
   const [submitting, setSubmitting] = useState(false)
 
@@ -1144,7 +1208,7 @@ function CorporateEditForm({
     setRelatedPersons([
       ...relatedPersons,
       {
-        type: "individual",
+        type: "Individual",
         name: "",
         is_pep: false,
         nationality: "",
@@ -1226,17 +1290,17 @@ function CorporateEditForm({
       products: productTypes,
       country_operations: operationCountries,
     }
-    
+
     console.log("Corporate Update Payload:", payload)
-    
+
     const formData = new FormData()
     formData.append("data", JSON.stringify(payload))
     files.forEach((file) => {
       formData.append("documents[]", file)
     })
-    
+
     console.log("FormData entries:", Array.from(formData.entries()).map(([key, value]) => [key, value instanceof File ? `File: ${value.name}` : value]))
-    
+
     try {
       const res = await fetch(`/api/onboarding/customers/${customerId}`, {
         method: "POST", // Use POST with _method=PUT for FormData
@@ -1260,7 +1324,7 @@ function CorporateEditForm({
       setSubmitting(false)
     }
   }
-  
+
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -1299,67 +1363,71 @@ function CorporateEditForm({
         <form className="space-y-6 pb-0" onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}>
 
           {/* Company Info Tab */}
-          <TabsContent value="company" className="space-y-4">
+          <TabsContent value="company" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Building2 className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Company Information</h4>
+              </div>
               <div className={CORPORATE_GRID_CLASS}>
-                <div className="md:col-span-2">
-                  <RequiredLabel htmlFor="companyName" text="Company Name" />
+                <div className="md:col-span-2 space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Company Name <span className="text-destructive">*</span></label>
                   <Input
-                    id="companyName"
+                    className={FIELD_CLASS}
+                    placeholder="Enter company name"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="Enter company name"
-                    className="mt-1.5"
                   />
                 </div>
-                <div className="md:col-span-2">
-                  <RequiredLabel htmlFor="companyAddress" text="Company Address" />
+                <div className="md:col-span-2 space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Company Address <span className="text-destructive">*</span></label>
                   <Input
-                    id="companyAddress"
+                    className={FIELD_CLASS}
+                    placeholder="Enter full address"
                     value={companyAddress}
                     onChange={(e) => setCompanyAddress(e.target.value)}
-                    placeholder="Enter company address"
-                    className="mt-1.5"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="city">City</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>City <span className="text-destructive">*</span></label>
                   <Input
-                    id="city"
+                    className={FIELD_CLASS}
+                    placeholder="Enter city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="Enter city"
-                    className="mt-1.5"
                   />
                 </div>
-                <div>
-                  <RequiredLabel htmlFor="countryIncorporated" text="Country Incorporated" />
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Country Incorporated <span className="text-destructive">*</span></label>
                   <Combobox
                     options={countries}
                     value={countryIncorporated}
                     onValueChange={handleSingleSelect(setCountryIncorporated)}
                     placeholder="Select country"
                     searchPlaceholder="Search country..."
+                    className={FIELD_CLASS}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="poBox">P.O. Box</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>P.O. Box</label>
                   <Input
-                    id="poBox"
+                    className={FIELD_CLASS}
+                    placeholder="Enter PO Box"
                     value={poBox}
                     onChange={(e) => setPoBox(e.target.value)}
-                    placeholder="Enter P.O. Box"
-                    className="mt-1.5"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="customerType">Customer Type</Label>
-                  <Input
-                    id="customerType"
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Customer Type <span className="text-destructive">*</span></label>
+                  <Combobox
+                    options={occupations}
                     value={customerType}
-                    onChange={(e) => setCustomerType(e.target.value)}
-                    placeholder="Enter customer type"
-                    className="mt-1.5"
+                    onValueChange={handleSingleSelect(setCustomerType)}
+                    placeholder="Select type"
+                    searchPlaceholder="Search type..."
+                    className={FIELD_CLASS}
                   />
                 </div>
               </div>
@@ -1367,58 +1435,63 @@ function CorporateEditForm({
           </TabsContent>
 
           {/* Contact Tab */}
-          <TabsContent value="contact" className="space-y-4">
+          <TabsContent value="contact" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Phone className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Contact Information</h4>
+              </div>
               <div className={CORPORATE_GRID_CLASS}>
-                <div>
-                  <Label htmlFor="officeCountryCode">Office Country Code</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Office No (Country Code) <span className="text-destructive">*</span></label>
                   <Combobox
                     options={countryCodes}
                     value={officeCountryCode}
                     onValueChange={handleSingleSelect(setOfficeCountryCode)}
                     placeholder="Select code"
                     searchPlaceholder="Search code..."
+                    className={FIELD_CLASS}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="officeNo">Office Number</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Office Number <span className="text-destructive">*</span></label>
                   <Input
-                    id="officeNo"
-                    value={officeNo}
-                    onChange={(e) => setOfficeNo(e.target.value)}
+                    className={FIELD_CLASS}
                     placeholder="Enter office number"
-                    className="mt-1.5"
+                    value={officeNo}
+                    onChange={(e) => setOfficeNo(formatContactNumber(e.target.value))}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="mobileCountryCode">Mobile Country Code</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Mobile No (Country Code) <span className="text-destructive">*</span></label>
                   <Combobox
                     options={countryCodes}
                     value={mobileCountryCode}
                     onValueChange={handleSingleSelect(setMobileCountryCode)}
                     placeholder="Select code"
                     searchPlaceholder="Search code..."
+                    className={FIELD_CLASS}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="mobileNo">Mobile Number</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Mobile Number <span className="text-destructive">*</span></label>
                   <Input
-                    id="mobileNo"
-                    value={mobileNo}
-                    onChange={(e) => setMobileNo(e.target.value)}
+                    className={FIELD_CLASS}
                     placeholder="Enter mobile number"
-                    className="mt-1.5"
+                    value={mobileNo}
+                    onChange={(e) => setMobileNo(formatContactNumber(e.target.value))}
                   />
                 </div>
-                <div className="md:col-span-2">
-                  <RequiredLabel htmlFor="email" text="Email" />
+                <div className="md:col-span-2 space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Email Address <span className="text-destructive">*</span></label>
                   <Input
-                    id="email"
+                    className={FIELD_CLASS}
                     type="email"
+                    placeholder="Enter email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter email address"
-                    className="mt-1.5"
                   />
                 </div>
               </div>
@@ -1426,77 +1499,78 @@ function CorporateEditForm({
           </TabsContent>
 
           {/* Identity Information Tab */}
-          <TabsContent value="identity" className="space-y-4">
+          <TabsContent value="identity" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <IdCard className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Identity Information</h4>
+              </div>
               <div className={CORPORATE_GRID_CLASS}>
-                <div>
-                  <Label htmlFor="tradeLicenseNo">Trade License Number</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Trade License Number <span className="text-destructive">*</span></label>
                   <Input
-                    id="tradeLicenseNo"
+                    className={FIELD_CLASS}
+                    placeholder="Enter trade license number"
                     value={tradeLicenseNo}
                     onChange={(e) => setTradeLicenseNo(e.target.value)}
-                    placeholder="Enter trade license number"
-                    className="mt-1.5"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="tradeLicenseIssuedAt">Trade License Issued At</Label>
-                  <Input
-                    id="tradeLicenseIssuedAt"
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Trade License Issued At <span className="text-destructive">*</span></label>
+                  <Combobox
+                    options={countries}
                     value={tradeLicenseIssuedAt}
-                    onChange={(e) => setTradeLicenseIssuedAt(e.target.value)}
-                    placeholder="Enter issuing location"
-                    className="mt-1.5"
+                    onValueChange={handleSingleSelect(setTradeLicenseIssuedAt)}
+                    placeholder="Select country"
+                    searchPlaceholder="Search country..."
+                    className={FIELD_CLASS}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="tradeLicenseIssuedBy">Trade License Issued By</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Trade License Issued By <span className="text-destructive">*</span></label>
                   <Input
-                    id="tradeLicenseIssuedBy"
+                    className={FIELD_CLASS}
+                    placeholder="Enter issuing authority"
                     value={tradeLicenseIssuedBy}
                     onChange={(e) => setTradeLicenseIssuedBy(e.target.value)}
-                    placeholder="Enter issuing authority"
-                    className="mt-1.5"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="licenseIssueDate">License Issue Date</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>License Issue Date <span className="text-destructive">*</span></label>
                   <Input
-                    id="licenseIssueDate"
                     type="date"
+                    className={FIELD_CLASS}
                     value={licenseIssueDate}
                     onChange={(e) => setLicenseIssueDate(e.target.value)}
-                    className="mt-1.5"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="licenseExpiryDate">License Expiry Date</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>License Expiry Date <span className="text-destructive">*</span></label>
                   <Input
-                    id="licenseExpiryDate"
                     type="date"
+                    className={FIELD_CLASS}
                     value={licenseExpiryDate}
                     onChange={(e) => setLicenseExpiryDate(e.target.value)}
-                    className="mt-1.5"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="vatRegistrationNo">VAT Registration Number</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>VAT Registration Number</label>
                   <Input
-                    id="vatRegistrationNo"
+                    className={FIELD_CLASS}
+                    placeholder="Enter VAT registration number"
                     value={vatRegistrationNo}
                     onChange={(e) => setVatRegistrationNo(e.target.value)}
-                    placeholder="Enter VAT registration number"
-                    className="mt-1.5"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="tenancyContractExpiryDate">Tenancy Contract Expiry Date</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Tenancy Contract Expiry Date</label>
                   <Input
-                    id="tenancyContractExpiryDate"
                     type="date"
+                    className={FIELD_CLASS}
                     value={tenancyContractExpiryDate}
                     onChange={(e) => setTenancyContractExpiryDate(e.target.value)}
-                    className="mt-1.5"
                   />
                 </div>
               </div>
@@ -1504,21 +1578,28 @@ function CorporateEditForm({
           </TabsContent>
 
           {/* Operations Information Tab */}
-          <TabsContent value="operations" className="space-y-4">
+          <TabsContent value="operations" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Operations Information</h4>
+              </div>
               <div className={CORPORATE_GRID_CLASS}>
-                <div>
-                  <RequiredLabel htmlFor="entityType" text="Entity Type" />
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Entity Type <span className="text-destructive">*</span></label>
                   <Combobox
                     options={entity_types}
                     value={entityType}
                     onValueChange={handleSingleSelect(setEntityType)}
                     placeholder="Select entity type"
                     searchPlaceholder="Search type..."
+                    className={FIELD_CLASS}
                   />
                 </div>
-                <div>
-                  <RequiredLabel htmlFor="countriesOfOperation" text="Countries of Operation" />
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Countries of Operation <span className="text-destructive">*</span></label>
                   <Combobox
                     options={countries}
                     value={operationCountries}
@@ -1526,20 +1607,22 @@ function CorporateEditForm({
                     multiple
                     placeholder="Select a country"
                     searchPlaceholder="Search country..."
+                    className={FIELD_CLASS}
                   />
                 </div>
-                <div>
-                  <RequiredLabel htmlFor="businessActivity" text="Business Activity" />
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Business Activity <span className="text-destructive">*</span></label>
                   <Combobox
                     options={business_activities}
                     value={businessActivity}
                     onValueChange={handleSingleSelect(setBusinessActivity)}
                     placeholder="Select business activity"
                     searchPlaceholder="Search business activity..."
+                    className={FIELD_CLASS}
                   />
                 </div>
-                <div>
-                  <RequiredLabel text="Is entity dealing with Import/Export?" />
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Is entity dealing with Import/Export? <span className="text-destructive">*</span></label>
                   <RadioGroup value={isImportExport ? "yes" : "no"} onValueChange={handleBooleanRadio(setIsImportExport)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="import-yes" />
@@ -1551,8 +1634,8 @@ function CorporateEditForm({
                     </div>
                   </RadioGroup>
                 </div>
-                <div className="md:col-span-2">
-                  <RequiredLabel text="Any other sister concern/branch?" />
+                <div className="md:col-span-2 space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Any other sister concern/branch? <span className="text-destructive">*</span></label>
                   <RadioGroup value={hasSisterConcern ? "yes" : "no"} onValueChange={handleBooleanRadio(setHasSisterConcern)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="sister-yes" />
@@ -1564,14 +1647,13 @@ function CorporateEditForm({
                     </div>
                   </RadioGroup>
                 </div>
-                <div className="md:col-span-2">
-                  <RequiredLabel htmlFor="accountHoldingBankName" text="Account Holding Bank Name" />
+                <div className="md:col-span-2 space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Account Holding Bank Name <span className="text-destructive">*</span></label>
                   <Input
-                    id="accountHoldingBankName"
+                    className={FIELD_CLASS}
+                    placeholder="Enter bank name (max 50 characters)"
                     value={accountHoldingBankName}
                     onChange={(e) => setAccountHoldingBankName(e.target.value)}
-                    placeholder="Enter bank name (max 50 characters)"
-                    className="mt-1.5"
                   />
                 </div>
               </div>
@@ -1579,22 +1661,29 @@ function CorporateEditForm({
           </TabsContent>
 
           {/* Product Details Tab */}
-          <TabsContent value="product" className="space-y-4">
+          <TabsContent value="product" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Package className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Product Details</h4>
+              </div>
               <div className={CORPORATE_GRID_CLASS}>
-                <div>
-                  <RequiredLabel htmlFor="productTypes" text="Product Type" />
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Product Type <span className="text-destructive">*</span></label>
                   <Combobox
                     options={products}
                     value={productTypes}
                     onValueChange={handleMultiSelect(setProductTypes)}
                     multiple
-                    placeholder="Select Product Type"
+                    placeholder="Select product type"
                     searchPlaceholder="Search type..."
+                    className={FIELD_CLASS}
                   />
                 </div>
-                <div>
-                  <RequiredLabel htmlFor="productSource" text="Product Source" />
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Product Source <span className="text-destructive">*</span></label>
                   <Combobox
                     options={product_sources}
                     value={productSource}
@@ -1603,50 +1692,50 @@ function CorporateEditForm({
                     searchPlaceholder="Search source..."
                   />
                 </div>
-                <div>
-                  <RequiredLabel htmlFor="paymentMode" text="Payment Mode" />
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Payment Mode <span className="text-destructive">*</span></label>
                   <Combobox
                     options={payment_modes}
                     value={paymentMode}
                     onValueChange={handleSingleSelect(setPaymentMode)}
                     placeholder="Select payment mode"
                     searchPlaceholder="Search mode..."
+                    className={FIELD_CLASS}
                   />
                 </div>
-                <div>
-                  <RequiredLabel htmlFor="deliveryChannel" text="Delivery Channel" />
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Delivery Channel <span className="text-destructive">*</span></label>
                   <Combobox
                     options={delivery_channels}
                     value={deliveryChannel}
                     onValueChange={handleSingleSelect(setDeliveryChannel)}
                     placeholder="Select delivery channel"
                     searchPlaceholder="Search channel..."
+                    className={FIELD_CLASS}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="expectedNoOfTransactions">Expected No of Transactions</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Expected No of Transactions</label>
                   <Input
-                    id="expectedNoOfTransactions"
+                    className={FIELD_CLASS}
                     type="number"
                     placeholder="0"
                     value={expectedNoOfTransactions}
                     onChange={(e) => setExpectedNoOfTransactions(e.target.value)}
-                    className="mt-1.5"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="expectedVolume">Expected Volume</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Expected Volume</label>
                   <Input
-                    id="expectedVolume"
+                    className={FIELD_CLASS}
                     type="number"
                     placeholder="0"
                     value={expectedVolume}
                     onChange={(e) => setExpectedVolume(e.target.value)}
-                    className="mt-1.5"
                   />
                 </div>
-                <div className="md:col-span-2">
-                  <RequiredLabel text="Deal with Goods?" />
+                <div className="md:col-span-2 space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Deal with Goods? <span className="text-destructive">*</span></label>
                   <RadioGroup value={dualUseGoods ? "yes" : "no"} onValueChange={handleBooleanRadio(setDualUseGoods)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="goods-yes" />
@@ -1663,11 +1752,17 @@ function CorporateEditForm({
           </TabsContent>
 
           {/* AML Compliance Tab */}
-          <TabsContent value="aml" className="space-y-4">
+          <TabsContent value="aml" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">AML Compliance</h4>
+              </div>
               <div className={CORPORATE_GRID_CLASS}>
-                <div>
-                  <Label>KYC Documents Collected</Label>
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>KYC Documents Collected <span className="text-destructive">*</span></label>
                   <RadioGroup value={kycDocumentsCollected ? "yes" : "no"} onValueChange={handleBooleanRadio(setKycDocumentsCollected)} className="flex gap-4 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="kyc-yes" />
@@ -1679,9 +1774,9 @@ function CorporateEditForm({
                     </div>
                   </RadioGroup>
                 </div>
-                <div>
-                  <Label>Registered in GOAML</Label>
-                  <RadioGroup value={isRegisteredInGoaml ? "yes" : "no"} onValueChange={handleBooleanRadio(setIsRegisteredInGoaml)} className="flex gap-4 mt-2">
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Registered in GOAML <span className="text-destructive">*</span></label>
+                  <RadioGroup value={isRegisteredInGoaml ? "yes" : "no"} onValueChange={handleBooleanRadio(setIsRegisteredInGoaml)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="goaml-yes" />
                       <Label htmlFor="goaml-yes" className="font-normal cursor-pointer">Yes</Label>
@@ -1692,9 +1787,9 @@ function CorporateEditForm({
                     </div>
                   </RadioGroup>
                 </div>
-                <div>
-                  <Label>Adverse News</Label>
-                  <RadioGroup value={hasAdverseNews ? "yes" : "no"} onValueChange={handleBooleanRadio(setHasAdverseNews)} className="flex gap-4 mt-2">
+                <div className="space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Adverse News <span className="text-destructive">*</span></label>
+                  <RadioGroup value={hasAdverseNews ? "yes" : "no"} onValueChange={handleBooleanRadio(setHasAdverseNews)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="adverse-yes" />
                       <Label htmlFor="adverse-yes" className="font-normal cursor-pointer">Yes</Label>
@@ -1729,8 +1824,8 @@ function CorporateEditForm({
                             const value = current === true ? "yes" : current === false ? "no" : ""
 
                             return (
-                              <div key={qa.id || `${qid}-${qText}`} className="rounded-md border bg-white p-3">
-                                <div className={FORM_QUESTION_TEXT_CLASS}>{qText}</div>
+                              <div key={qa.id || `${qid}-${qText}`} className="rounded-xl border border-border/60 bg-background/50 p-5 shadow-sm">
+                                <div className={FORM_QUESTION_TEXT_CLASS}>{qText} <span className="text-destructive">*</span></div>
                                 <div className="mt-3">
                                   <RadioGroup
                                     value={value}
@@ -1762,37 +1857,45 @@ function CorporateEditForm({
           </TabsContent>
 
           {/* Partner/Representative Tab */}
-          <TabsContent value="related" className="space-y-4">
+          <TabsContent value="related" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div className="flex items-center justify-between mb-4">
-                <Label>Partner/Representative/Authorized Person Details</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addRelatedPerson}>
+              <div className="flex items-center justify-between mb-6 border-b border-border/50 pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Partner/Representative Details</h4>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={addRelatedPerson} className="rounded-full shadow-sm hover:translate-y-[-1px] transition-all">
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Another Representative
+                  Add Representative
                 </Button>
               </div>
-              
+
               {relatedPersons.map((person, index) => (
-                <Card key={index} className="p-4 mb-4 bg-muted/40">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className={`${FORM_SECTION_HEADING_CLASS} flex items-center gap-2`}>
-                      <User className="w-4 h-4" />
-                      UBO {index + 1}
-                    </h4>
+                <div key={index} className="relative group p-6 rounded-2xl border border-border/50 bg-muted/20 mb-6 last:mb-0 transition-all hover:bg-muted/30">
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                        {index + 1}
+                      </div>
+                      <h5 className="font-semibold text-sm text-foreground uppercase tracking-wider">Representative Information</h5>
+                    </div>
                     {relatedPersons.length > 1 && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => removeRelatedPerson(index)}
+                        className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive p-0"
                       >
-                        <Trash2 className="w-4 h-4 text-red-600" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     )}
                   </div>
                   <div className={RELATED_PERSON_GRID_CLASS}>
-                    <div>
-                      <RequiredLabel className="text-xs" text="Type" />
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>Type <span className="text-destructive">*</span></label>
                       <Combobox
                         options={[
                           { value: "Individual", label: "Individual" },
@@ -1801,24 +1904,24 @@ function CorporateEditForm({
                         value={person.type}
                         onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "type", v)}
                         placeholder="Select type"
-                        searchPlaceholder="Search type..."
+                        className={FIELD_CLASS}
                       />
                     </div>
-                    <div>
-                      <RequiredLabel className="text-xs" text="Name" />
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>Full Name <span className="text-destructive">*</span></label>
                       <Input
+                        className={FIELD_CLASS}
                         value={person.name}
                         onChange={(e) => updateRelatedPerson(index, "name", e.target.value)}
-                        placeholder="Enter Name"
-                        className="mt-1"
+                        placeholder="Enter full name"
                       />
                     </div>
-                    <div className="md:col-span-2">
-                      <RequiredLabel className="text-xs" text="Previously Exposed Person (PEP)?" />
-                      <RadioGroup 
-                        value={person.is_pep ? "yes" : "no"} 
-                        onValueChange={(v) => updateRelatedPerson(index, "is_pep", v === "yes")} 
-                        className="flex gap-6 mt-1"
+                    <div className="md:col-span-2 space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>Previously Exposed Person (PEP)? <span className="text-destructive">*</span></label>
+                      <RadioGroup
+                        value={person.is_pep ? "yes" : "no"}
+                        onValueChange={(v) => updateRelatedPerson(index, "is_pep", v === "yes")}
+                        className="flex gap-8 mt-2"
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="yes" id={`pep-yes-${index}`} />
@@ -1830,125 +1933,120 @@ function CorporateEditForm({
                         </div>
                       </RadioGroup>
                     </div>
-                    <div>
-                      <Label className="text-xs">Nationality</Label>
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>Nationality <span className="text-destructive">*</span></label>
                       <Combobox
                         options={countries}
                         value={person.nationality}
                         onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "nationality", v)}
                         placeholder="Select nationality"
-                        searchPlaceholder="Search nationality..."
+                        className={FIELD_CLASS}
                       />
                     </div>
-                    <div>
-                      <RequiredLabel className="text-xs" text="ID Type" />
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>ID Type <span className="text-destructive">*</span></label>
                       <Combobox
                         options={idTypes}
                         value={person.id_type}
                         onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "id_type", v)}
                         placeholder="Passport"
-                        searchPlaceholder="Search type..."
+                        className={FIELD_CLASS}
                       />
                     </div>
-                    <div>
-                      <RequiredLabel className="text-xs" text="ID No/License No" />
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>ID No/License No <span className="text-destructive">*</span></label>
                       <Input
+                        className={FIELD_CLASS}
                         value={person.id_no}
                         onChange={(e) => updateRelatedPerson(index, "id_no", e.target.value)}
                         placeholder="Enter ID License No"
-                        className="mt-1"
                       />
                     </div>
-                    <div>
-                      <RequiredLabel className="text-xs" text="ID Issue Date" />
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>ID Issue Date <span className="text-destructive">*</span></label>
                       <Input
                         type="date"
-                        placeholder="mm/dd/yyyy"
+                        className={FIELD_CLASS}
                         value={person.id_issue_date}
                         onChange={(e) => updateRelatedPerson(index, "id_issue_date", e.target.value)}
-                        className="mt-1"
                       />
                     </div>
-                    <div>
-                      <RequiredLabel className="text-xs" text="ID Expiry Date" />
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>ID Expiry Date <span className="text-destructive">*</span></label>
                       <Input
                         type="date"
-                        placeholder="mm/dd/yyyy"
+                        className={FIELD_CLASS}
                         value={person.id_expiry_date}
                         onChange={(e) => updateRelatedPerson(index, "id_expiry_date", e.target.value)}
-                        className="mt-1"
                       />
                     </div>
-                    <div>
-                      <RequiredLabel className="text-xs" text="Date of Birth" />
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>Date of Birth <span className="text-destructive">*</span></label>
                       <Input
                         type="date"
-                        placeholder="mm/dd/yyyy"
+                        className={FIELD_CLASS}
                         value={person.dob}
                         onChange={(e) => updateRelatedPerson(index, "dob", e.target.value)}
-                        className="mt-1"
                       />
                     </div>
-                    <div>
-                      <RequiredLabel className="text-xs" text="Role" />
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>Role <span className="text-destructive">*</span></label>
                       <Combobox
                         options={roles}
                         value={person.role}
                         onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "role", v)}
-                        placeholder="UBO"
-                        searchPlaceholder="Search role..."
+                        placeholder="Select role"
+                        className={FIELD_CLASS}
                       />
                     </div>
-                    <div>
-                      <RequiredLabel className="text-xs" text="Percentage of Share" />
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>Percentage of Share <span className="text-destructive">*</span></label>
                       <Input
+                        className={FIELD_CLASS}
                         value={person.ownership_percentage}
                         onChange={(e) => updateRelatedPerson(index, "ownership_percentage", e.target.value)}
-                        placeholder="Enter Percentage (0-100)"
-                        className="mt-1"
+                        placeholder="Enter percentage (0-100)"
                       />
                     </div>
                   </div>
-                </Card>
+                </div>
               ))}
             </Card>
           </TabsContent>
 
-          {/* Additional Information Tab */}
-          <TabsContent value="additional" className="space-y-4">
+          <TabsContent value="additional" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Additional Information</h4>
+              </div>
               <div className={CORPORATE_GRID_CLASS}>
-                {/* <div>
-                  <Label htmlFor="fuzziness">Screening Fuzziness</Label>
-                  <Combobox
-                    options={screeningFuzziness}
-                    value={fuzziness}
-                    onValueChange={handleSingleSelect(setFuzziness)}
-                    placeholder="Select fuzziness"
-                    searchPlaceholder="Search fuzziness..."
-                  />
-                </div> */}
-                <div className="md:col-span-2">
-                  <Label htmlFor="remarks">Remarks</Label>
+                <div className="md:col-span-2 space-y-2">
+                  <label className={FIELD_LABEL_CLASS}>Remarks</label>
                   <Textarea
-                    id="remarks"
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
                     placeholder="Enter any additional remarks"
-                    className="mt-1.5"
-                    rows={3}
+                    className={TEXTAREA_CLASS}
+                    rows={4}
                   />
                 </div>
               </div>
             </Card>
           </TabsContent>
 
-          {/* Documents Tab */}
-          <TabsContent value="documents" className="space-y-4">
+          <TabsContent value="documents" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
-              <div className="space-y-4">
-                <Label>Upload Documents</Label>
-                <div className="border-2 border-dashed rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Upload className="w-4 h-4" />
+                </div>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Upload Documents</h4>
+              </div>
+              <div className="space-y-6">
+                <div className="relative group cursor-pointer">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -1957,27 +2055,35 @@ function CorporateEditForm({
                     multiple
                     accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                   />
-                  <Button type="button" variant="outline" onClick={openFilePicker} className="w-full">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Choose Files
-                  </Button>
-                  {files.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {files.map((f, i) => (
-                        <div key={i} className="text-sm text-muted-foreground">{f.name}</div>
-                      ))}
+                  <div
+                    onClick={openFilePicker}
+                    className="flex flex-col items-center justify-center min-h-[160px] rounded-2xl border-2 border-dashed border-border/60 bg-muted/20 px-6 py-10 transition-all hover:border-primary/40 hover:bg-muted/30 group-hover:shadow-md"
+                  >
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform group-hover:scale-110">
+                      <Upload className="h-6 w-6" />
                     </div>
-                  )}
+                    <p className="mb-1 text-sm font-semibold text-foreground">Click to upload documents</p>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Support for PDF, JPG, PNG, DOC (max 10MB per file)
+                    </p>
+                  </div>
                 </div>
+                {files.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {files.map((f, i) => (
+                      <div key={i} className="text-sm text-muted-foreground">{f.name}</div>
+                    ))}
+                  </div>
+                )}
               </div>
             </Card>
           </TabsContent>
 
-          <div className="sticky bottom-0 mt-6 rounded-2xl border border-border/60 bg-background/95 px-3 py-3 shadow-[0_12px_30px_-24px_oklch(0.28_0.06_260/0.5)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className={ACTION_BAR_CLASS}>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 className={`w-full sm:w-auto ${CANCEL_BUTTON_CLASS}`}
                 onClick={() => router.push("/dashboard/customers")}
                 disabled={submitting}
@@ -1996,8 +2102,8 @@ function CorporateEditForm({
               </Button>
             </div>
           </div>
-        </form>
-      </Tabs>
-    </div>
+        </form >
+      </Tabs >
+    </div >
   )
 }

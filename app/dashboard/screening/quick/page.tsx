@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,6 +25,21 @@ function clampPercent(value: string) {
   return String(Math.min(100, Math.max(10, n)))
 }
 
+const PAGE_CLASS = "space-y-8 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
+const CARD_STYLE =
+  "rounded-3xl border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
+const FIELD_LABEL_CLASS = "block text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+const FIELD_GROUP_CLASS = "space-y-2"
+const FIELD_CLASS =
+  "h-10 w-full rounded-xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground"
+const SELECT_TRIGGER_CLASS =
+  "!h-10 w-full rounded-xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20"
+const TABS_BAR_CLASS =
+  "sticky top-0 z-20 mb-4 rounded-2xl border border-border/50 bg-background/80 px-2 py-3 backdrop-blur-md"
+const TABS_LIST_CLASS = "grid h-auto w-full grid-cols-1 gap-1 bg-transparent p-0 sm:grid-cols-3"
+const TABS_TRIGGER_CLASS =
+  "h-10 w-full justify-center rounded-xl px-3 text-sm font-medium text-muted-foreground transition data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+
 const ConfidenceInput = React.memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
   const numValue = value === "" ? 10 : Number(value)
   const safeValue = Number.isFinite(numValue) ? Math.min(100, Math.max(10, numValue)) : 10
@@ -32,9 +47,9 @@ const ConfidenceInput = React.memo(({ value, onChange }: { value: string; onChan
   const percentage = ((safeValue - 10) / 90) * 100
 
   return (
-    <div className="space-y-2">
+    <div className={FIELD_GROUP_CLASS}>
       <div className="flex items-center justify-between">
-        <Label>Confidence rating</Label>
+        <Label className={FIELD_LABEL_CLASS}>Confidence rating</Label>
         <div className="text-sm text-muted-foreground tabular-nums">{safeValue}%</div>
       </div>
 
@@ -47,7 +62,7 @@ const ConfidenceInput = React.memo(({ value, onChange }: { value: string; onChan
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="10 - 100"
-          className="w-28"
+          className={`${FIELD_CLASS} w-28`}
         />
         <div className="flex-1">
           <input
@@ -58,9 +73,9 @@ const ConfidenceInput = React.memo(({ value, onChange }: { value: string; onChan
             step={1}
             value={safeValue}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full accent-blue-600 cursor-pointer h-2 rounded-lg appearance-none bg-gray-200"
+            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 accent-primary"
             style={{
-              background: `linear-gradient(to right, #2563eb 0%, #2563eb ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`
+              background: `linear-gradient(to right, #7c3aed 0%, #7c3aed ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`
             }}
           />
         </div>
@@ -97,8 +112,6 @@ export default function QuickScreeningPage() {
   const [vConfidence, setVConfidence] = React.useState("")
 
   const [searching, setSearching] = React.useState(false)
-  const [results, setResults] = React.useState<any>(null)
-
   React.useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -157,7 +170,6 @@ export default function QuickScreeningPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSearching(true)
-    setResults(null)
     try {
       const params = buildQuery()
       const res = await fetch(`/api/sanction-entities?${params.toString()}`, { method: "GET", credentials: "include" })
@@ -204,94 +216,84 @@ export default function QuickScreeningPage() {
       onValueChange={(v) => typeof v === "string" && onChange(v)} 
       placeholder={countriesLoading ? "Loading..." : placeholder}
       searchPlaceholder="Search country..."
+      className={FIELD_CLASS}
+      matchTriggerWidth
       // disabled={countriesLoading}
     />
   )
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <Search className="w-6 h-6" />
-        <h1 className="text-2xl font-semibold">Screening</h1>
-      </div>
-
-      <Card>
-        <CardHeader className="bg-blue-50/50 border-b">
-          <div className="flex items-center gap-2">
-            <Search className="w-5 h-5 text-blue-600" />
-            <CardTitle className="text-base font-medium">Name Screening</CardTitle>
+    <div className={PAGE_CLASS}>
+      <Card className={`${CARD_STYLE} relative overflow-hidden border-border/60 bg-gradient-to-br from-background via-background to-primary/10`}>
+        <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+        <CardContent className="relative p-5 sm:p-6">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+              <Search className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">Quick Screening</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Screen individuals, corporates, or vessels against sanctions data.
+              </p>
+            </div>
           </div>
-        </CardHeader>
-
-        <CardContent className="pt-6 px-2">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)} className="w-full">
-            <TabsList className="w-full grid grid-cols-3 gap-0 p-0 bg-gradient-to-b from-slate-50 to-slate-100 border rounded-xl overflow-hidden">
-              <TabsTrigger
-                value="individual"
-                className="h-14 rounded-none text-base font-semibold px-6 gap-2
-                  data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-violet-600
-                  data-[state=active]:text-white data-[state=active]:shadow-inner
-                  data-[state=inactive]:text-slate-700 data-[state=inactive]:bg-transparent
-                  transition-all duration-300"
-              >
-                <Users className="w-4 h-4" />
-                Individual
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="entity"
-                className="h-14 rounded-none text-base font-semibold px-6 gap-2 border-x
-                  data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-violet-600
-                  data-[state=active]:text-white data-[state=active]:shadow-inner
-                  data-[state=inactive]:text-slate-700 data-[state=inactive]:bg-transparent
-                  transition-all duration-300"
-              >
-                <Building2 className="w-4 h-8" />
-                Corporate
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="vessel"
-                className="h-14 rounded-none text-base font-semibold px-6 gap-2
-                  data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-violet-600
-                  data-[state=active]:text-white data-[state=active]:shadow-inner
-                  data-[state=inactive]:text-slate-700 data-[state=inactive]:bg-transparent
-                  transition-all duration-300"
-              >
-                <Ship className="w-4 h-4" />
-                Vessel
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="pt-6 space-y-6">
+      <Card className={CARD_STYLE}>
+        <CardContent className="p-5 sm:p-6">
           <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)} className="w-full">
+            <div className="mb-6 border-b border-border/50 pb-4">
+              <div className="flex items-center">
+                <h2 className="text-lg font-semibold tracking-tight text-foreground">Search Criteria</h2>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Select a subject type and provide available details to improve screening accuracy.
+              </p>
+            </div>
+
+            <div className={TABS_BAR_CLASS}>
+              <TabsList className={TABS_LIST_CLASS}>
+                <TabsTrigger value="individual" className={TABS_TRIGGER_CLASS}>
+                  <Users className="h-4 w-4" />
+                  Individual
+                </TabsTrigger>
+                <TabsTrigger value="entity" className={TABS_TRIGGER_CLASS}>
+                  <Building2 className="h-4 w-4" />
+                  Corporate
+                </TabsTrigger>
+                <TabsTrigger value="vessel" className={TABS_TRIGGER_CLASS}>
+                  <Ship className="h-4 w-4" />
+                  Vessel
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
             <form className="space-y-6" onSubmit={onSubmit} onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}>
-              <TabsContent value="individual" className="mt-0 space-y-4 transition-all duration-300 data-[state=inactive]:hidden">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
+              <TabsContent value="individual" className="mt-0 space-y-4">
+                <div className={FIELD_GROUP_CLASS}>
+                  <Label className={`${FIELD_LABEL_CLASS} flex items-center gap-2`}>
                     <Users className="w-4 h-4" />
                     Name
                   </Label>
-                  <Input value={iName} onChange={(e) => setIName(e.target.value)} placeholder="Enter name" />
+                  <Input className={FIELD_CLASS} value={iName} onChange={(e) => setIName(e.target.value)} placeholder="Enter name" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className={FIELD_GROUP_CLASS}>
+                    <Label className={`${FIELD_LABEL_CLASS} flex items-center gap-2`}>
                       <Calendar className="w-4 h-4" />
                       Date of Birth
                     </Label>
-                    <Input type="date" value={iDob} onChange={(e) => setIDob(e.target.value)} />
+                    <Input className={FIELD_CLASS} type="date" value={iDob} onChange={(e) => setIDob(e.target.value)} />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Gender</Label>
+                  <div className={FIELD_GROUP_CLASS}>
+                    <Label className={FIELD_LABEL_CLASS}>Gender</Label>
                     <Select value={iGender} onValueChange={setIGender}>
-                      <SelectTrigger>
+                      <SelectTrigger className={SELECT_TRIGGER_CLASS}>
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
                       <SelectContent>
@@ -303,8 +305,8 @@ export default function QuickScreeningPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
+                <div className={FIELD_GROUP_CLASS}>
+                  <Label className={`${FIELD_LABEL_CLASS} flex items-center gap-2`}>
                     <Globe className="w-4 h-4" />
                     Nationality
                   </Label>
@@ -314,63 +316,64 @@ export default function QuickScreeningPage() {
                 <ConfidenceInput value={iConfidence} onChange={setIConfidence} />
               </TabsContent>
 
-              <TabsContent value="entity" className="mt-0 space-y-4 transition-all duration-300 data-[state=inactive]:hidden">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4" />
-                    Name
-                  </Label>
-                  <Input value={eName} onChange={(e) => setEName(e.target.value)} placeholder="Enter name" />
-                </div>
+              <TabsContent value="entity" className="mt-0 space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className={`${FIELD_GROUP_CLASS} md:col-span-2`}>
+                    <Label className={`${FIELD_LABEL_CLASS} flex items-center gap-2`}>
+                      <Building2 className="w-4 h-4" />
+                      Name
+                    </Label>
+                    <Input className={FIELD_CLASS} value={eName} onChange={(e) => setEName(e.target.value)} placeholder="Enter name" />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Country of Incorporation</Label>
-                  <CountrySelect value={eCountry} onChange={setECountry} placeholder="Select country" />
-                </div>
+                  <div className={FIELD_GROUP_CLASS}>
+                    <Label className={FIELD_LABEL_CLASS}>Country of Incorporation</Label>
+                    <CountrySelect value={eCountry} onChange={setECountry} placeholder="Select country" />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Address</Label>
-                  <Input value={eAddress} onChange={(e) => setEAddress(e.target.value)} placeholder="Enter address" />
+                  <div className={FIELD_GROUP_CLASS}>
+                    <Label className={FIELD_LABEL_CLASS}>Address</Label>
+                    <Input className={FIELD_CLASS} value={eAddress} onChange={(e) => setEAddress(e.target.value)} placeholder="Enter address" />
+                  </div>
                 </div>
 
                 <ConfidenceInput value={eConfidence} onChange={setEConfidence} />
               </TabsContent>
 
-              <TabsContent value="vessel" className="mt-0 space-y-4 transition-all duration-300 data-[state=inactive]:hidden">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Ship className="w-4 h-4" />
-                    Name
-                  </Label>
-                  <Input value={vName} onChange={(e) => setVName(e.target.value)} placeholder="Enter name" />
-                </div>
+              <TabsContent value="vessel" className="mt-0 space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className={FIELD_GROUP_CLASS}>
+                    <Label className={`${FIELD_LABEL_CLASS} flex items-center gap-2`}>
+                      <Ship className="w-4 h-4" />
+                      Name
+                    </Label>
+                    <Input className={FIELD_CLASS} value={vName} onChange={(e) => setVName(e.target.value)} placeholder="Enter name" />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>IMO Number</Label>
-                  <Input value={vImo} onChange={(e) => setVImo(e.target.value)} placeholder="Enter IMO number" />
-                </div>
+                  <div className={FIELD_GROUP_CLASS}>
+                    <Label className={FIELD_LABEL_CLASS}>IMO Number</Label>
+                    <Input className={FIELD_CLASS} value={vImo} onChange={(e) => setVImo(e.target.value)} placeholder="Enter IMO number" />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Country</Label>
-                  <CountrySelect value={vCountry} onChange={setVCountry} placeholder="Select country" />
+                  <div className={`${FIELD_GROUP_CLASS} md:col-span-2`}>
+                    <Label className={FIELD_LABEL_CLASS}>Country</Label>
+                    <CountrySelect value={vCountry} onChange={setVCountry} placeholder="Select country" />
+                  </div>
                 </div>
 
                 <ConfidenceInput value={vConfidence} onChange={setVConfidence} />
               </TabsContent>
 
-              <Button className="w-full" size="lg" type="submit" disabled={searching}>
-                <Search className="w-4 h-4 mr-2" />
-                {searching ? "Searching..." : "Search"}
-              </Button>
+              <div className="sticky bottom-0 z-10 mt-6 border-t border-border/60 bg-background/95 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+                <div className="flex justify-end">
+                  <Button className="h-12 min-w-[180px] rounded-xl px-6 text-base font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl" type="submit" disabled={searching}>
+                    <Search className="mr-2 h-4 w-4" />
+                    {searching ? "Searching..." : "Search"}
+                  </Button>
+                </div>
+              </div>
             </form>
           </Tabs>
-
-          {results ? (
-            <div className="border rounded-md p-4">
-              <div className="font-medium mb-2">Results</div>
-              <pre className="text-xs overflow-auto max-h-80">{JSON.stringify(results, null, 2)}</pre>
-            </div>
-          ) : null}
         </CardContent>
       </Card>
     </div>
