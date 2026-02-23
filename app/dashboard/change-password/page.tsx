@@ -5,7 +5,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { RequiredLabel } from "@/components/ui/required-label"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { KeyRound, Eye, EyeOff, ArrowLeft } from "lucide-react"
@@ -151,9 +151,7 @@ export default function ChangePasswordPage() {
         <CardContent className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_280px]">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="currentPassword" className={FIELD_LABEL_CLASS}>
-                Current Password
-              </Label>
+              <RequiredLabel htmlFor="currentPassword" text="Current Password" className={FIELD_LABEL_CLASS} />
               <div className="relative">
                 <Input
                   id="currentPassword"
@@ -175,9 +173,7 @@ export default function ChangePasswordPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="newPassword" className={FIELD_LABEL_CLASS}>
-                New Password
-              </Label>
+              <RequiredLabel htmlFor="newPassword" text="New Password" className={FIELD_LABEL_CLASS} />
               <div className="relative">
                 <Input
                   id="newPassword"
@@ -199,9 +195,7 @@ export default function ChangePasswordPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className={FIELD_LABEL_CLASS}>
-                Confirm New Password
-              </Label>
+              <RequiredLabel htmlFor="confirmPassword" text="Confirm New Password" className={FIELD_LABEL_CLASS} />
               <div className="relative">
                 <Input
                   id="confirmPassword"

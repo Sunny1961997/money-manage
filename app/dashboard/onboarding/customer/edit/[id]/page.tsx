@@ -549,19 +549,19 @@ function IndividualEditForm({
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>First Name <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="First Name" className={FIELD_LABEL_CLASS} />
                   <Input className={FIELD_CLASS} placeholder="Enter first name" value={firstName} onChange={e => setFirstName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Last Name <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Last Name" className={FIELD_LABEL_CLASS} />
                   <Input className={FIELD_CLASS} placeholder="Enter last name" value={lastName} onChange={e => setLastName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Date of Birth <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Date of Birth" className={FIELD_LABEL_CLASS} />
                   <Input className={FIELD_CLASS} type="date" value={dob} onChange={e => setDob(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Residential Status <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Residential Status" className={FIELD_LABEL_CLASS} />
                   <select className={FIELD_CLASS} value={residentialStatus} onChange={e => setResidentialStatus(e.target.value)}>
                     <option value="resident">Resident</option>
                     <option value="non-resident">Non-Resident</option>
@@ -581,15 +581,15 @@ function IndividualEditForm({
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="md:col-span-2 space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Address <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Address" className={FIELD_LABEL_CLASS} />
                   <Input className={FIELD_CLASS} placeholder="Enter address" value={address} onChange={e => setAddress(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>City <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="City" className={FIELD_LABEL_CLASS} />
                   <Input className={FIELD_CLASS} placeholder="Enter city" value={city} onChange={e => setCity(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Country <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Country" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={countries}
                     value={country}
@@ -600,7 +600,7 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Nationality <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Nationality" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={countries}
                     value={nationality}
@@ -624,7 +624,7 @@ function IndividualEditForm({
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Country Code <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Country Code" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={countryCodes}
                     value={countryCode}
@@ -635,11 +635,11 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Contact No <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Contact No" className={FIELD_LABEL_CLASS} />
                   <Input className={FIELD_CLASS} placeholder="Enter contact number" value={contactNo} onChange={e => setContactNo(formatContactNumber(e.target.value))} />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Email <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Email" className={FIELD_LABEL_CLASS} />
                   <Input className={FIELD_CLASS} type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} />
                 </div>
               </div>
@@ -656,7 +656,7 @@ function IndividualEditForm({
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Gender <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Gender" className={FIELD_LABEL_CLASS} />
                   <RadioGroup value={gender} onValueChange={handleGenderRadio} className="flex flex-col gap-2 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="Male" id="male" />
@@ -673,7 +673,7 @@ function IndividualEditForm({
                   </RadioGroup>
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Politically Exposed Person (PEP)? <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Politically Exposed Person (PEP)?" className={FIELD_LABEL_CLASS} />
                   <RadioGroup value={isPep ? "yes" : "no"} onValueChange={handlePepRadio} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="pep-yes" />
@@ -699,7 +699,7 @@ function IndividualEditForm({
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Occupation <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Occupation" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={occupations}
                     value={occupation}
@@ -710,7 +710,7 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Source of Income <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Source of Income" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={sourceOfIncome}
                     value={sourceIncome}
@@ -734,7 +734,7 @@ function IndividualEditForm({
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Purpose <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Purpose" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={purposes}
                     value={purpose}
@@ -745,7 +745,7 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Payment Mode <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Payment Mode" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={paymentMethods}
                     value={paymentMethod}
@@ -769,7 +769,7 @@ function IndividualEditForm({
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Product Type <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Product Type" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={products}
                     value={productTypes}
@@ -781,7 +781,7 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Mode of Approach <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Mode of Approach" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={modeOfApproach}
                     value={approach}
@@ -825,7 +825,7 @@ function IndividualEditForm({
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>ID Type <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="ID Type" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={idTypes}
                     value={idType}
@@ -836,15 +836,15 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>ID No <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="ID No" className={FIELD_LABEL_CLASS} />
                   <Input className={FIELD_CLASS} placeholder="Enter ID number" value={idNo} onChange={e => setIdNo(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>ID Issued By <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="ID Issued By" className={FIELD_LABEL_CLASS} />
                   <Input className={FIELD_CLASS} placeholder="Enter issuing authority" value={issuingAuthority} onChange={e => setIssuingAuthority(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>ID Issued At <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="ID Issued At" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={countries}
                     value={idIssueAtCountry}
@@ -855,11 +855,11 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>ID Issued Date <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="ID Issued Date" className={FIELD_LABEL_CLASS} />
                   <Input className={FIELD_CLASS} type="date" value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>ID Expiry Date <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="ID Expiry Date" className={FIELD_LABEL_CLASS} />
                   <Input className={FIELD_CLASS} type="date" value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
                 </div>
               </div>
@@ -876,7 +876,7 @@ function IndividualEditForm({
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Place of Birth <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Place of Birth" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={countries}
                     value={placeOfBirth}
@@ -887,7 +887,7 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Country of Residence <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Country of Residence" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={countries}
                     value={countryOfResidence}
@@ -898,7 +898,7 @@ function IndividualEditForm({
                   />
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Dual Nationality <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Dual Nationality" className={FIELD_LABEL_CLASS} />
                   <RadioGroup value={dualNationality ? "yes" : "no"} onValueChange={handleBooleanRadio(setDualNationality)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="dual-yes" />
@@ -911,7 +911,7 @@ function IndividualEditForm({
                   </RadioGroup>
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Is Customer Facing any adverse event? <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Is Customer Facing any adverse event?" className={FIELD_LABEL_CLASS} />
                   <p className="text-xs text-primary/80 mb-2">We don't Check adverse news feed</p>
                   <RadioGroup value={adverseNews ? "yes" : "no"} onValueChange={handleBooleanRadio(setAdverseNews)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
@@ -1373,7 +1373,7 @@ function CorporateEditForm({
               </div>
               <div className={CORPORATE_GRID_CLASS}>
                 <div className="md:col-span-2 space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Company Name <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Company Name" className={FIELD_LABEL_CLASS} />
                   <Input
                     className={FIELD_CLASS}
                     placeholder="Enter company name"
@@ -1382,7 +1382,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Company Address <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Company Address" className={FIELD_LABEL_CLASS} />
                   <Input
                     className={FIELD_CLASS}
                     placeholder="Enter full address"
@@ -1391,7 +1391,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>City <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="City" className={FIELD_LABEL_CLASS} />
                   <Input
                     className={FIELD_CLASS}
                     placeholder="Enter city"
@@ -1400,7 +1400,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Country Incorporated <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Country Incorporated" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={countries}
                     value={countryIncorporated}
@@ -1420,7 +1420,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Customer Type <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Customer Type" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={occupations}
                     value={customerType}
@@ -1445,7 +1445,7 @@ function CorporateEditForm({
               </div>
               <div className={CORPORATE_GRID_CLASS}>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Office No (Country Code) <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Office No (Country Code)" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={countryCodes}
                     value={officeCountryCode}
@@ -1456,7 +1456,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Office Number <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Office Number" className={FIELD_LABEL_CLASS} />
                   <Input
                     className={FIELD_CLASS}
                     placeholder="Enter office number"
@@ -1465,7 +1465,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Mobile No (Country Code) <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Mobile No (Country Code)" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={countryCodes}
                     value={mobileCountryCode}
@@ -1476,7 +1476,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Mobile Number <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Mobile Number" className={FIELD_LABEL_CLASS} />
                   <Input
                     className={FIELD_CLASS}
                     placeholder="Enter mobile number"
@@ -1485,7 +1485,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Email Address <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Email Address" className={FIELD_LABEL_CLASS} />
                   <Input
                     className={FIELD_CLASS}
                     type="email"
@@ -1509,7 +1509,7 @@ function CorporateEditForm({
               </div>
               <div className={CORPORATE_GRID_CLASS}>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Trade License Number <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Trade License Number" className={FIELD_LABEL_CLASS} />
                   <Input
                     className={FIELD_CLASS}
                     placeholder="Enter trade license number"
@@ -1518,7 +1518,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Trade License Issued At <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Trade License Issued At" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={countries}
                     value={tradeLicenseIssuedAt}
@@ -1529,7 +1529,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Trade License Issued By <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Trade License Issued By" className={FIELD_LABEL_CLASS} />
                   <Input
                     className={FIELD_CLASS}
                     placeholder="Enter issuing authority"
@@ -1538,7 +1538,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>License Issue Date <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="License Issue Date" className={FIELD_LABEL_CLASS} />
                   <Input
                     type="date"
                     className={FIELD_CLASS}
@@ -1547,7 +1547,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>License Expiry Date <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="License Expiry Date" className={FIELD_LABEL_CLASS} />
                   <Input
                     type="date"
                     className={FIELD_CLASS}
@@ -1588,7 +1588,7 @@ function CorporateEditForm({
               </div>
               <div className={CORPORATE_GRID_CLASS}>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Entity Type <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Entity Type" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={entity_types}
                     value={entityType}
@@ -1599,7 +1599,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Countries of Operation <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Countries of Operation" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={countries}
                     value={operationCountries}
@@ -1611,7 +1611,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Business Activity <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Business Activity" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={business_activities}
                     value={businessActivity}
@@ -1622,7 +1622,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Is entity dealing with Import/Export? <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Is entity dealing with Import/Export?" className={FIELD_LABEL_CLASS} />
                   <RadioGroup value={isImportExport ? "yes" : "no"} onValueChange={handleBooleanRadio(setIsImportExport)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="import-yes" />
@@ -1635,7 +1635,7 @@ function CorporateEditForm({
                   </RadioGroup>
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Any other sister concern/branch? <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Any other sister concern/branch?" className={FIELD_LABEL_CLASS} />
                   <RadioGroup value={hasSisterConcern ? "yes" : "no"} onValueChange={handleBooleanRadio(setHasSisterConcern)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="sister-yes" />
@@ -1648,7 +1648,7 @@ function CorporateEditForm({
                   </RadioGroup>
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Account Holding Bank Name <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Account Holding Bank Name" className={FIELD_LABEL_CLASS} />
                   <Input
                     className={FIELD_CLASS}
                     placeholder="Enter bank name (max 50 characters)"
@@ -1671,7 +1671,7 @@ function CorporateEditForm({
               </div>
               <div className={CORPORATE_GRID_CLASS}>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Product Type <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Product Type" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={products}
                     value={productTypes}
@@ -1683,7 +1683,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Product Source <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Product Source" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={product_sources}
                     value={productSource}
@@ -1693,7 +1693,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Payment Mode <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Payment Mode" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={payment_modes}
                     value={paymentMode}
@@ -1704,7 +1704,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Delivery Channel <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Delivery Channel" className={FIELD_LABEL_CLASS} />
                   <Combobox
                     options={delivery_channels}
                     value={deliveryChannel}
@@ -1735,7 +1735,7 @@ function CorporateEditForm({
                   />
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Deal with Goods? <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Deal with Goods?" className={FIELD_LABEL_CLASS} />
                   <RadioGroup value={dualUseGoods ? "yes" : "no"} onValueChange={handleBooleanRadio(setDualUseGoods)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="goods-yes" />
@@ -1762,7 +1762,7 @@ function CorporateEditForm({
               </div>
               <div className={CORPORATE_GRID_CLASS}>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>KYC Documents Collected <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="KYC Documents Collected" className={FIELD_LABEL_CLASS} />
                   <RadioGroup value={kycDocumentsCollected ? "yes" : "no"} onValueChange={handleBooleanRadio(setKycDocumentsCollected)} className="flex gap-4 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="kyc-yes" />
@@ -1775,7 +1775,7 @@ function CorporateEditForm({
                   </RadioGroup>
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Registered in GOAML <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Registered in GOAML" className={FIELD_LABEL_CLASS} />
                   <RadioGroup value={isRegisteredInGoaml ? "yes" : "no"} onValueChange={handleBooleanRadio(setIsRegisteredInGoaml)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="goaml-yes" />
@@ -1788,7 +1788,7 @@ function CorporateEditForm({
                   </RadioGroup>
                 </div>
                 <div className="space-y-2">
-                  <label className={FIELD_LABEL_CLASS}>Adverse News <span className="text-destructive">*</span></label>
+                  <RequiredLabel text="Adverse News" className={FIELD_LABEL_CLASS} />
                   <RadioGroup value={hasAdverseNews ? "yes" : "no"} onValueChange={handleBooleanRadio(setHasAdverseNews)} className="flex gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="adverse-yes" />
@@ -1895,7 +1895,7 @@ function CorporateEditForm({
                   </div>
                   <div className={RELATED_PERSON_GRID_CLASS}>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Type <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="Type" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={[
                           { value: "Individual", label: "Individual" },
@@ -1908,7 +1908,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Full Name <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="Full Name" className={FIELD_LABEL_CLASS} />
                       <Input
                         className={FIELD_CLASS}
                         value={person.name}
@@ -1917,7 +1917,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div className="md:col-span-2 space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Previously Exposed Person (PEP)? <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="Previously Exposed Person (PEP)?" className={FIELD_LABEL_CLASS} />
                       <RadioGroup
                         value={person.is_pep ? "yes" : "no"}
                         onValueChange={(v) => updateRelatedPerson(index, "is_pep", v === "yes")}
@@ -1934,7 +1934,7 @@ function CorporateEditForm({
                       </RadioGroup>
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Nationality <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="Nationality" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={countries}
                         value={person.nationality}
@@ -1944,7 +1944,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>ID Type <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="ID Type" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={idTypes}
                         value={person.id_type}
@@ -1954,7 +1954,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>ID No/License No <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="ID No/License No" className={FIELD_LABEL_CLASS} />
                       <Input
                         className={FIELD_CLASS}
                         value={person.id_no}
@@ -1963,7 +1963,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>ID Issue Date <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="ID Issue Date" className={FIELD_LABEL_CLASS} />
                       <Input
                         type="date"
                         className={FIELD_CLASS}
@@ -1972,7 +1972,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>ID Expiry Date <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="ID Expiry Date" className={FIELD_LABEL_CLASS} />
                       <Input
                         type="date"
                         className={FIELD_CLASS}
@@ -1981,7 +1981,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Date of Birth <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="Date of Birth" className={FIELD_LABEL_CLASS} />
                       <Input
                         type="date"
                         className={FIELD_CLASS}
@@ -1990,7 +1990,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Role <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="Role" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={roles}
                         value={person.role}
@@ -2000,7 +2000,7 @@ function CorporateEditForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Percentage of Share <span className="text-destructive">*</span></label>
+                      <RequiredLabel text="Percentage of Share" className={FIELD_LABEL_CLASS} />
                       <Input
                         className={FIELD_CLASS}
                         value={person.ownership_percentage}

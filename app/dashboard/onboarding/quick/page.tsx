@@ -5,8 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { RequiredLabel } from "@/components/ui/required-label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Combobox } from "@/components/ui/combobox"
 import { Card, CardContent } from "@/components/ui/card"
@@ -367,9 +366,7 @@ export default function QuickOnboardingPage() {
 
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label htmlFor="firstName" className={FIELD_LABEL_CLASS}>
-                        First Name <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="firstName" text="First Name" className={FIELD_LABEL_CLASS} />
                       <input
                         id="firstName"
                         placeholder="Enter first name"
@@ -379,9 +376,7 @@ export default function QuickOnboardingPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="lastName" className={FIELD_LABEL_CLASS}>
-                        Last Name <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="lastName" text="Last Name" className={FIELD_LABEL_CLASS} />
                       <input
                         id="lastName"
                         placeholder="Enter last name"
@@ -392,9 +387,7 @@ export default function QuickOnboardingPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label htmlFor="email" className={FIELD_LABEL_CLASS}>
-                        Email <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="email" text="Email" className={FIELD_LABEL_CLASS} />
                       <input
                         id="email"
                         type="email"
@@ -405,9 +398,7 @@ export default function QuickOnboardingPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="dob" className={FIELD_LABEL_CLASS}>
-                        Date of Birth <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="dob" text="Date of Birth" className={FIELD_LABEL_CLASS} />
                       <input
                         id="dob"
                         type="date"
@@ -418,9 +409,7 @@ export default function QuickOnboardingPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>
-                        Residential Status <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel text="Residential Status" className={FIELD_LABEL_CLASS} />
                       <div className="mt-2 flex items-center gap-6">
                         <label className="flex cursor-pointer items-center gap-2">
                           <input
@@ -447,9 +436,7 @@ export default function QuickOnboardingPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="address" className={FIELD_LABEL_CLASS}>
-                        Address <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="address" text="Address" className={FIELD_LABEL_CLASS} />
                       <input
                         id="address"
                         placeholder="Enter address"
@@ -460,9 +447,7 @@ export default function QuickOnboardingPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label htmlFor="nationality" className={FIELD_LABEL_CLASS}>
-                        Nationality <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="nationality" text="Nationality" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={countries}
                         value={nationality}
@@ -473,9 +458,7 @@ export default function QuickOnboardingPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="countryCode" className={FIELD_LABEL_CLASS}>
-                        Country Code <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="countryCode" text="Country Code" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={countryCodes}
                         value={countryCode}
@@ -487,9 +470,7 @@ export default function QuickOnboardingPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label htmlFor="contactNo" className={FIELD_LABEL_CLASS}>
-                        Contact No <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="contactNo" text="Contact No" className={FIELD_LABEL_CLASS} />
                       <input
                         id="contactNo"
                         placeholder="Enter contact number"
@@ -518,9 +499,7 @@ export default function QuickOnboardingPage() {
 
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label htmlFor="idType" className={FIELD_LABEL_CLASS}>
-                        ID Type <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="idType" text="ID Type" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={idTypes}
                         value={idType}
@@ -531,9 +510,7 @@ export default function QuickOnboardingPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="idNo" className={FIELD_LABEL_CLASS}>
-                        ID No <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="idNo" text="ID No" className={FIELD_LABEL_CLASS} />
                       <input
                         id="idNo"
                         placeholder="Enter ID number"
@@ -544,9 +521,7 @@ export default function QuickOnboardingPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label htmlFor="idIssued" className={FIELD_LABEL_CLASS}>
-                        ID Issued Date <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="idIssued" text="ID Issued Date" className={FIELD_LABEL_CLASS} />
                       <input
                         id="idIssued"
                         type="date"
@@ -556,9 +531,7 @@ export default function QuickOnboardingPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="idExpiry" className={FIELD_LABEL_CLASS}>
-                        ID Expiry Date <span className="text-destructive">*</span>
-                      </label>
+                      <RequiredLabel htmlFor="idExpiry" text="ID Expiry Date" className={FIELD_LABEL_CLASS} />
                       <input
                         id="idExpiry"
                         type="date"

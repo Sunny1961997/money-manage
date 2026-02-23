@@ -11,7 +11,7 @@ function RequiredLabel({ text, className, requiredClassName, ...labelProps }: Re
   return (
     <Label className={cn('flex items-center gap-0.5', className)} {...labelProps}>
       <span>{text}</span>
-      <span className={cn('text-primary', requiredClassName)} aria-hidden="true">
+      <span className={cn('text-destructive', requiredClassName)} aria-hidden="true">
         *
       </span>
       <span className="sr-only">required</span>

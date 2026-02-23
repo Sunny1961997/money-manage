@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { RequiredLabel } from "@/components/ui/required-label"
 import { Combobox } from "@/components/ui/combobox"
 import { Building2, ArrowLeft, Loader2, UserRound } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
@@ -115,8 +116,8 @@ export default function AddCompanyPage() {
       } else {
         const details = data?.errors
           ? Object.values(data.errors as Record<string, string[]>)
-              .flat()
-              .join("; ")
+            .flat()
+            .join("; ")
           : ""
         const errText = details || data?.message || data?.error || "Unknown error"
         toast({
@@ -190,15 +191,15 @@ export default function AddCompanyPage() {
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Name *</Label>
+                <RequiredLabel text="Name" className={FIELD_LABEL_CLASS} />
                 <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter name" className={FIELD_CLASS} required />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Email *</Label>
+                <RequiredLabel text="Email" className={FIELD_LABEL_CLASS} />
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter email" className={FIELD_CLASS} required />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Password *</Label>
+                <RequiredLabel text="Password" className={FIELD_LABEL_CLASS} />
                 <Input
                   type="password"
                   value={password}
@@ -209,7 +210,7 @@ export default function AddCompanyPage() {
                 />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Confirm Password *</Label>
+                <RequiredLabel text="Confirm Password" className={FIELD_LABEL_CLASS} />
                 <Input
                   type="password"
                   value={passwordConfirmation}
@@ -224,7 +225,7 @@ export default function AddCompanyPage() {
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" className={FIELD_CLASS} />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Role *</Label>
+                <RequiredLabel text="Role" className={FIELD_LABEL_CLASS} />
                 <Combobox
                   options={roles}
                   value={role}
@@ -246,11 +247,11 @@ export default function AddCompanyPage() {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Company Name *</Label>
+                <RequiredLabel text="Company Name" className={FIELD_LABEL_CLASS} />
                 <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Enter company name" className={FIELD_CLASS} required />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Trade License Number *</Label>
+                <RequiredLabel text="Trade License Number" className={FIELD_LABEL_CLASS} />
                 <Input
                   value={tradeLicenseNumber}
                   onChange={(e) => setTradeLicenseNumber(e.target.value)}
@@ -260,11 +261,11 @@ export default function AddCompanyPage() {
                 />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Expiration Date *</Label>
+                <RequiredLabel text="Expiration Date" className={FIELD_LABEL_CLASS} />
                 <Input type="date" value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)} className={FIELD_CLASS} required />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Total Screenings *</Label>
+                <RequiredLabel text="Total Screenings" className={FIELD_LABEL_CLASS} />
                 <Input
                   type="number"
                   value={totalScreenings}
@@ -285,15 +286,15 @@ export default function AddCompanyPage() {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Date of Birth</Label>
-                <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={FIELD_CLASS} />
+                <RequiredLabel text="Date of Birth" className={FIELD_LABEL_CLASS} />
+                <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={FIELD_CLASS} required />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Passport Number</Label>
-                <Input value={passportNumber} onChange={(e) => setPassportNumber(e.target.value)} placeholder="Enter passport number" className={FIELD_CLASS} />
+                <RequiredLabel text="Passport Number" className={FIELD_LABEL_CLASS} />
+                <Input value={passportNumber} onChange={(e) => setPassportNumber(e.target.value)} placeholder="Enter passport number" className={FIELD_CLASS} required />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Passport Country</Label>
+                <RequiredLabel text="Passport Country" className={FIELD_LABEL_CLASS} />
                 <Combobox
                   options={countries}
                   value={passportCountry}
@@ -305,7 +306,7 @@ export default function AddCompanyPage() {
                 />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Nationality</Label>
+                <RequiredLabel text="Nationality" className={FIELD_LABEL_CLASS} />
                 <Combobox
                   options={countries}
                   value={nationality}
@@ -327,11 +328,11 @@ export default function AddCompanyPage() {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Phone Number *</Label>
+                <RequiredLabel text="Phone Number" className={FIELD_LABEL_CLASS} />
                 <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Enter phone number" className={FIELD_CLASS} required />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Contact Type *</Label>
+                <RequiredLabel text="Contact Type" className={FIELD_LABEL_CLASS} />
                 <Combobox
                   options={contactTypes}
                   value={contactType}
@@ -343,7 +344,7 @@ export default function AddCompanyPage() {
                 />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Communication Type *</Label>
+                <RequiredLabel text="Communication Type" className={FIELD_LABEL_CLASS} />
                 <Combobox
                   options={communicationTypes}
                   value={communicationType}
@@ -355,7 +356,7 @@ export default function AddCompanyPage() {
                 />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Company Email *</Label>
+                <RequiredLabel text="Company Email" className={FIELD_LABEL_CLASS} />
                 <Input type="email" value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} placeholder="Enter company email" className={FIELD_CLASS} required />
               </div>
             </div>
@@ -369,19 +370,19 @@ export default function AddCompanyPage() {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className={`${FIELD_GROUP_CLASS} md:col-span-2`}>
-                <Label className={FIELD_LABEL_CLASS}>Address *</Label>
+                <RequiredLabel text="Address" className={FIELD_LABEL_CLASS} />
                 <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Enter address" className={FIELD_CLASS} required />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>City *</Label>
+                <RequiredLabel text="City" className={FIELD_LABEL_CLASS} />
                 <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Enter city" className={FIELD_CLASS} required />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>State *</Label>
+                <RequiredLabel text="State" className={FIELD_LABEL_CLASS} />
                 <Input value={state} onChange={(e) => setState(e.target.value)} placeholder="Enter state" className={FIELD_CLASS} required />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <Label className={FIELD_LABEL_CLASS}>Country *</Label>
+                <RequiredLabel text="Country" className={FIELD_LABEL_CLASS} />
                 <Combobox
                   options={countries}
                   value={country}

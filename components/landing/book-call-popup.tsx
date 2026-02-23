@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { RequiredLabel } from "@/components/ui/required-label"
 
 export function BookCallPopup() {
   const [isOpen, setIsOpen] = useState(false)
@@ -173,7 +174,7 @@ export function BookCallPopup() {
             <form onSubmit={handleSubmit} className="space-y-3.5">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1.5 uppercase tracking-[0.12em]">First Name *</label>
+                  <RequiredLabel text="First Name" className="block text-[11px] font-semibold text-slate-600 mb-1.5 uppercase tracking-[0.12em]" />
                   <input
                     name="first_name"
                     required
@@ -184,7 +185,7 @@ export function BookCallPopup() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1.5 uppercase tracking-[0.12em]">Last Name *</label>
+                  <RequiredLabel text="Last Name" className="block text-[11px] font-semibold text-slate-600 mb-1.5 uppercase tracking-[0.12em]" />
                   <input
                     name="last_name"
                     required
@@ -198,7 +199,7 @@ export function BookCallPopup() {
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1.5 uppercase tracking-[0.12em]">Email *</label>
+                  <RequiredLabel text="Email" className="block text-[11px] font-semibold text-slate-600 mb-1.5 uppercase tracking-[0.12em]" />
                   <input
                     type="email"
                     name="email"
