@@ -26,7 +26,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
       'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
       'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
       type === "date" &&
-        "pr-10 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:pointer-events-none",
+        "!pr-12 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:pointer-events-none",
       className,
     )
 
@@ -39,7 +39,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
             tabIndex={-1}
             disabled={disabled}
             aria-label="Open date picker"
-            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none"
+            className="absolute inset-y-1 right-1 flex w-8 items-center justify-center rounded-md border border-border/60 bg-muted/35 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
             onClick={() => {
               const el = innerRef.current
               if (!el) return
@@ -53,7 +53,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
               el.click()
             }}
           >
-            <Calendar className="h-4 w-4" />
+            <Calendar className="h-4.5 w-4.5" />
           </button>
         </div>
       )
