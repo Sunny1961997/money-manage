@@ -37,6 +37,9 @@ type NavItem = {
   disabled?: boolean
   children?: Array<{ name: string; href?: string; disabled?: boolean }>
 }
+  const currentDate = new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+  }).format(new Date())
 
 const companyAdminNavigation: NavItem[] = [
   {
@@ -513,7 +516,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
             <div className="text-xs text-muted-foreground">
               <div className="flex justify-between">
                 <span>AML Meter</span>
-                <span>© 2026</span>
+                <span>© {currentDate}</span>
               </div>
             </div>
           )}

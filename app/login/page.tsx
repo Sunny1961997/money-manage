@@ -24,6 +24,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [showForgot, setShowForgot] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState("")
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotMsg, setForgotMsg] = useState("")
   const router = useRouter()
   const { setUser } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
@@ -86,6 +90,46 @@ export default function LoginPage() {
       console.error("An error occurred during login:", error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setForgotLoading(true)
+    setForgotMsg("")
+    try {
+      const res = await fetch("/api/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      })
+      const data = await res.json()
+      if (res.ok && data.status) {
+        toast({
+          title: "Success",
+          description: "Password reset instructions sent to your email.",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Failed to send reset instructions.",
+        })
+      }
+    } catch (err: any) {
+      // Check if it's a network error
+      if (err.message === 'Failed to fetch') {
+        toast({
+          title: "Connection Error",
+          description: "Unable to send request. Please check your internet connection.",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Unable to send request. Please try again later.",
+        })
+      }
+    } finally {
+      setForgotLoading(false)
     }
   }
 
@@ -155,6 +199,15 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                <div className="text-right mt-1">
+                  <button
+                    type="button"
+                    className="text-xs text-primary underline hover:text-primary/80"
+                    onClick={() => setShowForgot(true)}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
               </div>
 
               {error ? (
@@ -167,6 +220,36 @@ export default function LoginPage() {
                 {isLoading ? "Logging In..." : "Login"}
               </Button>
             </form>
+
+            {showForgot && (
+              <form onSubmit={handleForgotSubmit} className="space-y-4 mt-6">
+                <div className="space-y-2">
+                  <label htmlFor="forgot-email" className={FIELD_LABEL_CLASS}>Email</label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={forgotEmail}
+                    onChange={e => setForgotEmail(e.target.value)}
+                    required
+                    className={FIELD_CLASS}
+                  />
+                </div>
+                {forgotMsg && (
+                  <div className="rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-sm text-primary">
+                    {forgotMsg}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={() => setShowForgot(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={forgotLoading}>
+                    {forgotLoading ? "Sending..." : "Send Reset Link"}
+                  </Button>
+                </div>
+              </form>
+            )}
 
             <p className="text-center text-xs text-muted-foreground">
               Protected access for authorized users only.

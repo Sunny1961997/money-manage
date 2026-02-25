@@ -150,6 +150,19 @@ function CookieBanner() {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    if (process.env.NODE_ENV == "production") {
+      const handleContextMenu = (e: MouseEvent) => e.preventDefault()
+      const handleCopy = (e: ClipboardEvent) => e.preventDefault()
+      document.addEventListener("contextmenu", handleContextMenu)
+      document.addEventListener("copy", handleCopy)
+      return () => {
+        document.removeEventListener("contextmenu", handleContextMenu)
+        document.removeEventListener("copy", handleCopy)
+      }
+    }
+  }, [])
+
   return (
     <div className={font.className}>
       {children}

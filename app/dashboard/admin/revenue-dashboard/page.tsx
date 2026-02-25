@@ -60,7 +60,7 @@ export default function RevenueDashboard() {
   const summaryData = {
     totalClients: dashboard.total_client,
     totalRevenue: Number(dashboard.total_revenue),
-    activeClients: dashboard.total_client, // No separate field, fallback
+    activeClients: dashboard.active_company, // No separate field, fallback
     upcomingRenewals: dashboard.overdue_last_30_days,
   }
   const renewalData = {
@@ -77,14 +77,14 @@ export default function RevenueDashboard() {
           <h1 className="text-3xl font-bold tracking-tight">AML Meter Revenue Dashboard</h1>
           <p className="text-muted-foreground">Financial overview based on AML Meter Client Database</p>
         </div>
-        <div className="flex gap-3">
+        {/* <div className="flex gap-3">
           <Button variant="outline" className="rounded-xl border-border/50">
             <FileText className="mr-2 h-4 w-4" /> Export CSV
           </Button>
           <Button className="rounded-xl bg-primary shadow-lg shadow-primary/20">
             <Download className="mr-2 h-4 w-4" /> PDF Report
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* KPI Cards */}
@@ -96,7 +96,7 @@ export default function RevenueDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">AED {summaryData.totalRevenue.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">SUM('Sales Tracker'!H2:H1000)</p>
+            {/* <p className="text-xs text-muted-foreground">SUM('Sales Tracker'!H2:H1000)</p> */}
           </CardContent>
         </Card>
 
@@ -107,7 +107,7 @@ export default function RevenueDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summaryData.totalClients}</div>
-            <p className="text-xs text-muted-foreground">COUNTA('Client Master'!A2:A1000)</p>
+            {/* <p className="text-xs text-muted-foreground">COUNTA('Client Master'!A2:A1000)</p> */}
           </CardContent>
         </Card>
 
@@ -118,7 +118,7 @@ export default function RevenueDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600">{summaryData.activeClients}</div>
-            <p className="text-xs text-muted-foreground">COUNTIF('Client Master'!J2:J1000,"Active")</p>
+            {/* <p className="text-xs text-muted-foreground">COUNTIF('Client Master'!J2:J1000,"Active")</p> */}
           </CardContent>
         </Card>
 
