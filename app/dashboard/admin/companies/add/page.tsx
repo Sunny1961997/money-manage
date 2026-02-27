@@ -23,6 +23,7 @@ export default function AddCompanyPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [countriesLoading, setCountriesLoading] = useState(true)
   const [countries, setCountries] = useState<Array<{ value: string; label: string }>>([])
 
   const [name, setName] = useState("")
@@ -61,6 +62,8 @@ export default function AddCompanyPage() {
         setCountries(countryList)
       } catch (e) {
         console.error("Failed to fetch countries:", e)
+      } finally {
+        setCountriesLoading(false)
       }
     }
     fetchCountries()
@@ -152,6 +155,17 @@ export default function AddCompanyPage() {
     { value: "MLRO", label: "MLRO" },
     { value: "Analyst", label: "Analyst" },
   ]
+
+  if (countriesLoading) {
+    return (
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex h-14 w-14 items-center justify-center">
+          <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+          <Loader2 className="relative z-10 h-10 w-10 animate-spin text-primary" aria-hidden="true" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={PAGE_CLASS}>

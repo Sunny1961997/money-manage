@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
 
 const PAGE_CLASS = "space-y-8 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
 const CARD_STYLE =
@@ -25,8 +26,8 @@ export default function CompanySubscriptionsPage() {
       setLoading(true)
       setError(null)
       try {
-        console.log(`Fetching subscriptions for company ID: ${companyId} with offset ${(page-1)*limit} and limit ${limit}`);
-        const res = await fetch(`/api/company-subscriptions/${companyId}?offset=${(page-1)*limit}&limit=${limit}`)
+        console.log(`Fetching subscriptions for company ID: ${companyId} with offset ${(page - 1) * limit} and limit ${limit}`);
+        const res = await fetch(`/api/company-subscriptions/${companyId}?offset=${(page - 1) * limit}&limit=${limit}`)
         const data = await res.json()
         console.log("Fetched subscriptions data:", data.data)
         if (data.status) {
@@ -44,6 +45,20 @@ export default function CompanySubscriptionsPage() {
     if (companyId) fetchSubscriptions()
   }, [companyId, page, limit])
 
+  if (loading) {
+    return (
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex flex-col items-center">
+          <div className="relative flex h-14 w-14 items-center justify-center">
+            <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" aria-hidden="true" />
+          </div>
+          <p className="absolute top-full mt-4 text-sm text-muted-foreground animate-pulse whitespace-nowrap">Loading subscriptions...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={PAGE_CLASS}>
       <Card className={CARD_STYLE}>
@@ -57,9 +72,7 @@ export default function CompanySubscriptionsPage() {
               Add Subscription
             </Button>
           </div>
-          {loading ? (
-            <div className="py-10 text-center text-muted-foreground">Loading...</div>
-          ) : error ? (
+          {error ? (
             <div className="py-10 text-center text-destructive">{error}</div>
           ) : (
             <div className="overflow-x-auto">
