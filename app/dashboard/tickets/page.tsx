@@ -436,10 +436,10 @@ export default function TicketsPage() {
           </div>
 
           {loading ? (
-            <div className="py-12">
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading tickets...
+            <div className="grid w-full min-h-[400px] place-items-center">
+              <div className="relative flex h-14 w-14 items-center justify-center">
+                <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+                <Loader2 className="relative z-10 h-10 w-10 animate-spin text-primary" aria-hidden="true" />
               </div>
             </div>
           ) : tickets.length === 0 ? (

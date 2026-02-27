@@ -42,7 +42,7 @@ const userRoles = [
   { value: "Analyst", label: "Analyst" },
 ]
 
-const PAGE_CLASS = "space-y-8 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
+const PAGE_CLASS = "space-y-8 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
 const CARD_STYLE =
   "rounded-3xl border border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
 const FIELD_LABEL_CLASS = "block text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground"
@@ -163,8 +163,8 @@ export default function CompanyUsersPage() {
       } else {
         const details = data?.errors
           ? Object.values(data.errors as Record<string, string[]>)
-              .flat()
-              .join("; ")
+            .flat()
+            .join("; ")
           : ""
         const errText = details || data?.message || data?.error || "Unknown error"
         toast({

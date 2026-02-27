@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react"
 
 export default function AddSubscriptionPage() {
   const { toast } = useToast();
@@ -14,10 +15,10 @@ export default function AddSubscriptionPage() {
   const companyId = params?.id as string
   const [packages, setPackages] = useState<any[]>([])
   const [packageId, setPackageId] = useState("")
-//   const [currency, setCurrency] = useState("")
+  //   const [currency, setCurrency] = useState("")
   const [transactionId, setTransactionId] = useState("")
   const [status, setStatus] = useState("Paid")
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
   useEffect(() => {
@@ -40,15 +41,14 @@ export default function AddSubscriptionPage() {
         body: JSON.stringify({
           package_id: packageId,
           company_information_id: companyId,
-        //   currency,
+          //   currency,
           transaction_id: transactionId,
           status,
         }),
       })
       const data = await res.json()
       console.log("Subscription creation response:", data.message)
-      if (!res.ok || !data.status) 
-      {
+      if (!res.ok || !data.status) {
         toast({
           title: "Submission Failed",
           description: String(data.message || "Failed to subscribe"),
@@ -62,6 +62,20 @@ export default function AddSubscriptionPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading && packages.length === 0) {
+    return (
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex flex-col items-center">
+          <div className="relative flex h-14 w-14 items-center justify-center">
+            <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" aria-hidden="true" />
+          </div>
+          <p className="absolute top-full mt-4 text-sm text-muted-foreground animate-pulse whitespace-nowrap">Loading packages...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

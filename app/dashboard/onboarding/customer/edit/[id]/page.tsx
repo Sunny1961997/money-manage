@@ -217,9 +217,14 @@ export default function EditCustomerPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Spinner className="w-8 h-8 text-primary" />
-        <p className="text-sm text-muted-foreground animate-pulse">Loading form data...</p>
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex flex-col items-center">
+          <div className="relative flex h-14 w-14 items-center justify-center">
+            <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" aria-hidden="true" />
+          </div>
+          <p className="absolute top-full mt-4 text-sm text-muted-foreground animate-pulse whitespace-nowrap">Loading form data...</p>
+        </div>
       </div>
     )
   }

@@ -141,7 +141,7 @@ export default function CustomersPage() {
         if (json.status) {
           setDetailsById(prev => ({ ...prev, [id]: json.data }));
         }
-      } catch {}
+      } catch { }
     }
   }
 
@@ -300,9 +300,11 @@ export default function CustomersPage() {
           {/* Table */}
           <div className="overflow-x-auto rounded-b-3xl rounded-t-none">
             {loading ? (
-              <div className="flex items-center justify-center gap-2 p-10 text-center text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Loading customers...</span>
+              <div className="grid w-full min-h-[400px] place-items-center">
+                <div className="relative flex h-14 w-14 items-center justify-center">
+                  <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+                  <Loader2 className="relative z-10 h-10 w-10 animate-spin text-primary" aria-hidden="true" />
+                </div>
               </div>
             ) : (
               <table className="w-full min-w-[980px] text-sm">
@@ -325,524 +327,520 @@ export default function CustomersPage() {
                       </td>
                     </tr>
                   ) : (
-                  customers.map((customer) => {
-                    const isExpanded = expandedId === customer.id
-                    const isIndividualRow = customer.customer_type === "individual"
-                    const RowIcon = isIndividualRow ? User : Building2
-                    const customerTypeTone = isIndividualRow ? INDIVIDUAL_TYPE_TONE_CLASS : CORPORATE_TYPE_TONE_CLASS
-                    const riskInfo = getRisk(customer.risk_level)
-                    const hasRisk = customer.risk_level !== null && customer.risk_level !== undefined && !isNaN(Number(customer.risk_level))
-                    const riskScoreValue = hasRisk ? Number(customer.risk_level).toFixed(2) : "-"
-                    return (
-                      <Fragment key={customer.id}>
-                        <tr
-                          className={`border-b border-border/50 transition-colors ${isExpanded ? "bg-primary/5" : "hover:bg-primary/5"}`}
-                        >
-                          <td className="px-4 py-3.5">
-                            <button
-                              className="group flex w-full items-center gap-3 text-left"
-                              type="button"
-                              onClick={() => toggleExpand(customer.id)}
-                            >
-                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-muted/50 text-muted-foreground transition-colors group-hover:border-primary/30 group-hover:bg-primary/10 group-hover:text-primary">
-                                <RowIcon className="h-4 w-4" />
-                              </span>
-                              <span className="min-w-0 flex-1">
-                                <span
-                                  className={`block truncate font-semibold transition-colors ${isExpanded ? "text-primary" : "text-foreground group-hover:text-primary"}`}
-                                >
-                                  {customer.name || "-"}
+                    customers.map((customer) => {
+                      const isExpanded = expandedId === customer.id
+                      const isIndividualRow = customer.customer_type === "individual"
+                      const RowIcon = isIndividualRow ? User : Building2
+                      const customerTypeTone = isIndividualRow ? INDIVIDUAL_TYPE_TONE_CLASS : CORPORATE_TYPE_TONE_CLASS
+                      const riskInfo = getRisk(customer.risk_level)
+                      const hasRisk = customer.risk_level !== null && customer.risk_level !== undefined && !isNaN(Number(customer.risk_level))
+                      const riskScoreValue = hasRisk ? Number(customer.risk_level).toFixed(2) : "-"
+                      return (
+                        <Fragment key={customer.id}>
+                          <tr
+                            className={`border-b border-border/50 transition-colors ${isExpanded ? "bg-primary/5" : "hover:bg-primary/5"}`}
+                          >
+                            <td className="px-4 py-3.5">
+                              <button
+                                className="group flex w-full items-center gap-3 text-left"
+                                type="button"
+                                onClick={() => toggleExpand(customer.id)}
+                              >
+                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-muted/50 text-muted-foreground transition-colors group-hover:border-primary/30 group-hover:bg-primary/10 group-hover:text-primary">
+                                  <RowIcon className="h-4 w-4" />
                                 </span>
-                                <span className="block text-xs text-muted-foreground">ID #{customer.id}</span>
-                              </span>
-                              <ChevronDown
-                                className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isExpanded ? "rotate-180 text-primary" : ""}`}
-                              />
-                            </button>
-                          </td>
-                          <td className="px-4 py-3.5 text-muted-foreground">{customer.country || "-"}</td>
-                          <td className="px-4 py-3.5 text-muted-foreground">{customer.email || "-"}</td>
-                          <td className="px-4 py-3.5">
-                            <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${customerTypeTone}`}>
-                              {isIndividualRow ? "Individual" : "Corporate"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusTone(customer.status)}`}>
-                              {formatStatusLabel(customer.status)}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3.5 text-muted-foreground">{formatDate(customer.created_at)}</td>
-                          <td className="px-4 py-3.5">
-                            {hasRisk ? (
-                              <span className={`inline-flex items-center gap-2 rounded-full border px-2 py-1 text-xs font-semibold ${riskInfo.badgeClass}`}>
-                                <span className={`inline-flex h-7 min-w-7 px-2 items-center justify-center rounded-full text-[10px] font-bold text-white ${riskInfo.scoreClass}`}>
-                                  {riskScoreValue}
+                                <span className="min-w-0 flex-1">
+                                  <span
+                                    className={`block truncate font-semibold transition-colors ${isExpanded ? "text-primary" : "text-foreground group-hover:text-primary"}`}
+                                  >
+                                    {customer.name || "-"}
+                                  </span>
+                                  <span className="block text-xs text-muted-foreground">ID #{customer.id}</span>
                                 </span>
-                                <span>{riskInfo.label}</span>
+                                <ChevronDown
+                                  className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isExpanded ? "rotate-180 text-primary" : ""}`}
+                                />
+                              </button>
+                            </td>
+                            <td className="px-4 py-3.5 text-muted-foreground">{customer.country || "-"}</td>
+                            <td className="px-4 py-3.5 text-muted-foreground">{customer.email || "-"}</td>
+                            <td className="px-4 py-3.5">
+                              <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${customerTypeTone}`}>
+                                {isIndividualRow ? "Individual" : "Corporate"}
                               </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/30 px-2 py-1 text-xs font-medium text-muted-foreground">
-                                <span className="inline-flex h-7 min-w-7 px-2 items-center justify-center rounded-full bg-muted-foreground text-[10px] font-bold text-white">
-                                  -
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusTone(customer.status)}`}>
+                                {formatStatusLabel(customer.status)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 text-muted-foreground">{formatDate(customer.created_at)}</td>
+                            <td className="px-4 py-3.5">
+                              {hasRisk ? (
+                                <span className={`inline-flex items-center gap-2 rounded-full border px-2 py-1 text-xs font-semibold ${riskInfo.badgeClass}`}>
+                                  <span className={`inline-flex h-7 min-w-7 px-2 items-center justify-center rounded-full text-[10px] font-bold text-white ${riskInfo.scoreClass}`}>
+                                    {riskScoreValue}
+                                  </span>
+                                  <span>{riskInfo.label}</span>
                                 </span>
-                                <span>Not Scored</span>
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                        {isExpanded && (
-                          <tr className="bg-background/85">
-                            <td colSpan={7} className="px-4 py-4">
-                              {detailsById[customer.id] ? (
-                                (() => {
-                                  const data = detailsById[customer.id]
-                                  const isCorporate = data.customer_type === "corporate"
-                                  const corp = data.corporate_detail
-                                  const indiv = data.individual_detail;
-                                  const user_customer = data.user_customer
-                                  // Aggregate partners/UBOs from multiple possible API keys and flatten
-                                  const possiblePersonsArrays = [
-                                    data.corporate_detail?.related_persons,
-                                    data.corporate_related_persons,
-                                    data.corporate_detail?.partners,
-                                    data.related_persons,
-                                    data.partners,
-                                    data.corporate_detail?.ubo_partners,
-                                  ].filter((arr: any) => Array.isArray(arr));
-                                  const partners = possiblePersonsArrays.reduce((acc: any[], arr: any[]) => acc.concat(arr), [] as any[]);
-                                  const partnersCount = partners.length;
-                                  const expandedCustomerName = isCorporate
-                                    ? corp?.company_name || data.name || "-"
-                                    : [indiv?.first_name, indiv?.last_name].filter(Boolean).join(" ") || data.name || "-"
-                                  const expandedStatus = formatStatusLabel(data?.status)
-                                  const expandedCustomerType = isCorporate ? "Corporate" : "Individual"
-                                  const expandedTypeTone = isCorporate ? CORPORATE_TYPE_TONE_CLASS : INDIVIDUAL_TYPE_TONE_CLASS
-
-                                  const companyInfoItems: DetailItem[] = [
-                                    { label: "Company Name", value: corp?.company_name || data.name || "-" },
-                                    { label: "Email", value: data?.corporate_detail?.email || "-" },
-                                    { label: "Company Address", value: corp?.company_address || "-" },
-                                    { label: "City", value: corp?.city || "-" },
-                                    { label: "Country of Incorporation", value: corp?.country_incorporated || "-" },
-                                    { label: "PO Box No", value: corp?.po_box || "-" },
-                                    {
-                                      label: "Contact Office No",
-                                      value: `${data?.corporate_detail?.office_country_code || ""}${data?.corporate_detail?.office_no || ""}` || "-",
-                                    },
-                                    {
-                                      label: "Contact Mobile No",
-                                      value: `${data?.corporate_detail?.mobile_country_code || ""}${data?.corporate_detail?.mobile_no || ""}` || "-",
-                                    },
-                                    {
-                                      label: "Corporate Status",
-                                      value: (
-                                        <span
-                                          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusTone(
-                                            data?.status || "onboarded",
-                                          )}`}
-                                        >
-                                          {formatStatusLabel(data?.status || "Onboarded")}
-                                        </span>
-                                      ),
-                                      valueContainerClassName: "mt-1",
-                                    },
-                                  ]
-
-                                  const licenseItems: DetailItem[] = [
-                                    { label: "Trade License/CR No", value: corp?.trade_license_no || "-" },
-                                    { label: "Issued At", value: corp?.trade_license_issued_at || "-" },
-                                    { label: "Issued By", value: corp?.trade_license_issued_by || "-" },
-                                    {
-                                      label: "Issue Date",
-                                      value: formatDisplayDate(corp?.license_issue_date),
-                                      valueContainerClassName: "mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words",
-                                    },
-                                    {
-                                      label: "Expiry Date",
-                                      value: formatDisplayDate(corp?.license_expiry_date),
-                                      valueContainerClassName: "mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words",
-                                    },
-                                    { label: "VAT Registration No", value: corp?.vat_registration_no || "-" },
-                                  ]
-
-                                  const businessItems: DetailItem[] = [
-                                    { label: "Entity Type", value: corp?.entity_type || "-" },
-                                    { label: "Business Activity", value: corp?.business_activity || "-" },
-                                    {
-                                      label: "Countries of Operation",
-                                      value: Array.isArray(data.country_operations) && data.country_operations.length > 0
-                                        ? data.country_operations.map((item: any) => item.country).join(", ")
-                                        : "-",
-                                    },
-                                    { label: "Account Holding Bank Name", value: corp?.account_holding_bank_name || "-" },
-                                  ]
-
-                                  const hasDetailRisk = data.risk_level !== null && data.risk_level !== undefined && !isNaN(Number(data.risk_level))
-                                  const detailRiskInfo = getRisk(data.risk_level)
-                                  const detailRiskScore = hasDetailRisk ? Number(data.risk_level).toFixed(2) : "-"
-                                  const detailRiskLabel = hasDetailRisk ? detailRiskInfo.label : "Not Scored"
-
-                                  const personalInfoItems: DetailItem[] = [
-                                    { label: "Full Name", value: [indiv?.first_name, indiv?.last_name].filter(Boolean).join(" ") || data.name || "-" },
-                                    { label: "Email", value: indiv?.email || data.email || "-" },
-                                    { label: "Date of Birth", value: formatDisplayDate(indiv?.dob) },
-                                    { label: "Gender", value: indiv?.gender || "-" },
-                                    { label: "Nationality", value: indiv?.nationality || "-" },
-                                    { label: "Country of Residence", value: indiv?.country_of_residence || indiv?.country || "-" },
-                                    { label: "Address", value: indiv?.address || "-" },
-                                    { label: "City", value: indiv?.city || "-" },
-                                  ]
-
-                                  const transactionItems: DetailItem[] = [
-                                    { label: "Occupation", value: indiv?.occupation || "-" },
-                                    { label: "Source of Income", value: indiv?.source_of_income || "-" },
-                                    { label: "Purpose of Onboarding", value: indiv?.purpose_of_onboarding || "-" },
-                                    { label: "Payment Mode", value: indiv?.payment_mode || "-" },
-                                    {
-                                      label: "Expected Transactions",
-                                      value: formatDisplayNumber(indiv?.expected_no_of_transactions),
-                                    },
-                                    { label: "Expected Volume", value: formatDisplayNumber(indiv?.expected_volume) },
-                                  ]
-
-                                  const identificationItems: DetailItem[] = [
-                                    { label: "ID Type", value: indiv?.id_type || "-" },
-                                    { label: "ID Number", value: indiv?.id_no || "-" },
-                                    { label: "Issuing Authority", value: indiv?.issuing_authority || "-" },
-                                    { label: "Issuing Country", value: indiv?.issuing_country || "-" },
-                                    { label: "Issue Date", value: formatDisplayDate(indiv?.id_issue_date) },
-                                    { label: "Expiry Date", value: formatDisplayDate(indiv?.id_expiry_date) },
-                                  ]
-
-                                  const additionalItems: DetailItem[] = [
-                                    { label: "PEP", value: indiv?.is_pep ? "Yes" : "No" },
-                                    { label: "Dual Nationality", value: indiv?.dual_nationality ? "Yes" : "No" },
-                                    { label: "Adverse News", value: indiv?.adverse_news ? "Yes" : "No" },
-                                    { label: "Screening Fuzziness", value: data?.screening_fuzziness || "-" },
-                                  ]
-
-                                  return (
-                                    <div className="rounded-2xl border border-border/60 bg-background/90 shadow-[0_16px_36px_-24px_oklch(0.28_0.06_260/0.45)]">
-                                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-muted/20 p-3">
-                                        <div className="min-w-0 flex items-center gap-3">
-                                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/70 text-muted-foreground">
-                                            {isCorporate ? <Building2 className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                                          </span>
-                                          <div className="min-w-0">
-                                            <p className={SECONDARY_LABEL_CLASS}>Customer Details</p>
-                                            <p className="truncate font-semibold text-foreground">{expandedCustomerName}</p>
-                                          </div>
-                                          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${expandedTypeTone}`}>
-                                            {expandedCustomerType}
-                                          </span>
-                                          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusTone(data?.status)}`}>
-                                            {expandedStatus}
-                                          </span>
-                                        </div>
-                                        <div className="flex flex-wrap items-center justify-end gap-2">
-                                        {user?.role !== "Analyst" && (
-                                          <Link href={`/dashboard/onboarding/customer/edit/${customer.id}`}>
-                                            <Button className={ACTION_PRIMARY_BUTTON_CLASS}>
-                                              <PencilLine className="h-3.5 w-3.5" />
-                                              Edit Information
-                                            </Button>
-                                          </Link>
-                                        )}
-
-                                        <Button 
-                                          variant="outline" 
-                                          className={ACTION_BUTTON_CLASS}
-                                          onClick={() => generateCustomerPDF({...data, user_customer})}
-                                        >
-                                          <Download className="h-3.5 w-3.5" />
-                                          Download
-                                        </Button>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className={ACTION_ICON_BUTTON_CLASS}
-                                          onClick={() => setExpandedId(null)}
-                                          aria-label="Close details"
-                                        >
-                                          <X className="h-3.5 w-3.5" />
-                                        </Button>
-                                        </div>
-                                      </div>
-                                      {isCorporate ? (
-                                        <Tabs defaultValue="company-info" className="p-4">
-                                          <TabsList className={EXPANDED_TABS_LIST_CLASS}>
-                                            <TabsTrigger value="company-info" className={EXPANDED_TABS_TRIGGER_CLASS}>Company Info</TabsTrigger>
-                                            <TabsTrigger value="license-info" className={EXPANDED_TABS_TRIGGER_CLASS}>License Info</TabsTrigger>
-                                            <TabsTrigger value="business-details" className={EXPANDED_TABS_TRIGGER_CLASS}>Business Details</TabsTrigger>
-                                            <TabsTrigger value="partners" className={EXPANDED_TABS_TRIGGER_CLASS}>Partners{partnersCount ? ` (${partnersCount})` : ""}</TabsTrigger>
-                                            <TabsTrigger value="documents" className={EXPANDED_TABS_TRIGGER_CLASS}>Documents</TabsTrigger>
-                                            <TabsTrigger value="risk-details" className={EXPANDED_TABS_TRIGGER_CLASS}>Risk Details</TabsTrigger>
-                                            {/* <TabsTrigger value="aml-questionnaires">AML Questionnaires</TabsTrigger> */}
-                                            <TabsTrigger value="aml-questionnaire-answers" className={EXPANDED_TABS_TRIGGER_CLASS}>Compliance questionnaire</TabsTrigger>
-                                          </TabsList>
-                                          <TabsContent value="company-info" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            <DetailGrid items={companyInfoItems} />
-                                          </TabsContent>
-                                          <TabsContent value="license-info" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            {isCorporate ? (
-                                              <DetailGrid items={licenseItems} />
-                                            ) : (
-                                              <div className="text-sm text-muted-foreground mt-4">No license info for individual customers.</div>
-                                            )}
-                                          </TabsContent>
-                                          <TabsContent value="business-details" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            {isCorporate ? (
-                                              <DetailGrid items={businessItems} />
-                                            ) : (
-                                              <div className="text-sm text-muted-foreground mt-4">No business details for individual customers.</div>
-                                            )}
-                                          </TabsContent>
-                                          <TabsContent value="partners" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            {Array.isArray(partners) && partners.length > 0 ? (
-                                              <div className="space-y-4 mt-4">
-                                                {partners.map((p: any, idx: number) => {
-                                                  const displayType = p.type || p.person_type || p.entity_type || (p.is_entity ? "Entity" : p.is_individual ? "Individual" : "-");
-                                                  const displayName = p.name || [p.first_name, p.last_name].filter(Boolean).join(" ") || p.entity_name || "-";
-                                                  const displayNationality = p.nationality || p.country || p.country_of_residence || "-";
-                                                  const displayRole = p.role || p.designation || p.relationship || p.position || "-";
-                                                  const displayOwnership = (p.ownership_percentage ?? p.share_percentage ?? p.ownership ?? "-");
-                                                  const idType = p.id_type || p.identification_type || p.document_type || "-";
-                                                  const idNumber = p.id_number || p.id_no || p.identification_number || p.document_number || "-";
-                                                  const pepRaw = (p.is_pep ?? p.pep ?? p.politically_exposed_person);
-                                                  let displayPep: string | number = pepRaw;
-                                                  if (typeof pepRaw === "boolean") {
-                                                    displayPep = pepRaw ? "Yes" : "No";
-                                                  } else if (typeof pepRaw === "number") {
-                                                    displayPep = pepRaw === 1 ? "Yes" : "No";
-                                                  } else if (typeof pepRaw === "string") {
-                                                    const v = pepRaw.toLowerCase();
-                                                    displayPep = ["1", "true", "yes", "y"].includes(v)
-                                                      ? "Yes"
-                                                      : (["0", "false", "no", "n"].includes(v) ? "No" : pepRaw);
-                                                  }
-                                                  const dob = formatDisplayDate(p.dob || p.date_of_birth);
-                                                  const idIssue = formatDisplayDate(p.id_issue || p.id_issued || p.issue_date);
-                                                  const idExpiry = formatDisplayDate(p.id_expiry || p.expiry_date);
-                                                  const key = p.id ?? `${displayName}-${displayNationality}-${idx}`;
-                                                  return (
-                                                    <div key={key} className="grid grid-cols-1 gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 md:grid-cols-2">
-                                                      <div>
-                                                        <div className="text-sm text-muted-foreground">Type</div>
-                                                        <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayType}</div>
-                                                      </div>
-                                                      <div>
-                                                        <div className="text-sm text-muted-foreground">Name</div>
-                                                        <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayName}</div>
-                                                      </div>
-                                                      <div>
-                                                        <div className="text-sm text-muted-foreground">Nationality</div>
-                                                        <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayNationality}</div>
-                                                      </div>
-                                                      <div>
-                                                        <div className="text-sm text-muted-foreground">Role</div>
-                                                        <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayRole}</div>
-                                                      </div>
-                                                      <div>
-                                                        <div className="text-sm text-muted-foreground">Ownership %</div>
-                                                        <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayOwnership}</div>
-                                                      </div>
-                                                      <div>
-                                                        <div className="text-sm text-muted-foreground">ID Type</div>
-                                                        <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{idType}</div>
-                                                      </div>
-                                                      <div>
-                                                        <div className="text-sm text-muted-foreground">ID Number</div>
-                                                        <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{idNumber}</div>
-                                                      </div>
-                                                      <div>
-                                                        <div className="text-sm text-muted-foreground">PEP</div>
-                                                        <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayPep}</div>
-                                                      </div>
-                                                      <div>
-                                                        <div className="text-sm text-muted-foreground">DOB</div>
-                                                        <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{dob}</div>
-                                                      </div>
-                                                      <div>
-                                                        <div className="text-sm text-muted-foreground">ID Issue</div>
-                                                        <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{idIssue}</div>
-                                                      </div>
-                                                      <div>
-                                                        <div className="text-sm text-muted-foreground">ID Expiry</div>
-                                                        <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{idExpiry}</div>
-                                                      </div>
-                                                    </div>
-                                                  );
-                                                })}
-                                              </div>
-                                            ) : (
-                                              <div className="text-sm text-muted-foreground mt-4">No partners/UBOs available.</div>
-                                            )}
-                                          </TabsContent>
-                                          <TabsContent value="documents" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            {Array.isArray(data.documents) && data.documents.length > 0 ? (
-                                              <div className="grid grid-cols-1 gap-3 mt-4 md:grid-cols-2">
-                                                {data.documents.map((doc: any) => {
-                                                  const fileName = doc.file_name || "Document"
-                                                  const isPdf = /\.pdf$/i.test(fileName)
-
-                                                  return (
-                                                    <div key={doc.id} className="rounded-xl border border-border/60 bg-background/70 p-3">
-                                                      <div className="flex items-start gap-3">
-                                                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600">
-                                                          <FileText className="h-4 w-4" />
-                                                        </span>
-                                                        <div className="min-w-0">
-                                                          <p className="truncate text-sm font-semibold text-foreground">{fileName}</p>
-                                                          <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                                                            {isPdf ? "PDF Document" : "Document"}
-                                                          </p>
-                                                        </div>
-                                                      </div>
-                                                      <div className="mt-3 flex justify-end">
-                                                        <a
-                                                          href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/storage/${doc.file_path}`}
-                                                          target="_blank"
-                                                          rel="noreferrer"
-                                                          className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
-                                                        >
-                                                          <Eye className="h-3.5 w-3.5" />
-                                                          View
-                                                        </a>
-                                                      </div>
-                                                    </div>
-                                                  )
-                                                })}
-                                              </div>
-                                            ) : (
-                                              <div className="text-sm text-muted-foreground mt-4">No documents uploaded.</div>
-                                            )}
-                                          </TabsContent>
-                                          <TabsContent value="risk-details" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            <div className="mt-4 rounded-xl border border-border/60 bg-background/70 p-4">
-                                              <p className={SECONDARY_LABEL_CLASS}>Risk Profile</p>
-                                              <div className="mt-3 flex flex-wrap items-center gap-3">
-                                                <span
-                                                  className={`${DETAIL_RISK_SCORE_CIRCLE_CLASS} ${
-                                                    hasDetailRisk ? detailRiskInfo.scoreClass : "bg-muted-foreground"
-                                                  }`}
-                                                >
-                                                  {detailRiskScore}
-                                                </span>
-                                                <span
-                                                  className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold ${
-                                                    hasDetailRisk ? detailRiskInfo.badgeClass : "border-border bg-muted/30 text-muted-foreground"
-                                                  }`}
-                                                >
-                                                  {detailRiskLabel}
-                                                </span>
-                                              </div>
-                                            </div>
-                                          </TabsContent>
-                                          <TabsContent value="aml-questionnaire-answers" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            {Array.isArray(corp?.question_answers) && corp.question_answers.length > 0 ? (
-                                              <div className="space-y-4 mt-4">
-                                                {Object.entries(
-                                                  (corp.question_answers as any[]).reduce((acc: Record<string, any[]>, qa: any) => {
-                                                    const cat = qa?.question?.category || "Other"
-                                                    if (!acc[cat]) acc[cat] = []
-                                                    acc[cat].push(qa)
-                                                    return acc
-                                                  }, {})
-                                                ).map(([category, items], groupIndex) => {
-                                                  const tone = QUESTIONNAIRE_GROUP_TONES[groupIndex % QUESTIONNAIRE_GROUP_TONES.length]
-                                                  return (
-                                                  <div key={category} className={`rounded-xl border p-3 ${tone.card}`}>
-                                                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                                                      <div className={`font-semibold ${tone.heading}`}>{category}</div>
-                                                      <span className="inline-flex items-center rounded-full border border-border/60 bg-background/80 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                                                        {(items as any[]).length} questions
-                                                      </span>
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                      {(items as any[])
-                                                        .slice()
-                                                        .sort((a, b) => Number(a?.question?.order || 0) - Number(b?.question?.order || 0))
-                                                        .map((qa) => {
-                                                          const ans = qa?.answer
-                                                          const yesNo = typeof ans === "boolean" ? (ans ? "Yes" : "No") : ans === 1 ? "Yes" : ans === 0 ? "No" : ans ?? "-"
-                                                          const qText = qa?.question?.question || "-"
-                                                          return (
-                                                            <div key={qa.id || `${qa.compliance_question_id}-${qText}`} className={`grid grid-cols-12 gap-3 rounded-lg border p-2.5 ${tone.row}`}>
-                                                              <div className="col-span-10 text-sm">{qText}</div>
-                                                              <div className="col-span-2 text-sm font-semibold text-right">{yesNo}</div>
-                                                            </div>
-                                                          )
-                                                        })}
-                                                    </div>
-                                                  </div>
-                                                  )
-                                                })}
-                                              </div>
-                                            ) : (
-                                              <div className="text-sm text-muted-foreground mt-4">No Compliance questionnaire available.</div>
-                                            )}
-                                          </TabsContent>
-                                        </Tabs>
-                                      ) : (
-                                        <Tabs defaultValue="personal-info" className="p-4">
-                                          <TabsList className={EXPANDED_TABS_LIST_CLASS}>
-                                            <TabsTrigger value="personal-info" className={EXPANDED_TABS_TRIGGER_CLASS}>Personal Info</TabsTrigger>
-                                            <TabsTrigger value="transaction-details" className={EXPANDED_TABS_TRIGGER_CLASS}>Transaction Details</TabsTrigger>
-                                            <TabsTrigger value="identification-details" className={EXPANDED_TABS_TRIGGER_CLASS}>Identification Details</TabsTrigger>
-                                            <TabsTrigger value="additional-info" className={EXPANDED_TABS_TRIGGER_CLASS}>Additional Information</TabsTrigger>
-                                            <TabsTrigger value="risk-details" className={EXPANDED_TABS_TRIGGER_CLASS}>Risk Details</TabsTrigger>
-                                          </TabsList>
-                                          <TabsContent value="personal-info" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            <DetailGrid items={personalInfoItems} />
-                                          </TabsContent>
-                                          <TabsContent value="transaction-details" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            <DetailGrid items={transactionItems} />
-                                          </TabsContent>
-                                          <TabsContent value="identification-details" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            <DetailGrid items={identificationItems} />
-                                          </TabsContent>
-                                          <TabsContent value="additional-info" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            <DetailGrid items={additionalItems} />
-                                          </TabsContent>
-                                          <TabsContent value="risk-details" className={EXPANDED_TAB_CONTENT_CLASS}>
-                                            <div className="mt-4 rounded-xl border border-border/60 bg-background/70 p-4">
-                                              <p className={SECONDARY_LABEL_CLASS}>Risk Profile</p>
-                                              <div className="mt-3 flex flex-wrap items-center gap-3">
-                                                <span
-                                                  className={`${DETAIL_RISK_SCORE_CIRCLE_CLASS} ${
-                                                    hasDetailRisk ? detailRiskInfo.scoreClass : "bg-muted-foreground"
-                                                  }`}
-                                                >
-                                                  {detailRiskScore}
-                                                </span>
-                                                <span
-                                                  className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold ${
-                                                    hasDetailRisk ? detailRiskInfo.badgeClass : "border-border bg-muted/30 text-muted-foreground"
-                                                  }`}
-                                                >
-                                                  {detailRiskLabel}
-                                                </span>
-                                              </div>
-                                            </div>
-                                          </TabsContent>
-                                        </Tabs>
-                                      )}
-                                    </div>
-                                  )
-                                })()
                               ) : (
-                                <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                  <span>Loading details...</span>
-                                </div>
+                                <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/30 px-2 py-1 text-xs font-medium text-muted-foreground">
+                                  <span className="inline-flex h-7 min-w-7 px-2 items-center justify-center rounded-full bg-muted-foreground text-[10px] font-bold text-white">
+                                    -
+                                  </span>
+                                  <span>Not Scored</span>
+                                </span>
                               )}
                             </td>
                           </tr>
-                        )}
-                      </Fragment>
-                    )
-                  }))}
+                          {isExpanded && (
+                            <tr className="bg-background/85">
+                              <td colSpan={7} className="px-4 py-4">
+                                {detailsById[customer.id] ? (
+                                  (() => {
+                                    const data = detailsById[customer.id]
+                                    const isCorporate = data.customer_type === "corporate"
+                                    const corp = data.corporate_detail
+                                    const indiv = data.individual_detail;
+                                    const user_customer = data.user_customer
+                                    // Aggregate partners/UBOs from multiple possible API keys and flatten
+                                    const possiblePersonsArrays = [
+                                      data.corporate_detail?.related_persons,
+                                      data.corporate_related_persons,
+                                      data.corporate_detail?.partners,
+                                      data.related_persons,
+                                      data.partners,
+                                      data.corporate_detail?.ubo_partners,
+                                    ].filter((arr: any) => Array.isArray(arr));
+                                    const partners = possiblePersonsArrays.reduce((acc: any[], arr: any[]) => acc.concat(arr), [] as any[]);
+                                    const partnersCount = partners.length;
+                                    const expandedCustomerName = isCorporate
+                                      ? corp?.company_name || data.name || "-"
+                                      : [indiv?.first_name, indiv?.last_name].filter(Boolean).join(" ") || data.name || "-"
+                                    const expandedStatus = formatStatusLabel(data?.status)
+                                    const expandedCustomerType = isCorporate ? "Corporate" : "Individual"
+                                    const expandedTypeTone = isCorporate ? CORPORATE_TYPE_TONE_CLASS : INDIVIDUAL_TYPE_TONE_CLASS
+
+                                    const companyInfoItems: DetailItem[] = [
+                                      { label: "Company Name", value: corp?.company_name || data.name || "-" },
+                                      { label: "Email", value: data?.corporate_detail?.email || "-" },
+                                      { label: "Company Address", value: corp?.company_address || "-" },
+                                      { label: "City", value: corp?.city || "-" },
+                                      { label: "Country of Incorporation", value: corp?.country_incorporated || "-" },
+                                      { label: "PO Box No", value: corp?.po_box || "-" },
+                                      {
+                                        label: "Contact Office No",
+                                        value: `${data?.corporate_detail?.office_country_code || ""}${data?.corporate_detail?.office_no || ""}` || "-",
+                                      },
+                                      {
+                                        label: "Contact Mobile No",
+                                        value: `${data?.corporate_detail?.mobile_country_code || ""}${data?.corporate_detail?.mobile_no || ""}` || "-",
+                                      },
+                                      {
+                                        label: "Corporate Status",
+                                        value: (
+                                          <span
+                                            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusTone(
+                                              data?.status || "onboarded",
+                                            )}`}
+                                          >
+                                            {formatStatusLabel(data?.status || "Onboarded")}
+                                          </span>
+                                        ),
+                                        valueContainerClassName: "mt-1",
+                                      },
+                                    ]
+
+                                    const licenseItems: DetailItem[] = [
+                                      { label: "Trade License/CR No", value: corp?.trade_license_no || "-" },
+                                      { label: "Issued At", value: corp?.trade_license_issued_at || "-" },
+                                      { label: "Issued By", value: corp?.trade_license_issued_by || "-" },
+                                      {
+                                        label: "Issue Date",
+                                        value: formatDisplayDate(corp?.license_issue_date),
+                                        valueContainerClassName: "mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words",
+                                      },
+                                      {
+                                        label: "Expiry Date",
+                                        value: formatDisplayDate(corp?.license_expiry_date),
+                                        valueContainerClassName: "mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words",
+                                      },
+                                      { label: "VAT Registration No", value: corp?.vat_registration_no || "-" },
+                                    ]
+
+                                    const businessItems: DetailItem[] = [
+                                      { label: "Entity Type", value: corp?.entity_type || "-" },
+                                      { label: "Business Activity", value: corp?.business_activity || "-" },
+                                      {
+                                        label: "Countries of Operation",
+                                        value: Array.isArray(data.country_operations) && data.country_operations.length > 0
+                                          ? data.country_operations.map((item: any) => item.country).join(", ")
+                                          : "-",
+                                      },
+                                      { label: "Account Holding Bank Name", value: corp?.account_holding_bank_name || "-" },
+                                    ]
+
+                                    const hasDetailRisk = data.risk_level !== null && data.risk_level !== undefined && !isNaN(Number(data.risk_level))
+                                    const detailRiskInfo = getRisk(data.risk_level)
+                                    const detailRiskScore = hasDetailRisk ? Number(data.risk_level).toFixed(2) : "-"
+                                    const detailRiskLabel = hasDetailRisk ? detailRiskInfo.label : "Not Scored"
+
+                                    const personalInfoItems: DetailItem[] = [
+                                      { label: "Full Name", value: [indiv?.first_name, indiv?.last_name].filter(Boolean).join(" ") || data.name || "-" },
+                                      { label: "Email", value: indiv?.email || data.email || "-" },
+                                      { label: "Date of Birth", value: formatDisplayDate(indiv?.dob) },
+                                      { label: "Gender", value: indiv?.gender || "-" },
+                                      { label: "Nationality", value: indiv?.nationality || "-" },
+                                      { label: "Country of Residence", value: indiv?.country_of_residence || indiv?.country || "-" },
+                                      { label: "Address", value: indiv?.address || "-" },
+                                      { label: "City", value: indiv?.city || "-" },
+                                    ]
+
+                                    const transactionItems: DetailItem[] = [
+                                      { label: "Occupation", value: indiv?.occupation || "-" },
+                                      { label: "Source of Income", value: indiv?.source_of_income || "-" },
+                                      { label: "Purpose of Onboarding", value: indiv?.purpose_of_onboarding || "-" },
+                                      { label: "Payment Mode", value: indiv?.payment_mode || "-" },
+                                      {
+                                        label: "Expected Transactions",
+                                        value: formatDisplayNumber(indiv?.expected_no_of_transactions),
+                                      },
+                                      { label: "Expected Volume", value: formatDisplayNumber(indiv?.expected_volume) },
+                                    ]
+
+                                    const identificationItems: DetailItem[] = [
+                                      { label: "ID Type", value: indiv?.id_type || "-" },
+                                      { label: "ID Number", value: indiv?.id_no || "-" },
+                                      { label: "Issuing Authority", value: indiv?.issuing_authority || "-" },
+                                      { label: "Issuing Country", value: indiv?.issuing_country || "-" },
+                                      { label: "Issue Date", value: formatDisplayDate(indiv?.id_issue_date) },
+                                      { label: "Expiry Date", value: formatDisplayDate(indiv?.id_expiry_date) },
+                                    ]
+
+                                    const additionalItems: DetailItem[] = [
+                                      { label: "PEP", value: indiv?.is_pep ? "Yes" : "No" },
+                                      { label: "Dual Nationality", value: indiv?.dual_nationality ? "Yes" : "No" },
+                                      { label: "Adverse News", value: indiv?.adverse_news ? "Yes" : "No" },
+                                      { label: "Screening Fuzziness", value: data?.screening_fuzziness || "-" },
+                                    ]
+
+                                    return (
+                                      <div className="rounded-2xl border border-border/60 bg-background/90 shadow-[0_16px_36px_-24px_oklch(0.28_0.06_260/0.45)]">
+                                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-muted/20 p-3">
+                                          <div className="min-w-0 flex items-center gap-3">
+                                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/70 text-muted-foreground">
+                                              {isCorporate ? <Building2 className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                                            </span>
+                                            <div className="min-w-0">
+                                              <p className={SECONDARY_LABEL_CLASS}>Customer Details</p>
+                                              <p className="truncate font-semibold text-foreground">{expandedCustomerName}</p>
+                                            </div>
+                                            <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${expandedTypeTone}`}>
+                                              {expandedCustomerType}
+                                            </span>
+                                            <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusTone(data?.status)}`}>
+                                              {expandedStatus}
+                                            </span>
+                                          </div>
+                                          <div className="flex flex-wrap items-center justify-end gap-2">
+                                            {user?.role !== "Analyst" && (
+                                              <Link href={`/dashboard/onboarding/customer/edit/${customer.id}`}>
+                                                <Button className={ACTION_PRIMARY_BUTTON_CLASS}>
+                                                  <PencilLine className="h-3.5 w-3.5" />
+                                                  Edit Information
+                                                </Button>
+                                              </Link>
+                                            )}
+
+                                            <Button
+                                              variant="outline"
+                                              className={ACTION_BUTTON_CLASS}
+                                              onClick={() => generateCustomerPDF({ ...data, user_customer })}
+                                            >
+                                              <Download className="h-3.5 w-3.5" />
+                                              Download
+                                            </Button>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className={ACTION_ICON_BUTTON_CLASS}
+                                              onClick={() => setExpandedId(null)}
+                                              aria-label="Close details"
+                                            >
+                                              <X className="h-3.5 w-3.5" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                        {isCorporate ? (
+                                          <Tabs defaultValue="company-info" className="p-4">
+                                            <TabsList className={EXPANDED_TABS_LIST_CLASS}>
+                                              <TabsTrigger value="company-info" className={EXPANDED_TABS_TRIGGER_CLASS}>Company Info</TabsTrigger>
+                                              <TabsTrigger value="license-info" className={EXPANDED_TABS_TRIGGER_CLASS}>License Info</TabsTrigger>
+                                              <TabsTrigger value="business-details" className={EXPANDED_TABS_TRIGGER_CLASS}>Business Details</TabsTrigger>
+                                              <TabsTrigger value="partners" className={EXPANDED_TABS_TRIGGER_CLASS}>Partners{partnersCount ? ` (${partnersCount})` : ""}</TabsTrigger>
+                                              <TabsTrigger value="documents" className={EXPANDED_TABS_TRIGGER_CLASS}>Documents</TabsTrigger>
+                                              <TabsTrigger value="risk-details" className={EXPANDED_TABS_TRIGGER_CLASS}>Risk Details</TabsTrigger>
+                                              {/* <TabsTrigger value="aml-questionnaires">AML Questionnaires</TabsTrigger> */}
+                                              <TabsTrigger value="aml-questionnaire-answers" className={EXPANDED_TABS_TRIGGER_CLASS}>Compliance questionnaire</TabsTrigger>
+                                            </TabsList>
+                                            <TabsContent value="company-info" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              <DetailGrid items={companyInfoItems} />
+                                            </TabsContent>
+                                            <TabsContent value="license-info" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              {isCorporate ? (
+                                                <DetailGrid items={licenseItems} />
+                                              ) : (
+                                                <div className="text-sm text-muted-foreground mt-4">No license info for individual customers.</div>
+                                              )}
+                                            </TabsContent>
+                                            <TabsContent value="business-details" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              {isCorporate ? (
+                                                <DetailGrid items={businessItems} />
+                                              ) : (
+                                                <div className="text-sm text-muted-foreground mt-4">No business details for individual customers.</div>
+                                              )}
+                                            </TabsContent>
+                                            <TabsContent value="partners" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              {Array.isArray(partners) && partners.length > 0 ? (
+                                                <div className="space-y-4 mt-4">
+                                                  {partners.map((p: any, idx: number) => {
+                                                    const displayType = p.type || p.person_type || p.entity_type || (p.is_entity ? "Entity" : p.is_individual ? "Individual" : "-");
+                                                    const displayName = p.name || [p.first_name, p.last_name].filter(Boolean).join(" ") || p.entity_name || "-";
+                                                    const displayNationality = p.nationality || p.country || p.country_of_residence || "-";
+                                                    const displayRole = p.role || p.designation || p.relationship || p.position || "-";
+                                                    const displayOwnership = (p.ownership_percentage ?? p.share_percentage ?? p.ownership ?? "-");
+                                                    const idType = p.id_type || p.identification_type || p.document_type || "-";
+                                                    const idNumber = p.id_number || p.id_no || p.identification_number || p.document_number || "-";
+                                                    const pepRaw = (p.is_pep ?? p.pep ?? p.politically_exposed_person);
+                                                    let displayPep: string | number = pepRaw;
+                                                    if (typeof pepRaw === "boolean") {
+                                                      displayPep = pepRaw ? "Yes" : "No";
+                                                    } else if (typeof pepRaw === "number") {
+                                                      displayPep = pepRaw === 1 ? "Yes" : "No";
+                                                    } else if (typeof pepRaw === "string") {
+                                                      const v = pepRaw.toLowerCase();
+                                                      displayPep = ["1", "true", "yes", "y"].includes(v)
+                                                        ? "Yes"
+                                                        : (["0", "false", "no", "n"].includes(v) ? "No" : pepRaw);
+                                                    }
+                                                    const dob = formatDisplayDate(p.dob || p.date_of_birth);
+                                                    const idIssue = formatDisplayDate(p.id_issue || p.id_issued || p.issue_date);
+                                                    const idExpiry = formatDisplayDate(p.id_expiry || p.expiry_date);
+                                                    const key = p.id ?? `${displayName}-${displayNationality}-${idx}`;
+                                                    return (
+                                                      <div key={key} className="grid grid-cols-1 gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 md:grid-cols-2">
+                                                        <div>
+                                                          <div className="text-sm text-muted-foreground">Type</div>
+                                                          <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayType}</div>
+                                                        </div>
+                                                        <div>
+                                                          <div className="text-sm text-muted-foreground">Name</div>
+                                                          <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayName}</div>
+                                                        </div>
+                                                        <div>
+                                                          <div className="text-sm text-muted-foreground">Nationality</div>
+                                                          <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayNationality}</div>
+                                                        </div>
+                                                        <div>
+                                                          <div className="text-sm text-muted-foreground">Role</div>
+                                                          <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayRole}</div>
+                                                        </div>
+                                                        <div>
+                                                          <div className="text-sm text-muted-foreground">Ownership %</div>
+                                                          <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayOwnership}</div>
+                                                        </div>
+                                                        <div>
+                                                          <div className="text-sm text-muted-foreground">ID Type</div>
+                                                          <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{idType}</div>
+                                                        </div>
+                                                        <div>
+                                                          <div className="text-sm text-muted-foreground">ID Number</div>
+                                                          <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{idNumber}</div>
+                                                        </div>
+                                                        <div>
+                                                          <div className="text-sm text-muted-foreground">PEP</div>
+                                                          <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{displayPep}</div>
+                                                        </div>
+                                                        <div>
+                                                          <div className="text-sm text-muted-foreground">DOB</div>
+                                                          <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{dob}</div>
+                                                        </div>
+                                                        <div>
+                                                          <div className="text-sm text-muted-foreground">ID Issue</div>
+                                                          <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{idIssue}</div>
+                                                        </div>
+                                                        <div>
+                                                          <div className="text-sm text-muted-foreground">ID Expiry</div>
+                                                          <div className="mt-1 px-1 py-0.5 text-sm font-medium text-foreground break-words">{idExpiry}</div>
+                                                        </div>
+                                                      </div>
+                                                    );
+                                                  })}
+                                                </div>
+                                              ) : (
+                                                <div className="text-sm text-muted-foreground mt-4">No partners/UBOs available.</div>
+                                              )}
+                                            </TabsContent>
+                                            <TabsContent value="documents" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              {Array.isArray(data.documents) && data.documents.length > 0 ? (
+                                                <div className="grid grid-cols-1 gap-3 mt-4 md:grid-cols-2">
+                                                  {data.documents.map((doc: any) => {
+                                                    const fileName = doc.file_name || "Document"
+                                                    const isPdf = /\.pdf$/i.test(fileName)
+
+                                                    return (
+                                                      <div key={doc.id} className="rounded-xl border border-border/60 bg-background/70 p-3">
+                                                        <div className="flex items-start gap-3">
+                                                          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600">
+                                                            <FileText className="h-4 w-4" />
+                                                          </span>
+                                                          <div className="min-w-0">
+                                                            <p className="truncate text-sm font-semibold text-foreground">{fileName}</p>
+                                                            <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                                                              {isPdf ? "PDF Document" : "Document"}
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                        <div className="mt-3 flex justify-end">
+                                                          <a
+                                                            href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/storage/${doc.file_path}`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                                                          >
+                                                            <Eye className="h-3.5 w-3.5" />
+                                                            View
+                                                          </a>
+                                                        </div>
+                                                      </div>
+                                                    )
+                                                  })}
+                                                </div>
+                                              ) : (
+                                                <div className="text-sm text-muted-foreground mt-4">No documents uploaded.</div>
+                                              )}
+                                            </TabsContent>
+                                            <TabsContent value="risk-details" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              <div className="mt-4 rounded-xl border border-border/60 bg-background/70 p-4">
+                                                <p className={SECONDARY_LABEL_CLASS}>Risk Profile</p>
+                                                <div className="mt-3 flex flex-wrap items-center gap-3">
+                                                  <span
+                                                    className={`${DETAIL_RISK_SCORE_CIRCLE_CLASS} ${hasDetailRisk ? detailRiskInfo.scoreClass : "bg-muted-foreground"
+                                                      }`}
+                                                  >
+                                                    {detailRiskScore}
+                                                  </span>
+                                                  <span
+                                                    className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold ${hasDetailRisk ? detailRiskInfo.badgeClass : "border-border bg-muted/30 text-muted-foreground"
+                                                      }`}
+                                                  >
+                                                    {detailRiskLabel}
+                                                  </span>
+                                                </div>
+                                              </div>
+                                            </TabsContent>
+                                            <TabsContent value="aml-questionnaire-answers" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              {Array.isArray(corp?.question_answers) && corp.question_answers.length > 0 ? (
+                                                <div className="space-y-4 mt-4">
+                                                  {Object.entries(
+                                                    (corp.question_answers as any[]).reduce((acc: Record<string, any[]>, qa: any) => {
+                                                      const cat = qa?.question?.category || "Other"
+                                                      if (!acc[cat]) acc[cat] = []
+                                                      acc[cat].push(qa)
+                                                      return acc
+                                                    }, {})
+                                                  ).map(([category, items], groupIndex) => {
+                                                    const tone = QUESTIONNAIRE_GROUP_TONES[groupIndex % QUESTIONNAIRE_GROUP_TONES.length]
+                                                    return (
+                                                      <div key={category} className={`rounded-xl border p-3 ${tone.card}`}>
+                                                        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                                          <div className={`font-semibold ${tone.heading}`}>{category}</div>
+                                                          <span className="inline-flex items-center rounded-full border border-border/60 bg-background/80 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                                                            {(items as any[]).length} questions
+                                                          </span>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                          {(items as any[])
+                                                            .slice()
+                                                            .sort((a, b) => Number(a?.question?.order || 0) - Number(b?.question?.order || 0))
+                                                            .map((qa) => {
+                                                              const ans = qa?.answer
+                                                              const yesNo = typeof ans === "boolean" ? (ans ? "Yes" : "No") : ans === 1 ? "Yes" : ans === 0 ? "No" : ans ?? "-"
+                                                              const qText = qa?.question?.question || "-"
+                                                              return (
+                                                                <div key={qa.id || `${qa.compliance_question_id}-${qText}`} className={`grid grid-cols-12 gap-3 rounded-lg border p-2.5 ${tone.row}`}>
+                                                                  <div className="col-span-10 text-sm">{qText}</div>
+                                                                  <div className="col-span-2 text-sm font-semibold text-right">{yesNo}</div>
+                                                                </div>
+                                                              )
+                                                            })}
+                                                        </div>
+                                                      </div>
+                                                    )
+                                                  })}
+                                                </div>
+                                              ) : (
+                                                <div className="text-sm text-muted-foreground mt-4">No Compliance questionnaire available.</div>
+                                              )}
+                                            </TabsContent>
+                                          </Tabs>
+                                        ) : (
+                                          <Tabs defaultValue="personal-info" className="p-4">
+                                            <TabsList className={EXPANDED_TABS_LIST_CLASS}>
+                                              <TabsTrigger value="personal-info" className={EXPANDED_TABS_TRIGGER_CLASS}>Personal Info</TabsTrigger>
+                                              <TabsTrigger value="transaction-details" className={EXPANDED_TABS_TRIGGER_CLASS}>Transaction Details</TabsTrigger>
+                                              <TabsTrigger value="identification-details" className={EXPANDED_TABS_TRIGGER_CLASS}>Identification Details</TabsTrigger>
+                                              <TabsTrigger value="additional-info" className={EXPANDED_TABS_TRIGGER_CLASS}>Additional Information</TabsTrigger>
+                                              <TabsTrigger value="risk-details" className={EXPANDED_TABS_TRIGGER_CLASS}>Risk Details</TabsTrigger>
+                                            </TabsList>
+                                            <TabsContent value="personal-info" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              <DetailGrid items={personalInfoItems} />
+                                            </TabsContent>
+                                            <TabsContent value="transaction-details" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              <DetailGrid items={transactionItems} />
+                                            </TabsContent>
+                                            <TabsContent value="identification-details" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              <DetailGrid items={identificationItems} />
+                                            </TabsContent>
+                                            <TabsContent value="additional-info" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              <DetailGrid items={additionalItems} />
+                                            </TabsContent>
+                                            <TabsContent value="risk-details" className={EXPANDED_TAB_CONTENT_CLASS}>
+                                              <div className="mt-4 rounded-xl border border-border/60 bg-background/70 p-4">
+                                                <p className={SECONDARY_LABEL_CLASS}>Risk Profile</p>
+                                                <div className="mt-3 flex flex-wrap items-center gap-3">
+                                                  <span
+                                                    className={`${DETAIL_RISK_SCORE_CIRCLE_CLASS} ${hasDetailRisk ? detailRiskInfo.scoreClass : "bg-muted-foreground"
+                                                      }`}
+                                                  >
+                                                    {detailRiskScore}
+                                                  </span>
+                                                  <span
+                                                    className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold ${hasDetailRisk ? detailRiskInfo.badgeClass : "border-border bg-muted/30 text-muted-foreground"
+                                                      }`}
+                                                  >
+                                                    {detailRiskLabel}
+                                                  </span>
+                                                </div>
+                                              </div>
+                                            </TabsContent>
+                                          </Tabs>
+                                        )}
+                                      </div>
+                                    )
+                                  })()
+                                ) : (
+                                  <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <span>Loading details...</span>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      )
+                    }))}
                 </tbody>
               </table>
             )}

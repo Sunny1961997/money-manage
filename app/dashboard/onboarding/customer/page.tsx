@@ -1,6 +1,5 @@
 "use client"
 
-import { Spinner } from "@/components/ui/spinner"
 import { useState, useEffect, useRef } from "react"
 import type { KeyboardEvent } from "react"
 import { Button } from "@/components/ui/button"
@@ -25,13 +24,14 @@ import {
   Plus,
   Trash2,
   FileCheck,
+  Loader2,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { formatContactNumber } from "@/lib/utils"
 
-const PAGE_CLASS = "space-y-8 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
+const PAGE_CLASS = "space-y-8 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
 const CARD_STYLE =
   "rounded-3xl border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
 const SECONDARY_LABEL_CLASS = "text-xs font-extrabold uppercase tracking-[0.14em] text-foreground"
@@ -172,9 +172,14 @@ export default function CustomerOnboardingPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Spinner className="w-8 h-8 text-primary" />
-        <p className="text-sm text-muted-foreground animate-pulse">Loading form data...</p>
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex flex-col items-center">
+          <div className="relative flex h-14 w-14 items-center justify-center">
+            <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" aria-hidden="true" />
+          </div>
+          <p className="absolute top-full mt-4 text-sm text-muted-foreground animate-pulse whitespace-nowrap">Loading form data...</p>
+        </div>
       </div>
     )
   }
@@ -983,7 +988,7 @@ function IndividualForm({
             >
               {submitting ? (
                 <>
-                  <Spinner className="mr-2" />
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Submitting...
                 </>
               ) : (
@@ -2102,7 +2107,7 @@ function CorporateForm({
             >
               {submitting ? (
                 <>
-                  <Spinner className="mr-2" />
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Submitting...
                 </>
               ) : (

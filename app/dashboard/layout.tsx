@@ -60,7 +60,7 @@ export default function DashboardLayoutWrapper({
       {isSidebar && <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />}
 
       <div className={cn(
-        "flex flex-col min-h-screen transition-all duration-300",
+        "flex flex-col min-h-screen overflow-x-hidden transition-all duration-300",
         isSidebar ? (!isMobile ? (isCollapsed ? "ml-16" : "ml-72") : "ml-0") : "ml-0"
       )}>
         <Header setIsCollapsed={setIsCollapsed} />

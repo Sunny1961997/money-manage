@@ -11,6 +11,7 @@ import {
   FileText,
   RefreshCcw,
   Search,
+  Loader2,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { generateScreeningPDF } from "@/lib/screening-pdf-generator"
@@ -95,6 +96,7 @@ export default function QuickScreeningResultsPage() {
   const [savedByCandidate, setSavedByCandidate] = React.useState<
     Record<string, { decision: SourceDecision; annotationChoice: string; annotationText: string }>
   >({})
+  const [loading, setLoading] = React.useState(true)
 
   // Bulk selection and bulk decision state
   const bestBySource = payload?.data?.best_by_source || []
@@ -103,24 +105,31 @@ export default function QuickScreeningResultsPage() {
     return bestBySource.flatMap(src => (src.data || []).filter(Boolean).map(c => `${src.source}:${c!.id}`))
   }, [bestBySource])
   const allSelected = selectedCandidates.length === allCandidateKeys.length && allCandidateKeys.length > 0
+
   const toggleSelectAll = () => {
     setSelectedCandidates(allSelected ? [] : [...allCandidateKeys])
   }
+
   const toggleSelectCandidate = (key: string) => {
     setSelectedCandidates(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
   }
+
   const [bulkDecision, setBulkDecision] = React.useState<SourceDecision | null>(null)
   const [bulkResultType, setBulkResultType] = React.useState<string>("")
   const [bulkAnnotation, setBulkAnnotation] = React.useState<string>("")
 
   React.useEffect(() => {
-    const raw = sessionStorage.getItem("screening_results")
-    if (!raw) return
     try {
-      const parsed = JSON.parse(raw)
-      setPayload(parsed)
-    } catch {
+      const raw = sessionStorage.getItem("screening_results")
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        setPayload(parsed)
+      }
+    } catch (err) {
+      console.error("Failed to parse screening results:", err)
       setPayload(null)
+    } finally {
+      setLoading(false)
     }
   }, [])
 
@@ -157,7 +166,7 @@ export default function QuickScreeningResultsPage() {
   }, [payload])
 
   React.useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       const allDetails: Record<string, any> = {}
       for (const src of bestBySource) {
         for (const c of (src.data || []).filter(Boolean) as Candidate[]) {
@@ -285,6 +294,20 @@ export default function QuickScreeningResultsPage() {
     if (normalized === "entity" || normalized === "corporate") return "Corporate"
     if (normalized === "vessel") return "Vessel"
     return "Individual"
+  }
+
+  if (loading) {
+    return (
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex flex-col items-center">
+          <div className="relative flex h-14 w-14 items-center justify-center">
+            <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" aria-hidden="true" />
+          </div>
+          <p className="absolute top-full mt-4 text-sm text-muted-foreground animate-pulse whitespace-nowrap">Loading results...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!payload) {

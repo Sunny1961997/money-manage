@@ -7,10 +7,10 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell
 } from "recharts"
-import { DollarSign, Users, CheckCircle2, AlertCircle, FileText, Download, Calendar } from "lucide-react"
+import { DollarSign, Users, CheckCircle2, AlertCircle, FileText, Download, Calendar, Loader2 } from "lucide-react"
 
 // Styles from your existing structure
-const PAGE_CLASS = "space-y-8 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
+const PAGE_CLASS = "space-y-8 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
 const CARD_STYLE = "rounded-3xl border border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
 
 export default function RevenueDashboard() {
@@ -39,7 +39,19 @@ export default function RevenueDashboard() {
     fetchDashboard()
   }, [])
 
-  if (loading) return <div className={PAGE_CLASS}><div className="text-center py-20 text-muted-foreground">Loading...</div></div>
+  if (loading) {
+    return (
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex flex-col items-center">
+          <div className="relative flex h-14 w-14 items-center justify-center">
+            <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" aria-hidden="true" />
+          </div>
+          <p className="absolute top-full mt-4 text-sm text-muted-foreground animate-pulse whitespace-nowrap">Loading dashboard data...</p>
+        </div>
+      </div>
+    )
+  }
   if (error) return <div className={PAGE_CLASS}><div className="text-center py-20 text-destructive">{error}</div></div>
   if (!dashboard) return null
 

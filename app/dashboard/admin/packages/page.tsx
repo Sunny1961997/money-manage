@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import { Edit } from "lucide-react"
+import { Edit, Loader2 } from "lucide-react"
 export default function AdminPackagesPage() {
     const [packages, setPackages] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -28,7 +28,7 @@ export default function AdminPackagesPage() {
     }, [])
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto p-8">
+        <div className="space-y-8 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Packages</h1>
                 <Link href="/dashboard/admin/packages/add">
@@ -39,7 +39,15 @@ export default function AdminPackagesPage() {
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
                         {loading ? (
-                            <div className="text-center py-12">Loading packages...</div>
+                            <div className="grid w-full min-h-[400px] place-items-center">
+                                <div className="relative flex flex-col items-center">
+                                    <div className="relative flex h-14 w-14 items-center justify-center">
+                                        <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+                                        <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" aria-hidden="true" />
+                                    </div>
+                                    <p className="absolute top-full mt-4 text-sm text-muted-foreground animate-pulse whitespace-nowrap">Loading packages...</p>
+                                </div>
+                            </div>
                         ) : (
                             <table className="w-full">
                                 <thead className="bg-slate-50 border-b">
