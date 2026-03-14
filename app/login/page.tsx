@@ -169,7 +169,7 @@ export default function LoginPage() {
                 <RequiredLabel htmlFor="email" text="Email" className={FIELD_LABEL_CLASS} />
                 <Input
                   id="email"
-                  type="email"
+                  type="string"
                   placeholder="you@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CheckCircle2, ChevronLeft, ChevronRight, Download, FileCheck2, FilterX, Loader2, RotateCw, Search, X, XCircle } from "lucide-react"
+import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Download, FileCheck2, FilterX, Info, Loader2, RotateCw, Search, X, XCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { formatDateTime } from "@/lib/date-format"
 
@@ -14,7 +14,7 @@ type ScreeningLog = {
   user_id: number
   search_string: string
   screening_type: string
-  is_match: boolean
+  is_match: boolean | number | string
   screening_date: string
   user?: {
     id: number
@@ -89,6 +89,7 @@ export default function ScreeningLogsPage() {
         credentials: "include",
       })
       const data: ScreeningLogsResponse = await res.json()
+      console.log("Fetched logs:", data);
 
       if (data.status) {
         setLogs(data.data.items || [])
@@ -103,6 +104,47 @@ export default function ScreeningLogsPage() {
       setLoading(false)
     }
   }
+
+  const getMatchStatus = (d: any) => {
+    // Convert to string and lowercase for consistent checking
+    const val = String(d).toLowerCase();
+
+    if (val === "1" || val === "true" || val === "true match") {
+      return {
+        label: "True Match",
+        classes: "border-red-200 bg-red-100 text-red-700",
+        icon: <CheckCircle2 className="h-3.5 w-3.5" />
+      };
+    }
+    if (val === "potential match") {
+      return {
+        label: "Potential Match",
+        classes: "border-amber-200 bg-amber-100 text-amber-700",
+        icon: <AlertCircle className="h-3.5 w-3.5" />
+      };
+    }
+    if (val === "0" || val === "false" || val === "no match") {
+      return {
+        label: "No Match",
+        classes: "border-emerald-200 bg-emerald-100 text-emerald-700",
+        icon: <XCircle className="h-3.5 w-3.5" />
+      };
+    }
+    if (val === "insufficient data") {
+      return {
+        label: "Insufficient Data",
+        classes: "border-zinc-200 bg-zinc-100 text-zinc-700",
+        icon: <Info className="h-3.5 w-3.5" />
+      };
+    }
+
+    // Default Fallback
+    return {
+      label: String(d),
+      classes: "border-blue-200 bg-blue-100 text-blue-700",
+      icon: <AlertCircle className="h-3.5 w-3.5" />
+    };
+  };
 
   const screeningTypes = useMemo(() => {
     const unique = new Set(logs.map((log) => log.screening_type).filter(Boolean))
@@ -386,25 +428,22 @@ export default function ScreeningLogsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        {log.is_match ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            Match Found
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700">
-                            <XCircle className="h-3.5 w-3.5" />
-                            No Match
-                          </span>
-                        )}
+                        {(() => {
+                          const status = getMatchStatus(log.is_match);
+                          return (
+                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${status.classes}`}>
+                              {status.icon}
+                              {status.label}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-4 py-3">
                         <Button
                           variant="outline"
                           size="sm"
-                          className={`border-border/70 bg-background/90 text-xs font-semibold ${
-                            downloadingLogId === log.id ? "h-8 rounded-full px-3" : "h-8 w-8 rounded-full p-0"
-                          }`}
+                          className={`border-border/70 bg-background/90 text-xs font-semibold ${downloadingLogId === log.id ? "h-8 rounded-full px-3" : "h-8 w-8 rounded-full p-0"
+                            }`}
                           disabled={downloadingLogId === log.id}
                           onClick={() => handleDownloadReport(log.id, log.search_string)}
                           aria-label={downloadingLogId === log.id ? "Downloading..." : "Download"}

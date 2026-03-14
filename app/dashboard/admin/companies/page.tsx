@@ -22,6 +22,8 @@ type Company = {
   country: string
   created_at: string | null
   updated_at: string | null
+  status?: string
+  company_users_count?: number
 }
 
 const PAGE_CLASS = "space-y-8 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
@@ -39,72 +41,61 @@ export default function CompaniesPage() {
   const router = useRouter()
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [total, setTotal] = useState(0)
+  const [activeCount, setActiveCount] = useState(0)
+  const [remainingScreeningsTotal, setRemainingScreeningsTotal] = useState(0)
 
   useEffect(() => {
     const fetchCompanies = async () => {
+      setLoading(true)
+      setError(null)
       try {
-        const params = new URLSearchParams({
+        const fetchParams = new URLSearchParams({
           offset: String((page - 1) * limit),
           limit: String(limit),
         })
-        if (searchTerm) params.append("search", searchTerm)
-        const res = await fetch(`/api/companies?${params.toString()}`, {
+        if (searchTerm) fetchParams.append("search", searchTerm)
+
+        const res = await fetch(`/api/companies?${fetchParams.toString()}`, {
           method: "GET",
           credentials: "include",
         })
         const data = await res.json()
 
-        if (data.status === "success" || data.status) {
-          const companiesMap = new Map<number, Company>()
-          const users = data.data || []
-          // If API returns total, set it
-          if (typeof data.total === "number") setTotal(data.total)
-          else if (Array.isArray(users)) setTotal(users.length)
-
-          users.forEach((user: any) => {
-            if (user.company_users && Array.isArray(user.company_users)) {
-              user.company_users.forEach((cu: any) => {
-                const companyInfo = cu.company_information
-                if (companyInfo && !companiesMap.has(companyInfo.id)) {
-                  companiesMap.set(companyInfo.id, companyInfo)
-                }
-              })
-            }
-          })
-
-          setCompanies(Array.from(companiesMap.values()))
-        } else {
+        if (!(data.status === "success" || data.status)) {
           setError(data.message || "Failed to load companies")
+          setCompanies([])
+          return
         }
+
+        const companiesFromApi: Company[] = Array.isArray(data.data) ? data.data : []
+
+        if (data.meta) {
+          setTotal(Number(data.meta.total ?? 0))
+          setActiveCount(Number(data.meta.active ?? 0))
+          setRemainingScreeningsTotal(Number(data.meta.remaining_screenings ?? 0))
+        }
+
+        setCompanies(companiesFromApi)
       } catch (err: any) {
         setError(err.message || "Failed to load companies")
       } finally {
         setLoading(false)
+        setInitialLoad(false)
       }
     }
 
     fetchCompanies()
   }, [page, limit, searchTerm])
 
-  const filteredCompanies = useMemo(
-    () =>
-      companies.filter((company) =>
-        company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.trade_license_number.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [companies, searchTerm]
-  )
+  const totalPages = Math.max(1, Math.ceil(total / limit))
 
-  const activeCompanies = companies.filter((company) => new Date(company.expiration_date) > new Date()).length
-  const remainingScreenings = companies.reduce((sum, company) => sum + company.remaining_screenings, 0)
-
-  if (loading) {
+  if (initialLoad && loading) {
     return (
       <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
         <div className="relative flex h-14 w-14 items-center justify-center">
@@ -159,19 +150,19 @@ export default function CompaniesPage() {
         <Card className={CARD_STYLE}>
           <CardContent className="p-5">
             <p className={LABEL_CLASS}>Total Companies</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{companies.length}</p>
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{total}</p>
           </CardContent>
         </Card>
         <Card className={CARD_STYLE}>
           <CardContent className="p-5">
             <p className={LABEL_CLASS}>Active Subscriptions</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{activeCompanies}</p>
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{activeCount}</p>
           </CardContent>
         </Card>
         <Card className={CARD_STYLE}>
           <CardContent className="p-5">
             <p className={LABEL_CLASS}>Remaining Screenings</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{remainingScreenings}</p>
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{remainingScreeningsTotal}</p>
           </CardContent>
         </Card>
       </div>
@@ -207,14 +198,20 @@ export default function CompaniesPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredCompanies.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td className="px-4 py-10 text-center text-sm text-muted-foreground" colSpan={8}>
+                      <Loader2 className="inline h-5 w-5 animate-spin mr-2" />Loading...
+                    </td>
+                  </tr>
+                ) : companies.length === 0 ? (
                   <tr>
                     <td className="px-4 py-10 text-center text-sm text-muted-foreground" colSpan={8}>
                       No companies found.
                     </td>
                   </tr>
                 ) : (
-                  filteredCompanies.map((company) => {
+                  companies.map((company, idx) => {
                     const isActive = new Date(company.expiration_date) > new Date()
                     const screeningPercentage =
                       company.total_screenings > 0
@@ -222,7 +219,7 @@ export default function CompaniesPage() {
                         : 0
 
                     return (
-                      <tr key={company.id} className="border-b border-border/60 transition hover:bg-muted/20">
+                      <tr key={`${company.id}-${idx}`} className="border-b border-border/60 transition hover:bg-muted/20">
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2.5 text-sm text-foreground">
                             <Building2 className="h-4 w-4 shrink-0 text-primary" />
@@ -314,12 +311,23 @@ export default function CompaniesPage() {
                 <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>
                   Previous
                 </Button>
-                <Button variant="outline" size="sm" disabled={companies.length < limit} onClick={() => setPage(page + 1)}>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <Button
+                    key={p}
+                    variant={p === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPage(p)}
+                    className={p === page ? "bg-primary text-primary-foreground" : ""}
+                  >
+                    {p}
+                  </Button>
+                ))}
+                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
                   Next
                 </Button>
               </div>
               <div className="text-xs text-muted-foreground">
-                Page {page}
+                Page {page} of {totalPages} ({total} total)
               </div>
               <div>
                 <select

@@ -20,7 +20,11 @@ export async function GET(req: Request) {
   }
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/companies`, {
+    const { searchParams } = new URL(req.url)
+    const limit = searchParams.get("limit") || "15"
+    const offset = searchParams.get("offset") || "1"
+    const search = searchParams.get("search") || ""
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/companies?limit=${limit}&offset=${offset}&search=${search}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${decodedToken}`,

@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { Bell, KeyRound, LayoutDashboard, LogOut, PanelLeft, Settings, PanelTop, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -105,6 +106,9 @@ export function Header({ setIsCollapsed }: { setIsCollapsed?: Dispatch<SetStateA
   const isMobile = useIsMobile()
   const { user, clearAuth, isLoading, setLoading, setError, navPosition, setNavPosition } = useAuthStore()
   const { section, title } = getHeaderMeta(pathname ?? "/dashboard")
+  useEffect(() => {
+    setLoading(false)
+  }, [setLoading])
 
   const currentDate = new Intl.DateTimeFormat(undefined, {
     weekday: "short",

@@ -199,7 +199,17 @@ export async function generateScreeningSessionPDF({
   // --- CASE SUMMARY & OUTCOME (Two Tables Side by Side) ---
   const colWidth = (contentWidth - 6) / 2
 
-  const hasPep = bestBySourceForPdf.some(src => (src.data || []).some((c: any) => c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1')));
+  // PEP Status: true if any candidate in results (not just saved) has is_pep true and confidence 100%
+  let hasPep = false
+  for (const src of bestBySource) {
+    for (const c of (src.data || [])) {
+      if (c && (c.is_pep === true || c.is_pep === 'true' || c.is_pep === 1 || c.is_pep === '1') && Number(c.confidence) === 100) {
+        hasPep = true
+        break
+      }
+    }
+    if (hasPep) break
+  }
 
   const computedIrrelevant = (total_found ?? 0) - (relevantCount ?? 0)
 
@@ -320,7 +330,7 @@ export async function generateScreeningSessionPDF({
     if (d === "no match") return { label: "No Match", color: [34, 197, 94] }
     if (d === "insufficient data") return { label: "Insufficient Data", color: [156, 163, 175] }
     // if (d === "pending review") return { label: "Pending Review", color: [156, 163, 175] }
-    return { label: "No Match", color: [156, 163, 175] }
+    return { label: "No Match", color: [34, 197, 94] }
   }
 
   const risk = decisionToRisk(finalDecision)
@@ -841,6 +851,28 @@ export async function generateScreeningSessionPDF({
     }
   } catch (err) {
     console.error('Error uploading screening report:', err)
+  }
+
+  // Update screening log with is_match (Result) value
+  if (screening_log_id && screening_log_id !== 'N/A') {
+    try {
+      const isMatch = risk.label // "True Match" | "Potential Match" | "No Match" | "Insufficient Data"
+      console.log("screening_log_id:", screening_log_id)
+      const res = await fetch(`/api/screening-logs/${screening_log_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ is_match: isMatch }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        console.error('Failed to update screening log:', data)
+      } else {
+        console.log('Screening log updated successfully:', data)
+      }
+    } catch (err) {
+      console.error('Error updating screening log:', err)
+    }
   }
 
   // Also download locally

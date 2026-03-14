@@ -42,7 +42,7 @@ const TEXTAREA_CLASS =
   "w-full rounded-xl border border-border/70 bg-background/90 px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground"
 const TABS_GRID_LIST_CLASS = "grid h-auto w-full grid-cols-2 gap-1 bg-transparent p-0 md:grid-cols-3 lg:grid-cols-5"
 const TABS_GRID_TRIGGER_CLASS =
-  "h-10 w-full rounded-xl px-2 text-center text-sm whitespace-nowrap justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+  "h-10 bg-primary/20 w-full rounded-xl px-2 text-center text-sm whitespace-nowrap justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 
 const blockExponentInput = (e: KeyboardEvent<HTMLInputElement>) => {
   if (e.key === "e" || e.key === "E") {
@@ -297,12 +297,6 @@ function IndividualForm({
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  // Validation Checkers
-  const isIndividualFormValid = [
-    firstName, lastName, dob, address, city, country, nationality, countryCode, contactNo, email, gender, occupation, sourceIncome, purpose, paymentMethod,
-    approach, idType, idNo, issuingAuthority, idIssueAtCountry, idIssueDate, idExpiryDate, placeOfBirth, countryOfResidence,
-  ].every(Boolean) && productTypes.length > 0
-
   // Tab state
   const [activeTab, setActiveTab] = useState("personal")
   const [submitting, setSubmitting] = useState(false)
@@ -390,6 +384,7 @@ function IndividualForm({
         description: `Please fill in: ${emptyFields.join(', ')}`,
         // variant: "destructive"
       })
+      setSubmitting(false)
       return
     }
 
@@ -979,7 +974,7 @@ function IndividualForm({
             <Button
               className="w-full sm:w-auto min-w-[200px] h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
               type="submit"
-              disabled={submitting || !isIndividualFormValid}
+              disabled={submitting}
             >
               {submitting ? (
                 <>
@@ -1059,6 +1054,7 @@ function CorporateForm({
     { value: "Ajman Free Zone", label: "Ajman Free Zone" },
   ]
   const entity_types = [
+    { value: "LLC", label: "LLC" },
     { value: "IFZA", label: "IFZA" },
     { value: "Meydan", label: "Meydan" },
     { value: "Shams", label: "Shams" },
@@ -1181,18 +1177,6 @@ function CorporateForm({
 
   const openCorpFilePicker = () => corpFileInputRef.current?.click()
 
-  const isCorporateFormValid = [
-    companyName, companyAddress, city, companyCountry, corporateCustomerType, mobileCountryCode, mobileNo, email,
-    tradeLicenseNo, tradeLicenseIssuedAt, tradeLicenseIssuedBy, licenseIssueDate, licenseExpiryDate, tenancyContractExpiryDate, entityType,
-    businessActivity, purposeOfRelation, productSource, paymentMode, deliveryChannel
-  ].every(Boolean) &&
-    productTypesCorp.length > 0 &&
-    countriesOfOperation.length > 0 &&
-    ubos.every(ubo =>
-      ubo.type && ubo.name && ubo.idType && ubo.idNo && ubo.idIssue && ubo.idExpiry && ubo.dob && ubo.role && ubo.ownershipPercentage
-    ) &&
-    (!questionnaires.length || questionnaires.every(q => questionnaireAnswers[q.id] !== undefined && questionnaireAnswers[q.id] !== null))
-
   const router = useRouter()
   const { toast } = useToast()
   const [submitting, setSubmitting] = useState(false)
@@ -1224,7 +1208,6 @@ function CorporateForm({
       'Trade License/CR Issued Date': licenseIssueDate,
       'Trade License/CR Expiry Date': licenseExpiryDate,
       // 'VAT Registration Number': vatRegistrationNo,
-      'Tenancy Contract Expiry Date': tenancyContractExpiryDate,
       // Business Information
       'Entity Type': entityType,
       'Countries of Operation': countriesOfOperation.length > 0 ? 'filled' : '',
@@ -1250,6 +1233,7 @@ function CorporateForm({
         description: `Please fill in: ${emptyFields.join(', ')}`,
         // variant: "destructive"
       })
+      setSubmitting(false)
       return
     }
 
@@ -1278,6 +1262,7 @@ function CorporateForm({
           description: `Please fill in: ${uboEmptyFields.join(', ')}`,
           // variant: "destructive"
         })
+        setSubmitting(false)
         return
       }
     }
@@ -1290,6 +1275,7 @@ function CorporateForm({
           title: "Required fields missing",
           description: `Please answer AML Questionnaires (${missing.length} unanswered).`,
         })
+        setSubmitting(false)
         return
       }
     }
@@ -1317,7 +1303,7 @@ function CorporateForm({
         license_issue_date: licenseIssueDate,
         license_expiry_date: licenseExpiryDate,
         vat_registration_no: vatRegistrationNo,
-        tenancy_contract_expiry_date: tenancyContractExpiryDate,
+        ...(tenancyContractExpiryDate && { tenancy_contract_expiry_date: tenancyContractExpiryDate }),
         entity_type: entityType,
         business_activity: businessActivity === 'Other' ? businessActivityOther : businessActivity,
         is_entity_dealting_with_import_export: isImportExport,
@@ -1598,7 +1584,7 @@ function CorporateForm({
                     <input className={FIELD_CLASS} placeholder="Enter VAT Registration Number" value={vatRegistrationNo} onChange={e => setVatRegistrationNo(e.target.value)} />
                   </div>
                   <div className="md:col-span-2 space-y-2">
-                    <RequiredLabel text="Tenancy Contract Expiry Date" className={FIELD_LABEL_CLASS} />
+                    <label className={FIELD_LABEL_CLASS}>Tenancy Contract Expiry Date</label>
                     <Input type="date" className={FIELD_CLASS} value={tenancyContractExpiryDate} onChange={e => setTenancyContractExpiryDate(e.target.value)} />
                   </div>
                 </div>
@@ -1618,7 +1604,7 @@ function CorporateForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <RequiredLabel text="Entity Type" className={FIELD_LABEL_CLASS} />
+                    <RequiredLabel text="Entity legal status" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={entity_types}
                       value={entityType}
@@ -1955,7 +1941,7 @@ function CorporateForm({
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>Nationality</label>
+                        <RequiredLabel className={FIELD_LABEL_CLASS} text="Nationality" />
                         <Combobox
                           options={countries}
                           value={ubo.nationality}
@@ -1971,7 +1957,7 @@ function CorporateForm({
                           options={idTypes}
                           value={ubo.idType}
                           onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "idType", v)}
-                          placeholder="Passport"
+                          placeholder="Select ID Type"
                           searchPlaceholder="Search type..."
                           className={FIELD_CLASS}
                         />
@@ -1998,7 +1984,7 @@ function CorporateForm({
                           options={roles}
                           value={ubo.role}
                           onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "role", v)}
-                          placeholder="UBO"
+                          placeholder="Select a role"
                           searchPlaceholder="Search role..."
                           className={FIELD_CLASS}
                         />
@@ -2098,7 +2084,7 @@ function CorporateForm({
             <Button
               className="w-full sm:w-auto min-w-[200px] h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
               type="submit"
-              disabled={submitting || !isCorporateFormValid}
+              disabled={submitting}
             >
               {submitting ? (
                 <>
