@@ -365,6 +365,27 @@ export default function ViewGoamlReportPage() {
     { key: "currencyCode", label: "Currency Code", value: report.currency_code || "-" },
   ]
 
+  const relatedPersons: any[] =
+    (Array.isArray(corp?.related_persons) ? corp.related_persons : [])
+      .filter(Boolean)
+
+  const corporateRelatedFields = relatedPersons.map((p: any, idx: number) => {
+    const name = p?.name || [p?.first_name, p?.last_name].filter(Boolean).join(" ") || `Related Person ${idx + 1}`
+    return {
+      key: `corpRelated-${p?.id ?? idx}`,
+      label: `${p?.role || p?.type || "Related Person"} (${idx + 1})`,
+      value: (
+        <div className="space-y-1">
+          <div className="font-semibold text-foreground">{name}</div>
+          <div className="text-xs text-muted-foreground">
+            Nationality: {p?.nationality || "-"} | ID: {p?.id_no || p?.id_number || "-"} | DOB: {formatDate(p?.dob, p?.dob || "-")}
+          </div>
+        </div>
+      ),
+      fullWidth: true,
+    } as DetailFieldItem
+  })
+
   return (
     <div className={PAGE_CLASS}>
       <Button
@@ -481,6 +502,17 @@ export default function ViewGoamlReportPage() {
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 {corporateFields.map((field) => (
                   <DetailField key={field.key} label={field.label} value={field.value} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {isCorporate && relatedPersons.length > 0 && (
+            <section className="border-t border-border/60 pt-6">
+              <p className={SECONDARY_LABEL_CLASS}>Corporate Related Persons</p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {corporateRelatedFields.map((field) => (
+                  <DetailField key={field.key} label={field.label} value={field.value} fullWidth={field.fullWidth} />
                 ))}
               </div>
             </section>

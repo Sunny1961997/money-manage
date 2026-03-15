@@ -102,6 +102,10 @@ export async function generateCustomerPDF(data: any) {
   doc.setFont(PDF_FONT_PRIMARY, "normal")
   doc.text("Customer Due Diligence & KYC Report", pageWidth / 2, 24, { align: "center" })
 
+  doc.setFontSize(9)
+  doc.setFont(PDF_FONT_PRIMARY, "normal")
+  doc.text(userCompany, pageWidth / 2, 32, { align: "center" })
+
   // ----------------------------
   // KYC report layout (2 pages)
   // ----------------------------

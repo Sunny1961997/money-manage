@@ -1111,7 +1111,7 @@ function CorporateEditForm({
   ]
   const payment_modes = [
     { value: "Cash", label: "Cash" },
-    { value: "Debit/Credit Card-Cardholder name verified", label: "Debit/Credit Card-Cardholder name verified" },
+    { value: "Debit/Credit Card", label: "Debit/Credit Card" },
     { value: "Bank Transfer-Inside UAE", label: "Bank Transfer-Inside UAE" },
     { value: "Bank Transfer-Outisde UAE", label: "Bank Transfer-Outisde UAE" },
     { value: "Parial Cash/Card/Online trs", label: "Parial Cash/Card/Online trs" },

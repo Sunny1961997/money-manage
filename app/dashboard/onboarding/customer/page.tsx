@@ -133,7 +133,7 @@ export default function CustomerOnboardingPage() {
   const [countries, setCountries] = useState<Array<{ value: string; label: string }>>([])
   const [countryCodes, setCountryCodes] = useState<Array<{ value: string; label: string }>>([])
   const [products, setProducts] = useState<Array<{ value: string; label: string }>>([])
-  const [questionnaires, setQuestionnaires] = useState<Array<{ id: number; question: string; category?: string }>>([])
+  const [questionnaires, setQuestionnaires] = useState<Array<{ id: number; question: string; category?: string, default_answer?: boolean }>>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -1005,7 +1005,7 @@ function CorporateForm({
   products: Array<{ value: string; label: string }>
   occupations: Array<{ value: string; label: string }>
   idTypes: Array<{ value: string; label: string }>
-  questionnaires: Array<{ id: number; question: string; category?: string }>
+  questionnaires: Array<{ id: number; question: string; category?: string, default_answer?: boolean }>
 }) {
   const [ubos, setUbos] = useState([
     { id: 1, idType: "", role: "", type: "", name: "", isPep: false, nationality: "", idNo: "", idIssue: "", idExpiry: "", dob: "", ownershipPercentage: "" }
@@ -1087,7 +1087,7 @@ function CorporateForm({
   ]
   const payment_modes = [
     { value: "Cash", label: "Cash" },
-    { value: "Debit/Credit Card-Cardholder name verified", label: "Debit/Credit Card-Cardholder name verified" },
+    { value: "Debit/Credit Card", label: "Debit/Credit Card" },
     { value: "Bank Transfer-Inside UAE", label: "Bank Transfer-Inside UAE" },
     { value: "Bank Transfer-Outisde UAE", label: "Bank Transfer-Outisde UAE" },
     { value: "Parial Cash/Card/Online trs", label: "Parial Cash/Card/Online trs" },
@@ -1112,8 +1112,22 @@ function CorporateForm({
   // Stored as: { [question_id]: 1 | 0 }
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<number, 1 | 0 | null>>({})
 
+  // Initialize questionnaire answers from backend defaults (boolean -> 1/0)
+  useEffect(() => {
+    if (!Array.isArray(questionnaires) || questionnaires.length === 0) return
+    setQuestionnaireAnswers((prev) => {
+      // Don't overwrite user's edits
+      if (Object.keys(prev).length > 0) return prev
+      const next: Record<number, 1 | 0 | null> = {}
+      questionnaires.forEach((q) => {
+        if (typeof q.default_answer === "boolean") next[q.id] = q.default_answer ? 1 : 0
+      })
+      return next
+    })
+  }, [questionnaires])
+
   const setQuestionnaireAnswer = (questionId: number, value: 1 | 0) => {
-    setQuestionnaireAnswers(prev => ({ ...prev, [questionId]: value }))
+    setQuestionnaireAnswers((prev) => ({ ...prev, [questionId]: value }))
   }
 
   const [companyName, setCompanyName] = useState("")
@@ -1490,7 +1504,7 @@ function CorporateForm({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Country Code </label>
+                      <label className={FIELD_LABEL_CLASS}>Office Contact Country Code </label>
                       <Combobox
                         options={countryCodes}
                         value={officeCountryCode}
@@ -1501,13 +1515,13 @@ function CorporateForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Contact Office No </label>
-                      <input className={FIELD_CLASS} placeholder="Enter the Contact Office No" value={officeNo} onChange={e => setOfficeNo(formatContactNumber(e.target.value))} />
+                      <label className={FIELD_LABEL_CLASS}>Office Contact No </label>
+                      <input className={FIELD_CLASS} placeholder="Enter the Office Contact No" value={officeNo} onChange={e => setOfficeNo(formatContactNumber(e.target.value))} />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <RequiredLabel text="Country Code" className={FIELD_LABEL_CLASS} />
+                      <RequiredLabel text="Mobile Contact Country Code" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={countryCodes}
                         value={mobileCountryCode}
@@ -1518,8 +1532,8 @@ function CorporateForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <RequiredLabel text="Contact Mobile No" className={FIELD_LABEL_CLASS} />
-                      <input className={FIELD_CLASS} placeholder="Enter the Contact Mobile No" value={mobileNo} onChange={e => setMobileNo(formatContactNumber(e.target.value))} />
+                      <RequiredLabel text="Mobile Contact No" className={FIELD_LABEL_CLASS} />
+                      <input className={FIELD_CLASS} placeholder="Enter the Mobile Contact No" value={mobileNo} onChange={e => setMobileNo(formatContactNumber(e.target.value))} />
                     </div>
                   </div>
                   <div className="md:col-span-2 space-y-2">
@@ -1803,7 +1817,7 @@ function CorporateForm({
                 </div>
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <RequiredLabel text="Is entity registered in GOAML" className={FIELD_LABEL_CLASS} />
+                    <RequiredLabel text="Is entity registered in GOAML?" className={FIELD_LABEL_CLASS} />
                     <div className="flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="isRegisteredGoAML" value="yes" checked={isRegisteredGoAML} onChange={() => setIsRegisteredGoAML(true)} className="accent-primary" />
@@ -1816,7 +1830,7 @@ function CorporateForm({
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <RequiredLabel text="KYC documents collected with form" className={FIELD_LABEL_CLASS} />
+                    <RequiredLabel text="KYC documents collected with form?" className={FIELD_LABEL_CLASS} />
                     <div className="flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="kycCollected" value="yes" checked={kycCollected} onChange={() => setKycCollected(true)} className="accent-primary" />

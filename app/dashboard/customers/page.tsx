@@ -69,7 +69,7 @@ export default function CustomersPage() {
   const [individualTotal, setIndividualTotal] = useState(0)
   const [corporateTotal, setCorporateTotal] = useState(0)
   const [limit, setLimit] = useState(10)
-  const [offset, setOffset] = useState(1)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [detailsById, setDetailsById] = useState<Record<number, any>>({})
@@ -150,47 +150,60 @@ export default function CustomersPage() {
     const buildQuery = (params: Record<string, string | number>) => {
       const query = new URLSearchParams()
       Object.entries(params).forEach(([key, value]) => {
+        if (value === "" || value === null || value === undefined) return
         query.set(key, String(value))
       })
       return query.toString()
     }
 
+    const apiOffset = (page - 1) * limit // API expects 0-based offset
     const baseParams = { search: searchTerm || "" }
 
     try {
       const [res, individualRes, corporateRes] = await Promise.all([
-        fetch(`/api/onboarding/customers?${buildQuery({ ...baseParams, limit, offset })}`, { credentials: "include" }),
-        fetch(`/api/onboarding/customers?${buildQuery({ ...baseParams, limit: 1, offset: 1, customer_type: "individual" })}`, {
-          credentials: "include",
-        }),
-        fetch(`/api/onboarding/customers?${buildQuery({ ...baseParams, limit: 1, offset: 1, customer_type: "corporate" })}`, {
-          credentials: "include",
-        }),
+        fetch(`/api/onboarding/customers?${buildQuery({ ...baseParams, limit, offset: apiOffset })}`, { credentials: "include" }),
+        fetch(
+          `/api/onboarding/customers?${buildQuery({ ...baseParams, limit: 1, offset: 0, customer_type: "individual" })}`,
+          { credentials: "include" }
+        ),
+        fetch(
+          `/api/onboarding/customers?${buildQuery({ ...baseParams, limit: 1, offset: 0, customer_type: "corporate" })}`,
+          { credentials: "include" }
+        ),
       ])
 
-      const [json, individualJson, corporateJson] = await Promise.all([res.json(), individualRes.json(), corporateRes.json()])
+      const [json, individualJson, corporateJson] = await Promise.all([
+        res.json(),
+        individualRes.json(),
+        corporateRes.json(),
+      ])
 
       if (json.status && json.data) {
         setCustomers(Array.isArray(json.data.items) ? json.data.items : [])
         setTotal(Number(json.data.total || 0))
+      } else {
+        setCustomers([])
+        setTotal(0)
       }
+
       setIndividualTotal(individualJson?.status ? Number(individualJson?.data?.total || 0) : 0)
       setCorporateTotal(corporateJson?.status ? Number(corporateJson?.data?.total || 0) : 0)
     } finally {
       setLoading(false)
     }
-  }, [limit, offset, searchTerm])
+  }, [limit, page, searchTerm])
 
   useEffect(() => {
     void fetchCustomers()
   }, [fetchCustomers])
-  const totalPages = Math.ceil(total / limit)
+
+  const totalPages = Math.max(1, Math.ceil(total / limit))
   const hasActiveFilters = searchTerm.trim().length > 0 || limit !== 10
 
   const clearFilters = () => {
     setSearchTerm("")
     setLimit(10)
-    setOffset(1)
+    setPage(1)
   }
 
   return (
@@ -233,7 +246,7 @@ export default function CustomersPage() {
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value)
-                    setOffset(1)
+                    setPage(1)
                   }}
                 />
                 {searchTerm.trim().length > 0 ? (
@@ -244,7 +257,7 @@ export default function CustomersPage() {
                     className="absolute right-1.5 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full text-muted-foreground hover:text-foreground"
                     onClick={() => {
                       setSearchTerm("")
-                      setOffset(1)
+                      setPage(1)
                     }}
                     title="Clear search"
                     aria-label="Clear search"
@@ -258,7 +271,7 @@ export default function CustomersPage() {
                 value={limit.toString()}
                 onValueChange={(value) => {
                   setLimit(Number(value))
-                  setOffset(1)
+                  setPage(1)
                 }}
               >
                 <SelectTrigger className="h-11 w-full">
@@ -852,26 +865,26 @@ export default function CustomersPage() {
           {totalPages > 1 && (
             <div className="flex flex-col gap-3 border-t border-border/60 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-muted-foreground">
-                Showing {(offset - 1) * limit + 1} to {Math.min(offset * limit, total)} of {total} entries
+                Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of {total} entries
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setOffset((p) => Math.max(1, p - 1))}
-                  disabled={offset === 1 || loading}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1 || loading}
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Previous
                 </Button>
                 <div className="rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1.5 text-sm font-semibold text-primary">
-                  Page {offset} of {totalPages}
+                  Page {page} of {totalPages}
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setOffset((p) => Math.min(totalPages, p + 1))}
-                  disabled={offset === totalPages || loading}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages || loading}
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />

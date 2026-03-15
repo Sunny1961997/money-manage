@@ -9,7 +9,6 @@ export async function GET(req: Request) {
   const cookie = req.headers.get("cookie") || ""
   const token = getTokenFromCookie(cookie)
   const decodedToken = token ? decodeURIComponent(token) : null
-  console.log("Onboarding meta response data:", decodedToken)
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
