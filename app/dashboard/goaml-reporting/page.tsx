@@ -62,7 +62,7 @@ export default function GoamlReportingPage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   const normalizedRole = user?.role?.toLowerCase().trim() || ""
-  const createdParam = searchParams.get("created")
+  const createdParam = searchParams?.get("created")
 
   useEffect(() => {
     if (createdParam !== "1") return
@@ -205,7 +205,7 @@ export default function GoamlReportingPage() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by customer name, customer ID, entity reference, or amount"
+                placeholder="Search by customer name, customer ID, Org. ID/ FIU ID, or amount"
                 className="h-10 rounded-xl border-border/70 bg-background/90 pl-9"
               />
             </div>
@@ -238,7 +238,7 @@ export default function GoamlReportingPage() {
                 <thead>
                   <tr className="bg-muted/50 text-left text-xs uppercase tracking-[0.12em] text-muted-foreground">
                     <th className="px-3 py-3">Sl No.</th>
-                    <th className="px-3 py-3">Entity Ref</th>
+                    <th className="px-3 py-3">Org. ID/FIU ID</th>
                     <th className="px-3 py-3">Customer</th>
                     <th className="px-3 py-3">Customer ID</th>
                     <th className="px-3 py-3">Type</th>

@@ -397,7 +397,7 @@ export default function CreateGoamlReportPage() {
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <RequiredLabel text="Entity Reference" className={FIELD_LABEL_CLASS} />
+                      <RequiredLabel text="Org. ID/FIU ID" className={FIELD_LABEL_CLASS} />
                       <input
                         className={FIELD_CLASS}
                         value={formData.entity_reference}

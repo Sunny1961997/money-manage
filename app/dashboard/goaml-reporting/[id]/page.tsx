@@ -353,7 +353,7 @@ export default function ViewGoamlReportPage() {
   ]
 
   const reportFields: DetailFieldItem[] = [
-    { key: "entityReference", label: "Entity Reference", value: report.entity_reference || "-" },
+    { key: "entityReference", label: "Org. ID/FIU ID", value: report.entity_reference || "-" },
     { key: "transactionType", label: "Transaction Type", value: report.transaction_type || "-" },
     { key: "comments", label: "Comments", value: report.comments || "-" },
     { key: "itemType", label: "Item Type", value: report.item_type || "-" },

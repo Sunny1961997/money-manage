@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Building2, ChevronDown, ChevronLeft, ChevronRight, Download, Eye, FileText, FilterX, Loader2, PencilLine, RotateCw, Search, User, X } from "lucide-react"
+import { Building2, ChevronDown, ChevronLeft, ChevronRight, Download, Eye, FileText, FilterX, Loader2, PencilLine, RotateCw, Search, Trash, User, X } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useEffect, useState, Fragment, type ReactNode, useCallback } from "react"
 import Link from "next/link"
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuthStore } from "@/lib/store"
 import { generateCustomerPDF } from "@/lib/pdf-generator"
 import { formatDate } from "@/lib/date-format"
+import { useToast } from "@/components/ui/use-toast"
 
 const CARD_STYLE =
   "rounded-3xl border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
@@ -27,6 +28,8 @@ const ACTION_BUTTON_CLASS =
   "h-9 rounded-full border-border/70 bg-background/90 px-7 has-[>svg]:px-6 text-xs font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
 const ACTION_PRIMARY_BUTTON_CLASS =
   "h-9 rounded-full bg-primary px-7 has-[>svg]:px-6 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
+  const ACTION_DELETE_BUTTON_CLASS =
+  "h-9 rounded-full bg-red-500 px-7 has-[>svg]:px-6 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-red-800 hover:shadow-md"
 const ACTION_ICON_BUTTON_CLASS =
   "h-9 w-9 rounded-full border-border/70 bg-background/90 p-0 text-muted-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 hover:shadow-md focus-visible:ring-rose-200"
 const INDIVIDUAL_TYPE_TONE_CLASS = "border-primary/30 bg-primary/12 text-primary"
@@ -64,6 +67,7 @@ function DetailGrid({ items }: { items: DetailItem[] }) {
 }
 
 export default function CustomersPage() {
+  const { toast } = useToast()
   const [customers, setCustomers] = useState<any[]>([])
   const [total, setTotal] = useState(0)
   const [individualTotal, setIndividualTotal] = useState(0)
@@ -138,6 +142,7 @@ export default function CustomersPage() {
       try {
         const res = await fetch(`/api/onboarding/customers/${id}`, { credentials: "include" })
         const json = await res.json()
+        console.log("Fetched details for customer",  json)
         if (json.status) {
           setDetailsById(prev => ({ ...prev, [id]: json.data }));
         }
@@ -204,6 +209,30 @@ export default function CustomersPage() {
     setSearchTerm("")
     setLimit(10)
     setPage(1)
+  }
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this product?")) return
+
+    try {
+      const res = await fetch(`/api/onboarding/customers/${id}`, {
+        method: "DELETE",
+      })
+
+      const data = await res.json()
+
+      if (data.status === true || data.status === "success") {
+        toast({ title: "Deleted", description: "Customer removed successfully" })
+        fetchCustomers()
+      } else {
+        toast({
+          // variant: "destructive",
+          title: "Error",
+          description: data.message || "Could not delete customer",
+        })
+      }
+    } catch {
+      toast({ title: "Error", description: "Connection error" })
+    }
   }
 
   return (
@@ -562,6 +591,7 @@ export default function CustomersPage() {
                                             </Button>
                                           </Link>
                                         )}
+                                        
 
                                         <Button 
                                           variant="outline" 
@@ -571,6 +601,17 @@ export default function CustomersPage() {
                                           <Download className="h-3.5 w-3.5" />
                                           Download
                                         </Button>
+                                        {user?.role !== "Analyst" && (
+                                          // <Link href={`/dashboard/onboarding/customer/edit/${customer.id}`}>
+                                            <Button 
+                                              className={ACTION_DELETE_BUTTON_CLASS}
+                                              onClick={() => handleDelete(customer.id)}
+                                            >
+                                              <Trash className="h-3.5 w-3.5" />
+                                              Delete
+                                            </Button>
+                                          // </Link>
+                                        )}
                                         <Button
                                           variant="outline"
                                           size="sm"

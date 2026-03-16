@@ -1098,6 +1098,7 @@ function CorporateForm({
   const delivery_channels = [
     { value: "Face to Face", label: "Face to Face" },
     { value: "Non Face to Face", label: "Non Face to Face" },
+    // { value: "Walk-in-customer", label: "Walk-in-customer" },
   ]
   const roles = [
     { value: "UBO", label: "UBO" },
