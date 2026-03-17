@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Combobox } from "@/components/ui/combobox"
 import { Card, CardContent } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
-import { User, Users, Upload, Download, Info } from "lucide-react"
+import { User, Users, Upload, Download, Info, Loader2 } from "lucide-react"
 import { cn, formatContactNumber } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
 
@@ -278,9 +278,14 @@ export default function QuickOnboardingPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Spinner className="w-8 h-8 text-primary" />
-        <p className="text-sm text-muted-foreground animate-pulse">Loading form data...</p>
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex flex-col items-center">
+          <div className="relative flex h-14 w-14 items-center justify-center">
+            <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" aria-hidden="true" />
+          </div>
+          <p className="absolute top-full mt-4 text-sm text-muted-foreground animate-pulse whitespace-nowrap">Loading form data...</p>
+        </div>
       </div>
     )
   }

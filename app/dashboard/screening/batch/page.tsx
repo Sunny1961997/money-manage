@@ -23,7 +23,7 @@ export default function BatchScreeningPage() {
 
   const handleDownloadTemplate = () => {
     const link = document.createElement("a")
-    link.href = "/Bulk screening.xlsx" 
+    link.href = "/Bulk screening.xlsx"
     link.download = "Bulk screening.xlsx"
     document.body.appendChild(link)
     link.click()
@@ -208,9 +208,8 @@ export default function BatchScreeningPage() {
             </div>
 
             <div
-              className={`mt-4 rounded-2xl border-2 border-dashed p-8 text-center transition-colors sm:p-9 ${
-                dragActive ? "border-primary/60 bg-primary/10" : "border-border/70 bg-background/80"
-              } ${loading ? "cursor-wait opacity-90" : "cursor-pointer"}`}
+              className={`mt-4 rounded-2xl border-2 border-dashed p-8 text-center transition-colors sm:p-9 ${dragActive ? "border-primary/60 bg-primary/10" : "border-border/70 bg-background/80"
+                } ${loading ? "cursor-wait opacity-90" : "cursor-pointer"}`}
               onDragEnter={() => setDragActive(true)}
               onDragLeave={() => setDragActive(false)}
               onDragOver={(e) => e.preventDefault()}
@@ -219,7 +218,7 @@ export default function BatchScreeningPage() {
             >
               <div className="flex flex-col items-center gap-4">
                 {loading ? (
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
                 ) : (
                   <span className="flex h-14 w-14 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-muted-foreground">
                     <Upload className="h-6 w-6" />

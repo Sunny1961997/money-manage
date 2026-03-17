@@ -211,7 +211,7 @@ export default function CompaniesPage() {
                     </td>
                   </tr>
                 ) : (
-                  companies.map((company, idx) => {
+                  companies.map((company) => {
                     const isActive = new Date(company.expiration_date) > new Date()
                     const screeningPercentage =
                       company.total_screenings > 0
@@ -219,16 +219,18 @@ export default function CompaniesPage() {
                         : 0
 
                     return (
-                      <tr key={`${company.id}-${idx}`} className="border-b border-border/60 transition hover:bg-muted/20">
-                        <td className="px-4 py-3.5">
+                      <tr key={company.id} className="border-b border-border/60 transition hover:bg-muted/20">
+                        <td className="px-4 py-3.5 pr-4">
                           <div className="flex items-center gap-2.5 text-sm text-foreground">
                             <Building2 className="h-4 w-4 shrink-0 text-primary" />
                             <span className="font-medium text-foreground">{company.name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 text-sm text-foreground">{company.email || "-"}</td>
-                        <td className="px-4 py-3.5 text-sm text-foreground">{company.trade_license_number}</td>
-                        <td className="px-4 py-3.5 text-sm text-foreground">
+                        <td className="px-4 py-3.5 text-sm text-foreground pr-4">
+                          {company.email || "-"}
+                        </td>
+                        <td className="px-4 py-3.5 text-sm text-foreground pr-4">{company.trade_license_number}</td>
+                        <td className="px-4 py-3.5 text-sm text-foreground pr-4">
                           {company.city}, {company.country}
                         </td>
                         <td className="px-4 py-3.5 text-sm">
@@ -253,8 +255,8 @@ export default function CompaniesPage() {
                             {isActive ? "Active" : "Expired"}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5">
-                          <div className="flex items-center gap-1.5">
+                        <td className="px-4 py-3.5 pr-6 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 justify-end">
                             <Button
                               type="button"
                               title="View Company Details"
