@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,14 +12,48 @@ import { useAuthStore } from "@/lib/store"
 import { login } from "@/lib/auth"
 import { useToast } from "@/components/ui/use-toast"
 import { ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { motion, type Variants } from "framer-motion"
 
 const PAGE_CLASS =
-  "relative grid min-h-screen place-items-center overflow-hidden bg-gradient-to-br from-background via-background to-primary/10 px-4 py-6 sm:px-6 lg:px-8"
+  "relative grid min-h-screen place-items-center overflow-hidden px-4 py-6 sm:px-6 lg:px-8"
 const CARD_STYLE =
-  "relative mx-auto w-full max-w-md rounded-3xl border border-border/60 bg-card/75 p-6 shadow-[0_22px_60px_-30px_oklch(0.28_0.06_260/0.45)] backdrop-blur-sm sm:p-7"
-const FIELD_LABEL_CLASS = "text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+  "relative mx-auto w-full max-w-sm rounded-[2.5rem] border border-slate-200 bg-white p-7 shadow-[0_40px_100px_-20px_rgba(15,23,42,0.18)] sm:p-8"
+const FIELD_LABEL_CLASS = "ml-1 text-[11px] font-bold uppercase tracking-[0.25em] text-indigo-950/80"
 const FIELD_CLASS =
-  "h-11 rounded-xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20"
+  "h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-indigo-950 shadow-sm outline-none transition placeholder:text-slate-500 hover:border-indigo-300 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-500/20"
+
+// Animation Variants
+const containerVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+}
+
+const formVariants: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.25, ease: "easeOut" },
+  },
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -27,12 +62,21 @@ export default function LoginPage() {
   const [showForgot, setShowForgot] = useState(false)
   const [forgotEmail, setForgotEmail] = useState("")
   const [forgotLoading, setForgotLoading] = useState(false)
-  const [forgotMsg, setForgotMsg] = useState("")
   const router = useRouter()
   const { setUser } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const { toast } = useToast()
+
+  const handleOpenForgot = () => {
+    setShowForgot(true)
+  }
+
+  const handleCloseForgot = () => {
+    setShowForgot(false)
+    setForgotEmail("")
+    setForgotLoading(false)
+  }
 
   const handleBack = () => {
     const referrer = document.referrer
@@ -96,7 +140,6 @@ export default function LoginPage() {
   const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setForgotLoading(true)
-    setForgotMsg("")
     try {
       const res = await fetch("/api/forgot-password", {
         method: "POST",
@@ -107,17 +150,16 @@ export default function LoginPage() {
       if (res.ok && data.status) {
         toast({
           title: "Success",
-          description: "Password reset instructions sent to your email.",
+          description: data.message || "Password reset instructions sent to your email.",
         })
       } else {
         toast({
           title: "Error",
-          description: data.message || "Failed to send reset instructions.",
+          description: data.message || data.error || "Failed to send reset instructions.",
         })
       }
     } catch (err: any) {
-      // Check if it's a network error
-      if (err.message === 'Failed to fetch') {
+      if (err.message === "Failed to fetch") {
         toast({
           title: "Connection Error",
           description: "Unable to send request. Please check your internet connection.",
@@ -135,128 +177,181 @@ export default function LoginPage() {
 
   return (
     <div className={PAGE_CLASS}>
-      <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
-      <div className="pointer-events-none absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+      <Image
+        src="/login-bg.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="pointer-events-none absolute inset-0 z-0 object-cover object-center select-none"
+      />
 
-      <div className="relative mx-auto w-full max-w-md">
-        <div className="mb-4">
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-9 gap-2 rounded-xl px-3 text-muted-foreground hover:bg-background/80 hover:text-foreground"
-            onClick={handleBack}
-            aria-label="Go back"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-        </div>
+      <div className="absolute inset-0 z-[1] bg-[linear-gradient(135deg,rgba(49,46,129,0.44)_0%,rgba(67,56,202,0.14)_48%,rgba(129,140,248,0.04)_100%)]" />
+      <div className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(15,23,42,0.04)_0%,rgba(15,23,42,0.12)_58%,rgba(15,23,42,0.28)_100%)]" />
 
+      <motion.div 
+        className="relative z-10 mx-auto w-full max-w-sm"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
         <Card className={CARD_STYLE}>
+          <div className="absolute left-5 top-5">
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-8 w-8 rounded-full border border-slate-200 bg-white p-0 text-indigo-700 transition-colors hover:border-indigo-300 hover:bg-indigo-100 hover:text-indigo-950 focus-visible:ring-2 focus-visible:ring-indigo-500/30"
+              onClick={handleBack}
+              title="Return to home"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </div>
+
           <CardContent className="space-y-5 p-0">
-            <div className="space-y-3 text-center">
+            <motion.div variants={itemVariants} className="space-y-3 text-center">
               <div className="flex items-center justify-center">
-                <img src="/aml_meter_2.png" alt="AML Meter" className="h-16 w-auto object-contain" />
+                <div className="relative group p-1.5">
+                  <div className="absolute inset-0 bg-indigo-500/10 blur-3xl rounded-full" />
+                  <img 
+                    src="/aml_meter_2.png" 
+                    alt="AML Meter" 
+                    className="relative h-14 w-auto object-contain transition-transform duration-500 group-hover:scale-105" 
+                  />
+                </div>
               </div>
               <div className="space-y-1">
-                <h1 className="text-2xl font-semibold tracking-tight text-foreground">Sign In</h1>
-                <p className="text-sm text-muted-foreground">Access your compliance dashboard and screening workspace.</p>
+                <h1 className="text-3xl font-extrabold tracking-[-0.035em] text-indigo-950">
+                  {showForgot ? "Reset Password" : "Client Login"}
+                </h1>
+                <p className="mx-auto max-w-[240px] text-[13px] font-medium leading-relaxed text-indigo-900/70 antialiased">
+                  {showForgot ? "Enter your email to receive a password reset link." : "Access your secure UAE compliance screening workspace."}
+                </p>
               </div>
-            </div>
+            </motion.div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <RequiredLabel htmlFor="email" text="Email" className={FIELD_LABEL_CLASS} />
-                <Input
-                  id="email"
-                  type="string"
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className={FIELD_CLASS}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <RequiredLabel htmlFor="password" text="Password" className={FIELD_LABEL_CLASS} />
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className={`${FIELD_CLASS} pr-10`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <div className="text-right mt-1">
-                  <button
-                    type="button"
-                    className="text-xs text-primary underline hover:text-primary/80"
-                    onClick={() => setShowForgot(true)}
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-              </div>
-
-              {error ? (
-                <div className="rounded-xl border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  {error}
-                </div>
-              ) : null}
-
-              <Button type="submit" className="h-11 w-full rounded-xl" disabled={isLoading}>
-                {isLoading ? "Logging In..." : "Login"}
-              </Button>
-            </form>
-
-            {showForgot && (
-              <form onSubmit={handleForgotSubmit} className="space-y-4 mt-6">
+            {!showForgot ? (
+              <motion.form
+                key="login-form"
+                initial="hidden"
+                animate="visible"
+                variants={formVariants}
+                onSubmit={handleSubmit}
+                className="space-y-3.5"
+              >
                 <div className="space-y-2">
-                  <label htmlFor="forgot-email" className={FIELD_LABEL_CLASS}>Email</label>
+                  <RequiredLabel htmlFor="email" text="Email" className={FIELD_LABEL_CLASS} />
                   <Input
-                    id="forgot-email"
+                    id="email"
                     type="email"
-                    placeholder="Enter your email"
-                    value={forgotEmail}
-                    onChange={e => setForgotEmail(e.target.value)}
+                    placeholder="name@firm.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                     className={FIELD_CLASS}
                   />
                 </div>
-                {forgotMsg && (
-                  <div className="rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-sm text-primary">
-                    {forgotMsg}
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between px-1">
+                    <RequiredLabel htmlFor="password" text="Password" className={FIELD_LABEL_CLASS} />
+                    <button 
+                      type="button" 
+                      onClick={handleOpenForgot}
+                      className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-700 underline decoration-indigo-300 underline-offset-4 transition-colors hover:text-indigo-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30"
+                    >
+                      Reset
+                    </button>
                   </div>
-                )}
-                <div className="flex gap-2">
-                  <Button type="button" variant="outline" onClick={() => setShowForgot(false)}>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className={`${FIELD_CLASS} pr-12`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-500 transition-colors hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {error ? (
+                  <div className="animate-in fade-in slide-in-from-top-1 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-600">
+                    {error}
+                  </div>
+                ) : null}
+
+                <div className="pt-1">
+                  <Button type="submit" className="h-12 w-full rounded-full bg-gradient-to-r from-indigo-700 to-violet-700 font-bold text-white shadow-[0_20px_40px_-10px_rgba(79,70,229,0.35)] transition-all hover:scale-[1.01] hover:from-indigo-800 hover:to-violet-800 hover:shadow-[0_25px_50px_-10px_rgba(79,70,229,0.45)] focus-visible:ring-2 focus-visible:ring-indigo-500/30 active:scale-[0.99]" disabled={isLoading}>
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                        Connecting...
+                      </div>
+                    ) : <span className="text-[15px] tracking-tight">Enter Compliance Portal</span>}
+                  </Button>
+                </div>
+              </motion.form>
+            ) : (
+              <motion.form
+                key="forgot-form"
+                initial="hidden"
+                animate="visible"
+                variants={formVariants}
+                onSubmit={handleForgotSubmit}
+                className="space-y-3.5"
+              >
+                <div className="space-y-2">
+                  <RequiredLabel htmlFor="forgot-email" text="Email" className={FIELD_LABEL_CLASS} />
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="name@firm.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                    className={FIELD_CLASS}
+                  />
+                </div>
+
+                <div className="flex gap-2.5 pt-1">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    className="flex-1 rounded-full border border-slate-200 bg-white font-bold text-indigo-800 transition-colors hover:border-indigo-300 hover:bg-indigo-100 hover:text-indigo-950 focus-visible:ring-2 focus-visible:ring-indigo-500/30"
+                    onClick={handleCloseForgot}
+                  >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={forgotLoading}>
+                  <Button 
+                    type="submit" 
+                    className="flex-[2] rounded-full bg-indigo-700 font-bold text-white shadow-lg transition-colors hover:bg-indigo-800 focus-visible:ring-2 focus-visible:ring-indigo-500/30"
+                    disabled={forgotLoading}
+                  >
                     {forgotLoading ? "Sending..." : "Send Reset Link"}
                   </Button>
                 </div>
-              </form>
+              </motion.form>
             )}
 
-            <p className="text-center text-xs text-muted-foreground">
-              Protected access for authorized users only.
-            </p>
+            <motion.div variants={itemVariants} className="pt-1">
+              <p className="mx-auto max-w-[200px] text-center text-[10px] font-bold uppercase tracking-[0.15em] leading-relaxed text-indigo-900/60 antialiased">
+                Protected access for authorized users only.
+              </p>
+            </motion.div>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   )
 }

@@ -331,7 +331,7 @@ export default function CreateGoamlReportPage() {
               <div className="flex flex-col items-center justify-center gap-3 py-8">
                 <div className="relative flex h-10 w-10 items-center justify-center">
                   <div className="absolute h-10 w-10 rounded-full bg-primary/20 blur-lg animate-pulse" aria-hidden="true" />
-                  <Loader2 className="relative z-10 h-6 w-6 animate-spin text-primary" aria-hidden="true" />
+                  <Loader2 className="relative z-10 h-10 w-10 animate-spin text-primary" aria-hidden="true" />
                 </div>
                 <p className="text-sm text-muted-foreground">Loading customer details...</p>
               </div>

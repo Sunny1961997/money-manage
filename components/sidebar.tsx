@@ -285,8 +285,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         {/* Top section with logo and collapse button */}
         <div
           className={cn(
-            "border-b border-border h-[88px] shrink-0",
-            isCollapsed ? "flex flex-col items-center gap-2 px-2 py-3" : "flex items-center justify-between p-4"
+            "border-b border-border shrink-0",
+            isCollapsed
+              ? "flex flex-col items-center gap-3 px-2 py-4 h-auto"
+              : "flex items-center justify-between p-4 h-[88px]"
           )}
         >
           {!isCollapsed ? (
@@ -310,14 +312,15 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
               </Link>
             </div>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={cn("shrink-0 rounded-lg", isCollapsed ? "h-8 w-8" : "ml-2")}
+            className={cn(
+              "inline-flex items-center justify-center shrink-0 h-7 w-7 rounded-xl text-primary bg-primary/10 ring-1 ring-primary/20 hover:bg-primary/20 transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+              !isCollapsed && "ml-2"
+            )}
           >
-            <ChevronLeft className={cn("w-4 h-4 transition-transform", isCollapsed && "rotate-180")} />
-          </Button>
+            <ChevronLeft className={cn("w-3.5 h-3.5 transition-transform duration-300", isCollapsed && "rotate-180")} />
+          </button>
         </div>
 
         {/* Navigation - scrollable */}

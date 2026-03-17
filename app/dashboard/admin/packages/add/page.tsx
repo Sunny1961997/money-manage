@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,7 +18,7 @@ export default function AddPackagePage() {
   const [kycLimit, setKycLimit] = useState(0)
   const [duration, setDuration] = useState(0)
   const [description, setDescription] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [currencies, setCurrencies] = useState<string[]>([])
   const router = useRouter()
@@ -62,6 +63,20 @@ export default function AddPackagePage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading && currencies.length === 0) {
+    return (
+      <div className="grid w-full min-h-[calc(100vh-10rem)] place-items-center">
+        <div className="relative flex flex-col items-center">
+          <div className="relative flex h-14 w-14 items-center justify-center">
+            <div className="absolute h-14 w-14 rounded-full bg-primary/20 blur-xl animate-pulse" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" aria-hidden="true" />
+          </div>
+          <p className="absolute top-full mt-4 text-sm text-muted-foreground animate-pulse whitespace-nowrap">Loading form data...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
