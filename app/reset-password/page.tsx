@@ -18,23 +18,36 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const hasResetContext = Boolean(token && email)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setSuccess("")
-    if (!password || password.length < 6) {
+    if (!hasResetContext) {
+      const message = "This reset link is incomplete or expired. Please request a new password reset email."
+      setError(message)
+      toast({
+        title: "Invalid Reset Link",
+        description: message,
+      })
+      return
+    }
+    if (!password || password.length < 8) {
+      const message = "Password must be at least 8 characters."
+      setError(message)
       toast({
         title: "Error",
-        description: "Password must be at least 8 characters.",
-        
+        description: message,
       })
       return
     }
     if (password !== passwordConfirmation) {
+      const message = "Passwords do not match."
+      setError(message)
       toast({
         title: "Error",
-        description: "Passwords do not match.",
+        description: message,
       })
       return
     }
@@ -47,25 +60,27 @@ export default function ResetPasswordPage() {
       })
       const data = await res.json()
       if (res.ok && data.status) {
-        // setSuccess("Password reset successful. You can now log in.")
+        const message = "Password reset successful. Redirecting to login..."
+        setSuccess(message)
         toast({
           title: "Success",
-          description: "Password reset successful. Redirecting to login...",
+          description: message,
         })
         setTimeout(() => router.push("/login"), 2000)
       } else {
-        // setError(data.message || "Failed to reset password.")
+        const message = data.message || data.error || "Failed to reset password."
+        setError(message)
         toast({
           title: "Error",
-          description: data.message || "Failed to reset password.",
-          
+          description: message,
         })
       }
     } catch (err: any) {
+      const message = err.message || "Failed to reset password."
+      setError(message)
       toast({
         title: "Error",
-        description: err.message || "Failed to reset password.",
-        
+        description: message,
       })
     } finally {
       setLoading(false)
@@ -99,9 +114,14 @@ export default function ResetPasswordPage() {
               required
             />
           </div>
+          {!hasResetContext && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              This reset link is incomplete or expired. Request a new reset email from the login page.
+            </div>
+          )}
           {error && <div className="text-red-600 text-sm">{error}</div>}
           {success && <div className="text-green-600 text-sm">{success}</div>}
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading || !hasResetContext}>
             {loading ? "Resetting..." : "Reset Password"}
           </Button>
         </form>
