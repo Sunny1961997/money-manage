@@ -166,7 +166,7 @@ export default function CustomersPage() {
 
     try {
       const [res, individualRes, corporateRes] = await Promise.all([
-        fetch(`/api/onboarding/customers?${buildQuery({ ...baseParams, limit, offset: apiOffset })}`, { credentials: "include" }),
+        fetch(`/api/onboarding/customers?${buildQuery({ ...baseParams, limit, offset: page })}`, { credentials: "include" }),
         fetch(
           `/api/onboarding/customers?${buildQuery({ ...baseParams, limit: 1, offset: 0, customer_type: "individual" })}`,
           { credentials: "include" }
