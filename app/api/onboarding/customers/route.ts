@@ -10,38 +10,39 @@ export async function GET(req: Request) {
   const token = getTokenFromCookie(cookie)
   const decodedToken = token ? decodeURIComponent(token) : null
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  }
-  if (decodedToken) {
-    headers["Authorization"] = `Bearer ${decodedToken}`
+  if (!decodedToken) {
+    return NextResponse.json({ status: false, message: "Unauthorized - No session token" }, { status: 401 })
   }
 
-  // Forward query params
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    Authorization: `Bearer ${decodedToken}`,
+  }
+
+  // Some Laravel middleware requires session cookies as well
+  if (cookie) headers["Cookie"] = cookie
+
   const url = new URL(req.url)
   const query = url.search ? url.search : ""
   const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/onboarding/customers${query}`
+
   const res = await fetch(apiUrl, {
     method: "GET",
     headers,
-    credentials: "include",
   })
 
-  // Log the response status and body for debugging
   const text = await res.text()
-  console.log("API Response Status:", res.status)
-  console.log("API Response Body:", text)
-
   if (!res.ok) {
-    return NextResponse.json({ status: false, error: text }, { status: res.status })
+    try {
+      return NextResponse.json(JSON.parse(text), { status: res.status })
+    } catch {
+      return NextResponse.json({ status: false, error: text }, { status: res.status })
+    }
   }
 
-  // Try to parse JSON, fallback to text
-  let data;
   try {
-    data = JSON.parse(text);
-  } catch (e) {
-    data = text;
+    return NextResponse.json(JSON.parse(text))
+  } catch {
+    return NextResponse.json({ status: true, data: text })
   }
-  return NextResponse.json(data)
 }

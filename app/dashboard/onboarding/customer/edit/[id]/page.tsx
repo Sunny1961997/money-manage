@@ -1116,7 +1116,7 @@ function CorporateEditForm({
   ]
   const payment_modes = [
     { value: "Cash", label: "Cash" },
-    { value: "Debit/Credit Card-Cardholder name verified", label: "Debit/Credit Card-Cardholder name verified" },
+    { value: "Debit/Credit Card", label: "Debit/Credit Card" },
     { value: "Bank Transfer-Inside UAE", label: "Bank Transfer-Inside UAE" },
     { value: "Bank Transfer-Outisde UAE", label: "Bank Transfer-Outisde UAE" },
     { value: "Parial Cash/Card/Online trs", label: "Parial Cash/Card/Online trs" },
@@ -1345,7 +1345,7 @@ function CorporateEditForm({
               Identity Information
             </TabsTrigger>
             <TabsTrigger value="operations" className={TABS_TRIGGER_CLASS}>
-              Operations Information
+              Business Information
             </TabsTrigger>
             <TabsTrigger value="product" className={TABS_TRIGGER_CLASS}>
               Product Details
@@ -1582,14 +1582,14 @@ function CorporateEditForm({
             </Card>
           </TabsContent>
 
-          {/* Operations Information Tab */}
+          {/* Business Information Tab */}
           <TabsContent value="operations" className="mt-0">
             <Card className={FORM_SECTION_CARD_CLASS}>
               <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Globe className="w-4 h-4" />
                 </div>
-                <h4 className="font-semibold text-lg text-foreground tracking-tight">Operations Information</h4>
+                <h4 className="font-semibold text-lg text-foreground tracking-tight">Business Information</h4>
               </div>
               <div className={CORPORATE_GRID_CLASS}>
                 <div className="space-y-2">

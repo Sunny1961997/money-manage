@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { formatDate, formatDateTime } from "@/lib/date-format"
+import { decodeEntityId } from "@/lib/entity-id"
 
 type EntityDetails = Record<string, any>
 
@@ -68,7 +69,14 @@ function formatDateTimeValue(value: string | number, key?: string): string | nul
 
 export default function EntityDetailsPage() {
   const params = useParams()
-  const id = params?.id as string
+  const encodedId = params?.id as string
+  const id = React.useMemo(() => {
+    try {
+      return decodeEntityId(encodedId)
+    } catch {
+      return encodedId
+    }
+  }, [encodedId])
   const quickResultsHref = "/dashboard/screening/quick/results"
   const quickScreeningHref = "/dashboard/screening/quick"
 

@@ -5,7 +5,7 @@ function getTokenFromCookie(cookie: string): string | null {
   return match ? match[1] : null
 }
 
-export async function GET(req: Request) {
+export async function POST(req: Request) {
   const cookie = req.headers.get("cookie") || ""
   const token = getTokenFromCookie(cookie)
   const decodedToken = token ? decodeURIComponent(token) : null
@@ -17,15 +17,25 @@ export async function GET(req: Request) {
     headers["Authorization"] = `Bearer ${decodedToken}`
   }
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/onboarding/meta`, {
+  const body = await req.json()
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reset-password`
+
+  const res = await fetch(apiUrl, {
+    method: "POST",
     headers,
     credentials: "include",
+    body: JSON.stringify(body),
   })
 
+  const text = await res.text()
   if (!res.ok) {
-    return NextResponse.json({ status: false }, { status: res.status })
+    return NextResponse.json({ status: false, error: text }, { status: res.status })
   }
-
-  const data = await res.json()
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch {
+    data = text
+  }
   return NextResponse.json(data)
 }

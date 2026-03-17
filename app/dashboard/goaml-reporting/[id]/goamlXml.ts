@@ -56,9 +56,16 @@ export function buildGoamlXml(report: any) {
 
   const dateOnly = (v: any) => {
     if (!v) return ""
-    if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) return `${v}T00:00:00`
+    if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10)
     const d = new Date(v)
-    return Number.isNaN(d.getTime()) ? "" : `${d.toISOString().slice(0, 10)}T00:00:00`
+    return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10)
+  }
+
+  const dateTimeTo4am = (v: any) => {
+    if (!v) return ""
+    if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) return `${v.slice(0, 10)}T04:00:00`
+    const d = new Date(v)
+    return Number.isNaN(d.getTime()) ? "" : `${d.toISOString().slice(0, 10)}T04:00:00`
   }
 
   const isCorporate = customer?.customer_type === "corporate"
@@ -66,21 +73,35 @@ export function buildGoamlXml(report: any) {
   // Use API values as-is (no country-name -> code mapping).
   const countryVal = (v: any) => (v === null || v === undefined ? "" : String(v))
 
+  const normalizePhone = (v: any) => {
+    const s = (v ?? "").toString().trim()
+    if (!s) return ""
+    // keep + if present, remove spaces
+    return s.replace(/\s+/g, "")
+  }
+
+  // Best-effort: corporate related persons / UBOs
+  const relatedPeople: any[] = Array.isArray(corp?.related_persons) ? corp.related_persons : []
+
+  const firstDirector = relatedPeople[0] || {}
+
   const reporting = {
     first_name: isCorporate ? "" : ind?.first_name || "",
     last_name: isCorporate ? "" : ind?.last_name || "",
     birthdate: isCorporate ? "" : dateOnly(ind?.dob),
+    ssn: !isCorporate ? (ind?.ssn || ind?.national_id || ind?.id_no || "") : "",
     passport_number: isCorporate ? "" : ind?.id_no || "",
     passport_country: isCorporate ? "" : countryVal(ind?.issuing_country || ""),
     nationality1: isCorporate ? "" : countryVal(ind?.nationality || ""),
     phone:
       !isCorporate && ind?.contact_no
-        ? `${ind?.country_code || ""} ${ind?.contact_no}`.trim()
+        ? normalizePhone(`${ind?.country_code || ""}${ind?.contact_no}`)
         : isCorporate && corp?.office_no
-          ? `${corp?.office_country_code || ""} ${corp?.office_no}`.trim()
+          ? normalizePhone(`${corp?.office_country_code || ""}${corp?.office_no}`)
           : "",
     address: isCorporate ? corp?.company_address || "" : ind?.address || "",
     city: isCorporate ? corp?.city || "" : ind?.city || "",
+    state: isCorporate ? (corp?.state || "") : (ind?.state || ""),
     country_code: isCorporate
       ? countryVal(corp?.country_incorporated || "")
       : countryVal(ind?.country_of_residence || ind?.country || ""),
@@ -94,9 +115,9 @@ export function buildGoamlXml(report: any) {
   lines.push(xmlTag("rentity_id", report?.company_information_id ?? "", "  "))
   lines.push(xmlTag("rentity_branch", "", "  "))
   lines.push(xmlTag("submission_code", "E", "  "))
-  lines.push(xmlTag("report_code", "AMLMR", "  "))
+  lines.push(xmlTag("report_code", "DPMSR", "  "))
   lines.push(xmlTag("entity_reference", report?.entity_reference ?? report?.id ?? "", "  "))
-  lines.push(xmlTag("submission_date", report?.created_at ? dateOnly(report.created_at) : "", "  "))
+  lines.push(xmlTag("submission_date", report?.created_at ? dateTimeTo4am(report.created_at) : "", "  "))
   lines.push(xmlTag("currency_code_local", report?.currency_code ?? "", "  "))
 
   // reporting_person (fill from available API data)
@@ -104,7 +125,7 @@ export function buildGoamlXml(report: any) {
   lines.push(xmlTag("first_name", reporting.first_name, "    "))
   lines.push(xmlTag("last_name", reporting.last_name, "    "))
   lines.push(xmlTag("birthdate", reporting.birthdate, "    "))
-  lines.push(xmlTag("ssn", "", "    "))
+  lines.push(xmlTag("ssn", reporting.ssn, "    "))
   lines.push(xmlTag("passport_number", reporting.passport_number, "    "))
   lines.push(xmlTag("passport_country", reporting.passport_country, "    "))
   lines.push(xmlTag("nationality1", reporting.nationality1, "    "))
@@ -112,21 +133,21 @@ export function buildGoamlXml(report: any) {
   lines.push(`    <phones>`)
   if (reporting.phone) {
     lines.push(`      <phone>`)
-    lines.push(xmlTag("tph_contact_type", isCorporate ? "OFFIC" : "HOME", "        "))
-    lines.push(xmlTag("tph_communication_type", isCorporate ? "L" : "M", "        "))
+    lines.push(xmlTag("tph_contact_type", "OFFIC", "        "))
+    lines.push(xmlTag("tph_communication_type", "M", "        "))
     lines.push(xmlTag("tph_number", reporting.phone, "        "))
     lines.push(`      </phone>`)
   }
   lines.push(`    </phones>`)
 
   lines.push(`    <addresses>`)
-  if (reporting.address || reporting.city || reporting.country_code) {
+  if (reporting.address || reporting.city || reporting.country_code || reporting.state) {
     lines.push(`      <address>`)
-    lines.push(xmlTag("address_type", isCorporate ? "OFFIC" : "HOME", "        "))
+    lines.push(xmlTag("address_type", "OFFIC", "        "))
     lines.push(xmlTag("address", reporting.address, "        "))
     lines.push(xmlTag("city", reporting.city, "        "))
     lines.push(xmlTag("country_code", reporting.country_code, "        "))
-    lines.push(xmlTag("state", "", "        "))
+    lines.push(xmlTag("state", reporting.state, "        "))
     lines.push(`      </address>`)
   }
   lines.push(`    </addresses>`)
@@ -144,7 +165,7 @@ export function buildGoamlXml(report: any) {
       "    "
     )
   )
-  lines.push(xmlTag("state", "", "    "))
+  lines.push(xmlTag("state", isCorporate ? (corp?.state || "") : (ind?.state || ""), "    "))
   lines.push(`  </location>`)
 
   lines.push(xmlTag("reason", report?.comments ?? "", "  "))
@@ -163,8 +184,8 @@ export function buildGoamlXml(report: any) {
 
     // phones
     const corpPhone = corp?.office_no
-      ? `${corp?.office_country_code || ""}${corp?.office_no}`.replace(/\s+/g, "")
-      : ""
+      ? normalizePhone(`${corp?.office_country_code || ""}${corp?.office_no}`)
+      : normalizePhone(corp?.phone_number)
     lines.push(`          <phones>`)
     if (corpPhone) {
       lines.push(`            <phone>`)
@@ -182,16 +203,79 @@ export function buildGoamlXml(report: any) {
     lines.push(xmlTag("address", corp?.company_address ?? "", "              "))
     lines.push(xmlTag("city", corp?.city ?? "", "              "))
     lines.push(xmlTag("country_code", countryVal(corp?.country_incorporated), "              "))
-    lines.push(xmlTag("state", "", "              "))
+    lines.push(xmlTag("state", corp?.state ?? "", "              "))
     lines.push(`            </address>`)
     lines.push(`          </addresses>`)
 
     lines.push(xmlTag("incorporation_country_code", countryVal(corp?.country_incorporated), "          "))
 
-    // director_id placeholder: use the first product as hint for role? keep minimal for now
-    lines.push(`          <director_id></director_id>`)
+    // director_id block(s) (use related_persons if available)
+    const directorsToEmit = relatedPeople.length > 0 ? relatedPeople : [firstDirector]
 
-    lines.push(xmlTag("incorporation_date", dateOnly(corp?.license_issue_date || corp?.created_at), "          "))
+    for (const rp of directorsToEmit) {
+      if (!rp) continue
+
+      lines.push(`          <director_id>`)
+      const directorFirst = rp?.first_name || rp?.name?.split?.(" ")?.[0] || ""
+      const directorLast = rp?.last_name || (rp?.name ? rp.name.split(" ").slice(1).join(" ") : "")
+      lines.push(xmlTag("first_name", directorFirst, "            "))
+      lines.push(xmlTag("last_name", directorLast, "            "))
+      lines.push(xmlTag("birthdate", dateOnly(rp?.dob), "            "))
+      lines.push(xmlTag("passport_number", rp?.passport_number || rp?.id_no || rp?.id_number || "", "            "))
+      lines.push(xmlTag("passport_country", countryVal(rp?.passport_country || rp?.issuing_country || corp?.country_incorporated || ""), "            "))
+      lines.push(xmlTag("id_number", rp?.id_number || rp?.id_no || "", "            "))
+      lines.push(xmlTag("nationality1", countryVal(rp?.nationality || rp?.nationality1 || ""), "            "))
+
+      // Contact/addresses: fallback to entity office/address if not provided
+      const directorPhone = normalizePhone(rp?.phone || rp?.phone_number || corpPhone)
+      lines.push(`            <phones>`)
+      if (directorPhone) {
+        lines.push(`              <phone>`)
+        lines.push(xmlTag("tph_contact_type", "OFFIC", "                "))
+        lines.push(xmlTag("tph_communication_type", "L", "                "))
+        lines.push(xmlTag("tph_number", directorPhone, "                "))
+        lines.push(`              </phone>`)
+      }
+      lines.push(`            </phones>`)
+
+      lines.push(`            <addresses>`)
+      lines.push(`              <address>`)
+      lines.push(xmlTag("address_type", "OFFIC", "                "))
+      lines.push(xmlTag("address", corp?.company_address ?? "", "                "))
+      lines.push(xmlTag("city", corp?.city ?? "", "                "))
+      lines.push(xmlTag("country_code", countryVal(corp?.country_incorporated), "                "))
+      lines.push(xmlTag("state", corp?.state ?? "", "                "))
+      lines.push(`              </address>`)
+      lines.push(`            </addresses>`)
+
+      lines.push(`            <employer_address_id>`)
+      lines.push(xmlTag("address_type", "OFFIC", "              "))
+      lines.push(xmlTag("address", corp?.company_address ?? "", "              "))
+      lines.push(xmlTag("city", corp?.city ?? "", "              "))
+      lines.push(xmlTag("country_code", countryVal(corp?.country_incorporated), "              "))
+      lines.push(xmlTag("state", corp?.state ?? "", "              "))
+      lines.push(`            </employer_address_id>`)
+
+      lines.push(`            <employer_phone_id>`)
+      lines.push(xmlTag("tph_contact_type", "OFFIC", "              "))
+      lines.push(xmlTag("tph_communication_type", "L", "              "))
+      lines.push(xmlTag("tph_number", corpPhone, "              "))
+      lines.push(`            </employer_phone_id>`)
+
+      lines.push(`            <identification>`)
+      lines.push(xmlTag("type", rp?.id_type ? String(rp.id_type).slice(0, 5).toUpperCase() : "PASSP", "              "))
+      lines.push(xmlTag("number", rp?.id_no || rp?.id_number || "", "              "))
+      // related_persons payload uses id_issue / id_expiry
+      lines.push(xmlTag("issue_date", dateOnly(rp?.id_issue_date || rp?.id_issue), "              "))
+      lines.push(xmlTag("expiry_date", dateOnly(rp?.id_expiry_date || rp?.id_expiry), "              "))
+      lines.push(xmlTag("issue_country", countryVal(rp?.issuing_country || corp?.country_incorporated || ""), "              "))
+      lines.push(`            </identification>`)
+
+      lines.push(xmlTag("role", rp?.role || "UBO", "            "))
+      lines.push(`          </director_id>`)
+    }
+
+    lines.push(xmlTag("incorporation_date", dateTimeTo4am(corp?.license_issue_date || corp?.created_at), "          "))
     lines.push(`        </entity>`)
   } else {
     // individual

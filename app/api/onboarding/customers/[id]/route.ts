@@ -10,7 +10,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const token = getTokenFromCookie(cookie)
   const decodedToken = token ? decodeURIComponent(token) : null
 
-  console.log("[API] /api/onboarding/customers/:id GET called")
 
   if (!decodedToken) {
     return NextResponse.json(
@@ -107,4 +106,45 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 // POST handler for FormData updates (same as PUT)
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   return PUT(req, { params })
+}
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const cookie = req.headers.get("cookie") || ""
+  const token = getTokenFromCookie(cookie)
+  const decodedToken = token ? decodeURIComponent(token) : null
+
+  if (!decodedToken) {
+    return NextResponse.json(
+      { status: false, message: "Unauthorized" },
+      { status: 401 }
+    )
+  }
+
+  try {
+    const { id } = await params;
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/onboarding/customers/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${decodedToken}`,
+        "Accept": "application/json",
+      },
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      return NextResponse.json(
+        data || { status: false, message: "Failed to delete customer" },
+        { status: res.status }
+      )
+    }
+
+    return NextResponse.json(data)
+  } catch (err: any) {
+    return NextResponse.json(
+      { status: false, message: err.message || "Delete error" },
+      { status: 500 }
+    )
+  }
 }

@@ -300,12 +300,12 @@ export default function AddCompanyPage() {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className={FIELD_GROUP_CLASS}>
-                <RequiredLabel text="Date of Birth" className={FIELD_LABEL_CLASS} />
-                <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={FIELD_CLASS} required />
+                <Label className={FIELD_LABEL_CLASS}>Date of Birth</Label>
+                <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={FIELD_CLASS} />
               </div>
               <div className={FIELD_GROUP_CLASS}>
-                <RequiredLabel text="Passport Number" className={FIELD_LABEL_CLASS} />
-                <Input value={passportNumber} onChange={(e) => setPassportNumber(e.target.value)} placeholder="Enter passport number" className={FIELD_CLASS} required />
+                <Label className={FIELD_LABEL_CLASS}>Passport Number</Label>
+                <Input value={passportNumber} onChange={(e) => setPassportNumber(e.target.value)} placeholder="Enter passport number" className={FIELD_CLASS} />
               </div>
               <div className={FIELD_GROUP_CLASS}>
                 <RequiredLabel text="Passport Country" className={FIELD_LABEL_CLASS} />

@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { generateScreeningPDF } from "@/lib/screening-pdf-generator"
 import { generateScreeningSessionPDF } from "@/lib/screening-session-pdf"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { encodeEntityId } from "@/lib/entity-id"
 
 type Candidate = {
   id: number
@@ -552,7 +553,7 @@ export default function QuickScreeningResultsPage() {
                           </div>
 
                           <a
-                            href={`/dashboard/screening/entity/${c.id}`}
+                            href={`/dashboard/screening/entity/${encodeEntityId(c.id)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex max-w-full items-center gap-2 truncate text-xl font-semibold tracking-tight text-primary hover:underline"

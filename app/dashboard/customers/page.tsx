@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Building2, ChevronDown, ChevronLeft, ChevronRight, Download, Eye, FileText, FilterX, Loader2, PencilLine, RotateCw, Search, User, X } from "lucide-react"
+import { Building2, ChevronDown, ChevronLeft, ChevronRight, Download, Eye, FileText, FilterX, Loader2, PencilLine, RotateCw, Search, Trash, User, X } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useEffect, useState, Fragment, type ReactNode, useCallback } from "react"
 import Link from "next/link"
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuthStore } from "@/lib/store"
 import { generateCustomerPDF } from "@/lib/pdf-generator"
 import { formatDate } from "@/lib/date-format"
+import { useToast } from "@/components/ui/use-toast"
 
 const CARD_STYLE =
   "rounded-3xl border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
@@ -27,6 +28,8 @@ const ACTION_BUTTON_CLASS =
   "h-9 rounded-full border-border/70 bg-background/90 px-7 has-[>svg]:px-6 text-xs font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
 const ACTION_PRIMARY_BUTTON_CLASS =
   "h-9 rounded-full bg-primary px-7 has-[>svg]:px-6 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
+  const ACTION_DELETE_BUTTON_CLASS =
+  "h-9 rounded-full bg-red-500 px-7 has-[>svg]:px-6 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-red-800 hover:shadow-md"
 const ACTION_ICON_BUTTON_CLASS =
   "h-9 w-9 rounded-full border-border/70 bg-background/90 p-0 text-muted-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 hover:shadow-md focus-visible:ring-rose-200"
 const INDIVIDUAL_TYPE_TONE_CLASS = "border-primary/30 bg-primary/12 text-primary"
@@ -64,12 +67,13 @@ function DetailGrid({ items }: { items: DetailItem[] }) {
 }
 
 export default function CustomersPage() {
+  const { toast } = useToast()
   const [customers, setCustomers] = useState<any[]>([])
   const [total, setTotal] = useState(0)
   const [individualTotal, setIndividualTotal] = useState(0)
   const [corporateTotal, setCorporateTotal] = useState(0)
   const [limit, setLimit] = useState(10)
-  const [offset, setOffset] = useState(1)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [detailsById, setDetailsById] = useState<Record<number, any>>({})
@@ -138,6 +142,7 @@ export default function CustomersPage() {
       try {
         const res = await fetch(`/api/onboarding/customers/${id}`, { credentials: "include" })
         const json = await res.json()
+        console.log("Fetched details for customer",  json)
         if (json.status) {
           setDetailsById(prev => ({ ...prev, [id]: json.data }));
         }
@@ -150,47 +155,84 @@ export default function CustomersPage() {
     const buildQuery = (params: Record<string, string | number>) => {
       const query = new URLSearchParams()
       Object.entries(params).forEach(([key, value]) => {
+        if (value === "" || value === null || value === undefined) return
         query.set(key, String(value))
       })
       return query.toString()
     }
 
+    const apiOffset = (page - 1) * limit // API expects 0-based offset
     const baseParams = { search: searchTerm || "" }
 
     try {
       const [res, individualRes, corporateRes] = await Promise.all([
-        fetch(`/api/onboarding/customers?${buildQuery({ ...baseParams, limit, offset })}`, { credentials: "include" }),
-        fetch(`/api/onboarding/customers?${buildQuery({ ...baseParams, limit: 1, offset: 1, customer_type: "individual" })}`, {
-          credentials: "include",
-        }),
-        fetch(`/api/onboarding/customers?${buildQuery({ ...baseParams, limit: 1, offset: 1, customer_type: "corporate" })}`, {
-          credentials: "include",
-        }),
+        fetch(`/api/onboarding/customers?${buildQuery({ ...baseParams, limit, offset: apiOffset })}`, { credentials: "include" }),
+        fetch(
+          `/api/onboarding/customers?${buildQuery({ ...baseParams, limit: 1, offset: 0, customer_type: "individual" })}`,
+          { credentials: "include" }
+        ),
+        fetch(
+          `/api/onboarding/customers?${buildQuery({ ...baseParams, limit: 1, offset: 0, customer_type: "corporate" })}`,
+          { credentials: "include" }
+        ),
       ])
 
-      const [json, individualJson, corporateJson] = await Promise.all([res.json(), individualRes.json(), corporateRes.json()])
+      const [json, individualJson, corporateJson] = await Promise.all([
+        res.json(),
+        individualRes.json(),
+        corporateRes.json(),
+      ])
 
       if (json.status && json.data) {
         setCustomers(Array.isArray(json.data.items) ? json.data.items : [])
         setTotal(Number(json.data.total || 0))
+      } else {
+        setCustomers([])
+        setTotal(0)
       }
+
       setIndividualTotal(individualJson?.status ? Number(individualJson?.data?.total || 0) : 0)
       setCorporateTotal(corporateJson?.status ? Number(corporateJson?.data?.total || 0) : 0)
     } finally {
       setLoading(false)
     }
-  }, [limit, offset, searchTerm])
+  }, [limit, page, searchTerm])
 
   useEffect(() => {
     void fetchCustomers()
   }, [fetchCustomers])
-  const totalPages = Math.ceil(total / limit)
+
+  const totalPages = Math.max(1, Math.ceil(total / limit))
   const hasActiveFilters = searchTerm.trim().length > 0 || limit !== 10
 
   const clearFilters = () => {
     setSearchTerm("")
     setLimit(10)
-    setOffset(1)
+    setPage(1)
+  }
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this product?")) return
+
+    try {
+      const res = await fetch(`/api/onboarding/customers/${id}`, {
+        method: "DELETE",
+      })
+
+      const data = await res.json()
+
+      if (data.status === true || data.status === "success") {
+        toast({ title: "Deleted", description: "Customer removed successfully" })
+        fetchCustomers()
+      } else {
+        toast({
+          // variant: "destructive",
+          title: "Error",
+          description: data.message || "Could not delete customer",
+        })
+      }
+    } catch {
+      toast({ title: "Error", description: "Connection error" })
+    }
   }
 
   return (
@@ -233,7 +275,7 @@ export default function CustomersPage() {
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value)
-                    setOffset(1)
+                    setPage(1)
                   }}
                 />
                 {searchTerm.trim().length > 0 ? (
@@ -244,7 +286,7 @@ export default function CustomersPage() {
                     className="absolute right-1.5 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full text-muted-foreground hover:text-foreground"
                     onClick={() => {
                       setSearchTerm("")
-                      setOffset(1)
+                      setPage(1)
                     }}
                     title="Clear search"
                     aria-label="Clear search"
@@ -258,7 +300,7 @@ export default function CustomersPage() {
                 value={limit.toString()}
                 onValueChange={(value) => {
                   setLimit(Number(value))
-                  setOffset(1)
+                  setPage(1)
                 }}
               >
                 <SelectTrigger className="h-11 w-full">
@@ -383,6 +425,8 @@ export default function CustomersPage() {
                                   </span>
                                   <span>{riskInfo.label}</span>
                                 </span>
+                                <span>Not Scored</span>
+                              </span>
                               ) : (
                                 <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/30 px-2 py-1 text-xs font-medium text-muted-foreground">
                                   <span className="inline-flex h-7 min-w-7 px-2 items-center justify-center rounded-full bg-muted-foreground text-[10px] font-bold text-white">
@@ -850,26 +894,26 @@ export default function CustomersPage() {
           {totalPages > 1 && (
             <div className="flex flex-col gap-3 border-t border-border/60 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-muted-foreground">
-                Showing {(offset - 1) * limit + 1} to {Math.min(offset * limit, total)} of {total} entries
+                Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of {total} entries
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setOffset((p) => Math.max(1, p - 1))}
-                  disabled={offset === 1 || loading}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1 || loading}
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Previous
                 </Button>
                 <div className="rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1.5 text-sm font-semibold text-primary">
-                  Page {offset} of {totalPages}
+                  Page {page} of {totalPages}
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setOffset((p) => Math.min(totalPages, p + 1))}
-                  disabled={offset === totalPages || loading}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages || loading}
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />

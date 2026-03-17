@@ -1,4 +1,4 @@
-import { jsPDF } from "jspdf"
+import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { registerGlobalFonts, PDF_FONT_PRIMARY, PDF_FONT_ITALIC } from "./pdf-utils"
 
@@ -102,6 +102,10 @@ export async function generateCustomerPDF(data: any) {
   doc.setFont(PDF_FONT_PRIMARY, "normal")
   doc.text("Customer Due Diligence & KYC Report", pageWidth / 2, 24, { align: "center" })
 
+  doc.setFontSize(9)
+  doc.setFont(PDF_FONT_PRIMARY, "normal")
+  doc.text(userCompany, pageWidth / 2, 32, { align: "center" })
+
   // ----------------------------
   // KYC report layout (2 pages)
   // ----------------------------
@@ -133,10 +137,17 @@ export async function generateCustomerPDF(data: any) {
     if (s >= 2.0) return "Medium Risk"
     return "Low Risk"
   }
+  const riskColor = (s: number): [number, number, number] => {
+    if (!Number.isFinite(s)) return [0, 0, 0]
+    if (s >= 4.0) return [220, 38, 38] // Red for High Risk
+    if (s >= 3.0) return [234, 88, 12] // Orange for Medium High Risk
+    if (s >= 2.0) return [202, 138, 4] // Yellow for Medium Risk
+    return [22, 163, 74] // Green for Low Risk
+  }
 
   // Make tables more compact to reduce page count
   const gridStyles = {
-    font: "helvetica",
+    font: PDF_FONT_PRIMARY,
     fontSize: 8,
     cellPadding: 1.6,
     lineColor: [210, 210, 210] as any,
@@ -204,7 +215,7 @@ export async function generateCustomerPDF(data: any) {
     return (doc as any).lastAutoTable.finalY + TABLE_GAP
   }
 
-  const oneColKV = (y: number, pairs: Array<[string, any]>) => {
+  const oneColKV = (y: number, pairs: Array<[string, any]>, options?: { coloredRows?: number[] }) => {
     y = ensureSpace(y, 8 + pairs.length * 4.4)
 
     autoTable(doc, {
@@ -215,6 +226,12 @@ export async function generateCustomerPDF(data: any) {
       columnStyles: {
         0: { cellWidth: 70 },
         1: { cellWidth: contentWidth - 70, fontStyle: "bold" },
+      },
+      didParseCell: (data: any) => {
+        if (options?.coloredRows && options.coloredRows.includes(data.row.index) && data.column.index === 1) {
+          const color = riskColor(riskScore)
+          data.cell.styles.textColor = color
+        }
       },
       margin: { left: margin, right: margin },
     })
@@ -347,7 +364,7 @@ export async function generateCustomerPDF(data: any) {
       ["Overall Risk Rating", riskClass(riskScore)],
       ["Final Risk Score", Number.isFinite(riskScore) ? riskScore.toFixed(2) : "-"],
       ["Due Diligence Level", "CDD"],
-    ])
+    ], { coloredRows: [0] })
 
     yPos = ensureSpace(yPos, 40)
     yPos = sectionTitle("Risk Score Scale (Interpretation)", yPos)
@@ -499,7 +516,7 @@ export async function generateCustomerPDF(data: any) {
       ["Overall Risk Rating", riskClass(riskScore)],
       ["Final Risk Score", Number.isFinite(riskScore) ? riskScore.toFixed(2) : "-"],
       ["Due Diligence Level", "CDD"],
-    ])
+    ], { coloredRows: [0] })
 
     // Before Risk Score Scale, ensure it won't be split
     yPos = ensureSpace(yPos, 40)

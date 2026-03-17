@@ -42,7 +42,7 @@ const TEXTAREA_CLASS =
   "w-full rounded-xl border border-border/70 bg-background/90 px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground"
 const TABS_GRID_LIST_CLASS = "grid h-auto w-full grid-cols-2 gap-1 bg-transparent p-0 md:grid-cols-3 lg:grid-cols-5"
 const TABS_GRID_TRIGGER_CLASS =
-  "h-10 w-full rounded-xl px-2 text-center text-sm whitespace-nowrap justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+  "h-10 bg-primary/20 w-full rounded-xl px-2 text-center text-sm whitespace-nowrap justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 
 const blockExponentInput = (e: KeyboardEvent<HTMLInputElement>) => {
   if (e.key === "e" || e.key === "E") {
@@ -133,7 +133,7 @@ export default function CustomerOnboardingPage() {
   const [countries, setCountries] = useState<Array<{ value: string; label: string }>>([])
   const [countryCodes, setCountryCodes] = useState<Array<{ value: string; label: string }>>([])
   const [products, setProducts] = useState<Array<{ value: string; label: string }>>([])
-  const [questionnaires, setQuestionnaires] = useState<Array<{ id: number; question: string; category?: string }>>([])
+  const [questionnaires, setQuestionnaires] = useState<Array<{ id: number; question: string; category?: string, default_answer?: boolean }>>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -302,12 +302,6 @@ function IndividualForm({
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  // Validation Checkers
-  const isIndividualFormValid = [
-    firstName, lastName, dob, address, city, country, nationality, countryCode, contactNo, email, gender, occupation, sourceIncome, purpose, paymentMethod,
-    approach, idType, idNo, issuingAuthority, idIssueAtCountry, idIssueDate, idExpiryDate, placeOfBirth, countryOfResidence,
-  ].every(Boolean) && productTypes.length > 0
-
   // Tab state
   const [activeTab, setActiveTab] = useState("personal")
   const [submitting, setSubmitting] = useState(false)
@@ -395,6 +389,7 @@ function IndividualForm({
         description: `Please fill in: ${emptyFields.join(', ')}`,
         // variant: "destructive"
       })
+      setSubmitting(false)
       return
     }
 
@@ -984,7 +979,7 @@ function IndividualForm({
             <Button
               className="w-full sm:w-auto min-w-[200px] h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
               type="submit"
-              disabled={submitting || !isIndividualFormValid}
+              disabled={submitting}
             >
               {submitting ? (
                 <>
@@ -1015,7 +1010,7 @@ function CorporateForm({
   products: Array<{ value: string; label: string }>
   occupations: Array<{ value: string; label: string }>
   idTypes: Array<{ value: string; label: string }>
-  questionnaires: Array<{ id: number; question: string; category?: string }>
+  questionnaires: Array<{ id: number; question: string; category?: string, default_answer?: boolean }>
 }) {
   const [ubos, setUbos] = useState([
     { id: 1, idType: "", role: "", type: "", name: "", isPep: false, nationality: "", idNo: "", idIssue: "", idExpiry: "", dob: "", ownershipPercentage: "" }
@@ -1064,6 +1059,7 @@ function CorporateForm({
     { value: "Ajman Free Zone", label: "Ajman Free Zone" },
   ]
   const entity_types = [
+    { value: "LLC", label: "LLC" },
     { value: "IFZA", label: "IFZA" },
     { value: "Meydan", label: "Meydan" },
     { value: "Shams", label: "Shams" },
@@ -1096,7 +1092,7 @@ function CorporateForm({
   ]
   const payment_modes = [
     { value: "Cash", label: "Cash" },
-    { value: "Debit/Credit Card-Cardholder name verified", label: "Debit/Credit Card-Cardholder name verified" },
+    { value: "Debit/Credit Card", label: "Debit/Credit Card" },
     { value: "Bank Transfer-Inside UAE", label: "Bank Transfer-Inside UAE" },
     { value: "Bank Transfer-Outisde UAE", label: "Bank Transfer-Outisde UAE" },
     { value: "Parial Cash/Card/Online trs", label: "Parial Cash/Card/Online trs" },
@@ -1107,6 +1103,7 @@ function CorporateForm({
   const delivery_channels = [
     { value: "Face to Face", label: "Face to Face" },
     { value: "Non Face to Face", label: "Non Face to Face" },
+    // { value: "Walk-in-customer", label: "Walk-in-customer" },
   ]
   const roles = [
     { value: "UBO", label: "UBO" },
@@ -1121,8 +1118,22 @@ function CorporateForm({
   // Stored as: { [question_id]: 1 | 0 }
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<number, 1 | 0 | null>>({})
 
+  // Initialize questionnaire answers from backend defaults (boolean -> 1/0)
+  useEffect(() => {
+    if (!Array.isArray(questionnaires) || questionnaires.length === 0) return
+    setQuestionnaireAnswers((prev) => {
+      // Don't overwrite user's edits
+      if (Object.keys(prev).length > 0) return prev
+      const next: Record<number, 1 | 0 | null> = {}
+      questionnaires.forEach((q) => {
+        if (typeof q.default_answer === "boolean") next[q.id] = q.default_answer ? 1 : 0
+      })
+      return next
+    })
+  }, [questionnaires])
+
   const setQuestionnaireAnswer = (questionId: number, value: 1 | 0) => {
-    setQuestionnaireAnswers(prev => ({ ...prev, [questionId]: value }))
+    setQuestionnaireAnswers((prev) => ({ ...prev, [questionId]: value }))
   }
 
   const [companyName, setCompanyName] = useState("")
@@ -1186,18 +1197,6 @@ function CorporateForm({
 
   const openCorpFilePicker = () => corpFileInputRef.current?.click()
 
-  const isCorporateFormValid = [
-    companyName, companyAddress, city, companyCountry, corporateCustomerType, mobileCountryCode, mobileNo, email,
-    tradeLicenseNo, tradeLicenseIssuedAt, tradeLicenseIssuedBy, licenseIssueDate, licenseExpiryDate, tenancyContractExpiryDate, entityType,
-    businessActivity, purposeOfRelation, productSource, paymentMode, deliveryChannel
-  ].every(Boolean) &&
-    productTypesCorp.length > 0 &&
-    countriesOfOperation.length > 0 &&
-    ubos.every(ubo =>
-      ubo.type && ubo.name && ubo.idType && ubo.idNo && ubo.idIssue && ubo.idExpiry && ubo.dob && ubo.role && ubo.ownershipPercentage
-    ) &&
-    (!questionnaires.length || questionnaires.every(q => questionnaireAnswers[q.id] !== undefined && questionnaireAnswers[q.id] !== null))
-
   const router = useRouter()
   const { toast } = useToast()
   const [submitting, setSubmitting] = useState(false)
@@ -1229,7 +1228,6 @@ function CorporateForm({
       'Trade License/CR Issued Date': licenseIssueDate,
       'Trade License/CR Expiry Date': licenseExpiryDate,
       // 'VAT Registration Number': vatRegistrationNo,
-      'Tenancy Contract Expiry Date': tenancyContractExpiryDate,
       // Business Information
       'Entity Type': entityType,
       'Countries of Operation': countriesOfOperation.length > 0 ? 'filled' : '',
@@ -1255,6 +1253,7 @@ function CorporateForm({
         description: `Please fill in: ${emptyFields.join(', ')}`,
         // variant: "destructive"
       })
+      setSubmitting(false)
       return
     }
 
@@ -1283,6 +1282,7 @@ function CorporateForm({
           description: `Please fill in: ${uboEmptyFields.join(', ')}`,
           // variant: "destructive"
         })
+        setSubmitting(false)
         return
       }
     }
@@ -1295,6 +1295,7 @@ function CorporateForm({
           title: "Required fields missing",
           description: `Please answer AML Questionnaires (${missing.length} unanswered).`,
         })
+        setSubmitting(false)
         return
       }
     }
@@ -1322,7 +1323,7 @@ function CorporateForm({
         license_issue_date: licenseIssueDate,
         license_expiry_date: licenseExpiryDate,
         vat_registration_no: vatRegistrationNo,
-        tenancy_contract_expiry_date: tenancyContractExpiryDate,
+        ...(tenancyContractExpiryDate && { tenancy_contract_expiry_date: tenancyContractExpiryDate }),
         entity_type: entityType,
         business_activity: businessActivity === 'Other' ? businessActivityOther : businessActivity,
         is_entity_dealting_with_import_export: isImportExport,
@@ -1509,7 +1510,7 @@ function CorporateForm({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Country Code </label>
+                      <label className={FIELD_LABEL_CLASS}>Office Contact Country Code </label>
                       <Combobox
                         options={countryCodes}
                         value={officeCountryCode}
@@ -1520,13 +1521,13 @@ function CorporateForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className={FIELD_LABEL_CLASS}>Contact Office No </label>
-                      <input className={FIELD_CLASS} placeholder="Enter the Contact Office No" value={officeNo} onChange={e => setOfficeNo(formatContactNumber(e.target.value))} />
+                      <label className={FIELD_LABEL_CLASS}>Office Contact No </label>
+                      <input className={FIELD_CLASS} placeholder="Enter the Office Contact No" value={officeNo} onChange={e => setOfficeNo(formatContactNumber(e.target.value))} />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <RequiredLabel text="Country Code" className={FIELD_LABEL_CLASS} />
+                      <RequiredLabel text="Mobile Contact Country Code" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={countryCodes}
                         value={mobileCountryCode}
@@ -1537,8 +1538,8 @@ function CorporateForm({
                       />
                     </div>
                     <div className="space-y-2">
-                      <RequiredLabel text="Contact Mobile No" className={FIELD_LABEL_CLASS} />
-                      <input className={FIELD_CLASS} placeholder="Enter the Contact Mobile No" value={mobileNo} onChange={e => setMobileNo(formatContactNumber(e.target.value))} />
+                      <RequiredLabel text="Mobile Contact No" className={FIELD_LABEL_CLASS} />
+                      <input className={FIELD_CLASS} placeholder="Enter the Mobile Contact No" value={mobileNo} onChange={e => setMobileNo(formatContactNumber(e.target.value))} />
                     </div>
                   </div>
                   <div className="md:col-span-2 space-y-2">
@@ -1603,7 +1604,7 @@ function CorporateForm({
                     <input className={FIELD_CLASS} placeholder="Enter VAT Registration Number" value={vatRegistrationNo} onChange={e => setVatRegistrationNo(e.target.value)} />
                   </div>
                   <div className="md:col-span-2 space-y-2">
-                    <RequiredLabel text="Tenancy Contract Expiry Date" className={FIELD_LABEL_CLASS} />
+                    <label className={FIELD_LABEL_CLASS}>Tenancy Contract Expiry Date</label>
                     <Input type="date" className={FIELD_CLASS} value={tenancyContractExpiryDate} onChange={e => setTenancyContractExpiryDate(e.target.value)} />
                   </div>
                 </div>
@@ -1623,7 +1624,7 @@ function CorporateForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <RequiredLabel text="Entity Type" className={FIELD_LABEL_CLASS} />
+                    <RequiredLabel text="Entity legal status" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={entity_types}
                       value={entityType}
@@ -1822,7 +1823,7 @@ function CorporateForm({
                 </div>
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <RequiredLabel text="Is entity registered in GOAML" className={FIELD_LABEL_CLASS} />
+                    <RequiredLabel text="Is entity registered in GOAML?" className={FIELD_LABEL_CLASS} />
                     <div className="flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="isRegisteredGoAML" value="yes" checked={isRegisteredGoAML} onChange={() => setIsRegisteredGoAML(true)} className="accent-primary" />
@@ -1835,7 +1836,7 @@ function CorporateForm({
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <RequiredLabel text="KYC documents collected with form" className={FIELD_LABEL_CLASS} />
+                    <RequiredLabel text="KYC documents collected with form?" className={FIELD_LABEL_CLASS} />
                     <div className="flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="kycCollected" value="yes" checked={kycCollected} onChange={() => setKycCollected(true)} className="accent-primary" />
@@ -1960,7 +1961,7 @@ function CorporateForm({
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className={FIELD_LABEL_CLASS}>Nationality</label>
+                        <RequiredLabel className={FIELD_LABEL_CLASS} text="Nationality" />
                         <Combobox
                           options={countries}
                           value={ubo.nationality}
@@ -1976,7 +1977,7 @@ function CorporateForm({
                           options={idTypes}
                           value={ubo.idType}
                           onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "idType", v)}
-                          placeholder="Passport"
+                          placeholder="Select ID Type"
                           searchPlaceholder="Search type..."
                           className={FIELD_CLASS}
                         />
@@ -2003,7 +2004,7 @@ function CorporateForm({
                           options={roles}
                           value={ubo.role}
                           onValueChange={(v) => typeof v === "string" && setUboField(ubo.id, "role", v)}
-                          placeholder="UBO"
+                          placeholder="Select a role"
                           searchPlaceholder="Search role..."
                           className={FIELD_CLASS}
                         />
@@ -2103,7 +2104,7 @@ function CorporateForm({
             <Button
               className="w-full sm:w-auto min-w-[200px] h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
               type="submit"
-              disabled={submitting || !isCorporateFormValid}
+              disabled={submitting}
             >
               {submitting ? (
                 <>
