@@ -425,8 +425,6 @@ export default function CustomersPage() {
                                   </span>
                                   <span>{riskInfo.label}</span>
                                 </span>
-                                <span>Not Scored</span>
-                              </span>
                               ) : (
                                 <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/30 px-2 py-1 text-xs font-medium text-muted-foreground">
                                   <span className="inline-flex h-7 min-w-7 px-2 items-center justify-center rounded-full bg-muted-foreground text-[10px] font-bold text-white">
