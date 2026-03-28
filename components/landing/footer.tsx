@@ -81,10 +81,10 @@ export function Footer() {
               © 2026 AML Meter Inc. All rights reserved
             </p>
             <div className="flex items-center gap-6 text-sm text-white/60">
-              <Link href="/legal/copyright" className="hover:text-white transition-colors">Copyright</Link>
+              <Link href="/copyright" className="hover:text-white transition-colors">Copyright</Link>
               <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
               <Link href="/terms-condition" className="hover:text-white transition-colors">Terms</Link>
-              <Link href="/legal/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link>
+              <Link href="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link>
             </div>
           </div>
         </div>

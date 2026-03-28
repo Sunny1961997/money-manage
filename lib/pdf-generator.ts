@@ -42,13 +42,16 @@ export async function generateCustomerPDF(data: any) {
   const pageHeight = doc.internal.pageSize.getHeight()
   const margin = 15
   const contentWidth = pageWidth - margin * 2
-  const userCompany = data.user_company || data.user_company || "-"
+  const userCompany = data.company_information.name || data.company_information.name || "-"
+  const trader_license_no = data.company_information.trade_license_number || data.company_information.trade_license_number || "-"
   const userRole = data.user_role || data.user_role || "-"
+  const userName = data.user.name ?? "-"
   console.log("Data: ", data)
 
   // --- HEADER with Purple Background and Logo ---
+  const HEADER_HEIGHT = 45
   doc.setFillColor(...headerColor)
-  doc.rect(0, 0, pageWidth, 35, "F") // Header bar
+  doc.rect(0, 0, pageWidth, HEADER_HEIGHT, "F") // Header bar
 
   const headerPadding = 15
 
@@ -100,11 +103,22 @@ export async function generateCustomerPDF(data: any) {
   // Document type subtitle
   doc.setFontSize(9)
   doc.setFont(PDF_FONT_PRIMARY, "normal")
-  doc.text("Customer Due Diligence & KYC Report", pageWidth / 2, 24, { align: "center" })
+  // doc.text("Customer Due Diligence & KYC Report", pageWidth / 2, 24, { align: "center" })
+
+  if (isCorporate) {
+    doc.text("Corporate KYC Report", pageWidth / 2, 24, { align: "center" });
+  } else {
+      doc.text("Individual KYC Report", pageWidth / 2, 24, { align: "center" });
+  }
 
   doc.setFontSize(9)
   doc.setFont(PDF_FONT_PRIMARY, "normal")
   doc.text(userCompany, pageWidth / 2, 32, { align: "center" })
+
+  doc.setFontSize(9)
+  doc.setFont(PDF_FONT_PRIMARY, "normal")
+  console.log("Trade License No: ", trader_license_no)
+  doc.text(`Trade License No: ${trader_license_no}`, pageWidth / 2, 40, { align: "center" })
 
   // ----------------------------
   // KYC report layout (2 pages)
@@ -143,6 +157,15 @@ export async function generateCustomerPDF(data: any) {
     if (s >= 3.0) return [234, 88, 12] // Orange for Medium High Risk
     if (s >= 2.0) return [202, 138, 4] // Yellow for Medium Risk
     return [22, 163, 74] // Green for Low Risk
+  }
+
+  const riskTypeColor = (riskType: string): [number, number, number] => {
+    const t = (riskType || "").toLowerCase()
+    if (t.includes("very high")) return [220, 38, 38] // Red
+    if (t.includes("high") && !t.includes("medium")) return [234, 88, 12] // Orange
+    if (t.includes("medium high")) return [234, 88, 12] // Orange
+    if (t.includes("medium")) return [202, 138, 4] // Yellow/Amber
+    return [22, 163, 74] // Green for Low
   }
 
   // Make tables more compact to reduce page count
@@ -259,9 +282,56 @@ export async function generateCustomerPDF(data: any) {
     return (doc as any).lastAutoTable.finalY + TABLE_GAP
   }
 
+  const riskAssessmentTable = (y: number, details: any[]) => {
+    if (!Array.isArray(details) || details.length === 0) return y
+
+    const rows = details.map((item: any) => [
+      item.category || "-",
+      item.details || "-",
+      item.risk_score?.toString() || "-",
+      item.risk_type || "-",
+    ])
+
+    y = sectionTitle("Risk Assessment Details", y, 12 + rows.length * 5)
+
+    autoTable(doc, {
+      startY: y,
+      theme: "grid",
+      styles: {
+        ...gridStyles,
+        fontSize: 7.5,
+        cellPadding: 2.5,
+      } as any,
+      head: [["Category", "Details", "Risk Score", "Risk Type"]],
+      body: rows,
+      headStyles: {
+        fillColor: [245, 245, 245] as any,
+        textColor: [0, 0, 0] as any,
+        fontStyle: "bold",
+        fontSize: 8,
+      },
+      columnStyles: {
+        0: { cellWidth: 55 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 22, halign: "center" as const },
+        3: { cellWidth: contentWidth - 55 - 50 - 22 },
+      },
+      didParseCell: (data: any) => {
+        // Color the Risk Type column based on risk level
+        if (data.section === "body" && data.column.index === 3) {
+          const riskType = data.cell.raw || ""
+          data.cell.styles.textColor = riskTypeColor(riskType)
+        }
+      },
+      margin: { left: margin, right: margin },
+    })
+
+    return (doc as any).lastAutoTable.finalY + TABLE_GAP
+  }
+
   // --- Corporate report (matches corporate screenshots) ---
   if (isCorporate) {
-    let yPos = 45
+    let yPos = HEADER_HEIGHT + 10
 
     doc.setFontSize(8.5)
     doc.setTextColor(120, 120, 120)
@@ -366,6 +436,11 @@ export async function generateCustomerPDF(data: any) {
       ["Due Diligence Level", "CDD"],
     ], { coloredRows: [0] })
 
+    // Risk Assessment Details table (corporate)
+    if (Array.isArray(data.riskAssessmentDetails) && data.riskAssessmentDetails.length > 0) {
+      yPos = riskAssessmentTable(yPos, data.riskAssessmentDetails)
+    }
+
     yPos = ensureSpace(yPos, 40)
     yPos = sectionTitle("Risk Score Scale (Interpretation)", yPos)
     yPos = simpleTable(yPos, ["Risk Score Range", "Risk Classification"], [
@@ -422,14 +497,14 @@ export async function generateCustomerPDF(data: any) {
     yPos = sectionTitle("Audit Trail", yPos, 40)
     yPos = oneColKV(yPos, [
       ["Company Name", userCompany],
-      ["Generated By (User)", userRole],
+      ["Generated By (User)", userName],
       ["Generation Timestamp", new Date().toLocaleString()],
     ])
 
     // Footer (reuse existing footer loop below)
   } else {
     // Page 1
-    let yPos = 45
+    let yPos = HEADER_HEIGHT + 10
 
     doc.setFontSize(8.5)
     doc.setTextColor(120, 120, 120)
@@ -518,6 +593,11 @@ export async function generateCustomerPDF(data: any) {
       ["Due Diligence Level", "CDD"],
     ], { coloredRows: [0] })
 
+    // Risk Assessment Details table (individual)
+    if (Array.isArray(data.riskAssessmentDetails) && data.riskAssessmentDetails.length > 0) {
+      yPos = riskAssessmentTable(yPos, data.riskAssessmentDetails)
+    }
+
     // Before Risk Score Scale, ensure it won't be split
     yPos = ensureSpace(yPos, 40)
     yPos = sectionTitle("Risk Score Scale (Interpretation)", yPos)
@@ -567,8 +647,8 @@ export async function generateCustomerPDF(data: any) {
 
     yPos = sectionTitle("Audit Trail", yPos, 40)
     yPos = oneColKV(yPos, [
-      ["Company Name", corp?.company_name || data.company?.company_name || "-"],
-      ["Generated By (User)", data.generated_by || "Compliance Analyst – AML Meter"],
+      // ["Company Name", corp?.company_name || data.company?.company_name || "-"],
+      ["Generated By (User)", userName || "Compliance Analyst – AML Meter"],
       ["Generation Timestamp", new Date().toLocaleString()],
     ])
   }

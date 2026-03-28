@@ -30,6 +30,7 @@ type ScreeningLogsResponse = {
   data: {
     items: ScreeningLog[]
     total: number
+    total_match: number
     limit: number
     offset: number
   }
@@ -73,6 +74,7 @@ export default function ScreeningLogsPage() {
   const [typeFilter, setTypeFilter] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [totalMatch, setTotalMatch ] = useState(0)
   const limit = 15
   const [downloadingLogId, setDownloadingLogId] = useState<number | null>(null)
 
@@ -94,6 +96,7 @@ export default function ScreeningLogsPage() {
       if (data.status) {
         setLogs(data.data.items || [])
         setTotal(data.data.total || 0)
+        setTotalMatch(data.data.total_match || 0)
         setError(null)
       } else {
         setError(data.message || "Failed to load screening logs")
@@ -168,8 +171,8 @@ export default function ScreeningLogsPage() {
   }, [logs, searchTerm, typeFilter])
 
   const summary = useMemo(() => {
-    const matches = filteredLogs.filter((log) => log.is_match).length
-    const matchRate = filteredLogs.length > 0 ? Math.round((matches / filteredLogs.length) * 100) : 0
+    const matches = totalMatch
+    const matchRate = filteredLogs.length > 0 ? Math.round((matches / total) * 100) : 0
     return {
       matches,
       matchRate,
@@ -290,10 +293,10 @@ export default function ScreeningLogsPage() {
                 <p className={SECONDARY_LABEL_CLASS}>Total Records</p>
                 <p className="mt-1 text-xl font-bold tracking-tight">{total}</p>
               </div>
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-3">
+              {/* <div className="rounded-2xl border border-border/60 bg-background/80 p-3">
                 <p className={SECONDARY_LABEL_CLASS}>Filtered</p>
                 <p className="mt-1 text-xl font-bold tracking-tight">{summary.filteredTotal}</p>
-              </div>
+              </div> */}
               <div className="rounded-2xl border border-border/60 bg-background/80 p-3">
                 <p className={SECONDARY_LABEL_CLASS}>Matches</p>
                 <p className="mt-1 text-xl font-bold tracking-tight">{summary.matches}</p>

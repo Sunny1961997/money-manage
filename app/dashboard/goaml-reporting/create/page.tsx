@@ -432,17 +432,17 @@ export default function CreateGoamlReportPage() {
                       <RequiredLabel text="Item Type" className={FIELD_LABEL_CLASS} />
                       <select className={FIELD_CLASS} value={formData.item_type} onChange={(e) => setFormData({ ...formData, item_type: e.target.value })}>
                         <option value="">Select an item type</option>
-                        <option value="Gold">Gold</option>
-                        <option value="Silver">Silver</option>
-                        <option value="Diamond">Diamond</option>
-                        <option value="Gemstones">Gemstones</option>
-                        <option value="Jewellery">Jewellery</option>
-                        <option value="Grain / Cereals">Grain / Cereals</option>
-                        <option value="Real estate / land dealing">Real estate / land dealing</option>
-                        <option value="Platinum">Platinum</option>
-                        <option value="Property / Real estate">Property / Real estate</option>
-                        <option value="Building / Real estate construction">Building / Real estate construction</option>
-                        <option value="Watch">Watch</option>
+                        <option value="GOLD">GOLD</option>
+                        <option value="SILVER">SILVER</option>
+                        <option value="DIAMOND">DIAMOND</option>
+                        <option value="GEMSTONES">GEMSTONES</option>
+                        <option value="JEWELLERY">JEWELLERY</option>
+                        <option value="GRAIN / CEREALS">GRAIN / CEREALS</option>
+                        <option value="REAL ESTATE / LAND DEALING">REAL ESTATE / LAND DEALING</option>
+                        <option value="PLATINUM">PLATINUM</option>
+                        <option value="PROPERTY / REAL ESTATE">PROPERTY / REAL ESTATE</option>
+                        <option value="BUILDING / REAL ESTATE CONSTRUCTION">BUILDING / REAL ESTATE CONSTRUCTION</option>
+                        <option value="WATCH">WATCH</option>
                       </select>
                     </div>
                   </div>

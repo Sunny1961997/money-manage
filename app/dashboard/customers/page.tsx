@@ -145,6 +145,7 @@ export default function CustomersPage() {
         console.log("Fetched details for customer",  json)
         if (json.status) {
           setDetailsById(prev => ({ ...prev, [id]: json.data }));
+          // console.log("Company name: ", json.data.company_information.name);
         }
       } catch { }
     }

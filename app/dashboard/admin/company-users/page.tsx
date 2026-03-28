@@ -54,6 +54,7 @@ export default function CompanyUsersPage() {
   const { toast } = useToast()
   const [users, setUsers] = useState<CompanyUser[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
+  const [countries, setCountries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -71,6 +72,8 @@ export default function CompanyUsersPage() {
   useEffect(() => {
     fetchUsers()
     fetchCompanies()
+    fetchCountries()
+    setLoading(false)
   }, [])
 
   const fetchUsers = async () => {
@@ -88,9 +91,10 @@ export default function CompanyUsersPage() {
       }
     } catch (err: any) {
       setError(err.message || "Failed to load company users")
-    } finally {
-      setLoading(false)
-    }
+    } 
+    // finally {
+    //   setLoading(false)
+    // }
   }
 
   const fetchCompanies = async () => {
@@ -100,21 +104,18 @@ export default function CompanyUsersPage() {
         credentials: "include",
       })
       const data = await res.json()
-
+      console.log("companies response:", data)
       if (data.status === "success" || data.status) {
+        console.log("Entered in if")
         const companiesMap = new Map<number, Company>()
-        const usersData = data.data || []
-
-        usersData.forEach((user: any) => {
-          if (user.company_users && Array.isArray(user.company_users)) {
-            user.company_users.forEach((cu: any) => {
-              const companyInfo = cu.company_information
-              if (companyInfo && !companiesMap.has(companyInfo.id)) {
-                companiesMap.set(companyInfo.id, {
-                  id: companyInfo.id,
-                  name: companyInfo.name,
-                })
-              }
+        const companies = data.data || []
+        console.log("Entered Companies", companies)
+        companies.forEach((company: any) => {
+          console.log("Processing company info:", company.name)
+          if (company && !companiesMap.has(company.id)) {
+            companiesMap.set(company.id, {
+              id: company.id,
+              name: company.name,
             })
           }
         })
@@ -125,6 +126,22 @@ export default function CompanyUsersPage() {
       console.error("Failed to fetch companies:", err)
     }
   }
+  const fetchCountries = async () => {
+    try {
+      console.log("Fetching countries from /api/countries...");
+      const res = await fetch("/api/countries", { method: "GET", credentials: "include" });
+      const payload = await res.json().catch(async () => ({ message: await res.text() }));
+      console.log("Countries payload:", payload);
+
+      if (!res.ok || !payload?.data?.countries?.length) {
+        console.warn("API failed or empty, using fallback countries.");
+        return;
+      }
+      setCountries(payload.data.countries);
+    } catch (e) {
+      console.error("Countries load failed, using fallback:", e);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

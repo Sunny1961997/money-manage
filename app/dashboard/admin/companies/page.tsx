@@ -66,6 +66,7 @@ export default function CompaniesPage() {
           credentials: "include",
         })
         const data = await res.json()
+        console.log("API Response:", data)
 
         if (!(data.status === "success" || data.status)) {
           setError(data.message || "Failed to load companies")
@@ -189,9 +190,10 @@ export default function CompaniesPage() {
                 <tr className="text-left">
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Company Name</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Email</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">License Number</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">License Number/Emirates ID</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Location</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Screenings</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Creation Date</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Expiry Date</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Status</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Actions</th>
@@ -243,6 +245,7 @@ export default function CompaniesPage() {
                             </div>
                           </div>
                         </td>
+                        <td className="px-4 py-3.5 text-sm text-foreground">{formatDate(company.creation_date)}</td>
                         <td className="px-4 py-3.5 text-sm text-foreground">{formatDate(company.expiration_date)}</td>
                         <td className="px-4 py-3.5">
                           <span

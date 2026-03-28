@@ -173,9 +173,9 @@ export default function EditCompanyPage() {
   ]
 
   const contactTypes = [
-    { value: "OFFIC", label: "Office" },
+    { value: "OFFICE", label: "Office" },
     { value: "HOME", label: "Home" },
-    { value: "MOBIL", label: "Mobile" },
+    { value: "MOBILE", label: "Mobile" },
   ]
 
   const formattedExpiry = useMemo(() => {

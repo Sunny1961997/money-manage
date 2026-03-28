@@ -299,7 +299,7 @@ export default function ProfilePage() {
             <p className={SECONDARY_LABEL_CLASS}>License And Expiry</p>
             <div className="mt-2 space-y-3">
               <div>
-                <p className="text-xs text-muted-foreground">Trade License</p>
+                <p className="text-xs text-muted-foreground">Trade License/Emirates ID</p>
                 <p className="mt-1 text-sm font-semibold break-words">{company?.trade_license_number || "Not Available"}</p>
               </div>
               <div className="border-t border-border/50 pt-2 flex items-center justify-between gap-3">

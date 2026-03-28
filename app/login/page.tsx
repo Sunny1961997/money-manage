@@ -346,7 +346,7 @@ export default function LoginPage() {
 
             <motion.div variants={itemVariants} className="pt-1">
               <p className="mx-auto max-w-[200px] text-center text-[10px] font-bold uppercase tracking-[0.15em] leading-relaxed text-indigo-900/60 antialiased">
-                Protected access for authorized users only.
+                Welcome back. Manage your AML, screening, and compliance risk in one platform
               </p>
             </motion.div>
           </CardContent>

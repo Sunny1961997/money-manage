@@ -54,26 +54,40 @@ type CustomerType = "individual" | "corporate"
 
 const occupations = [
   { value: "Accounting", label: "Accounting" },
-  { value: "Advocacy Organizations", label: "Self Employed" },
-  { value: "Air Couriers and Cargo Services", label: "Air Couriers and Cargo Services" },
+  { value: "Accounting/Auditing Firm", label: "Accounting/Auditing Firm" },
   { value: "Advertising, Marketing and PR", label: "Advertising, Marketing and PR" },
+  { value: "Air Couriers and Cargo Services", label: "Air Couriers and Cargo Services" },
+  { value: "Bank/Financial Institute", label: "Bank/Financial Institute" },
   { value: "Banking/Financial Institutions", label: "Banking/Financial Institutions" },
   { value: "Business Services Other", label: "Business Services Other" },
+  { value: "CSP", label: "CSP" },
   { value: "Charitable Organizations and Foundations", label: "Charitable Organizations and Foundations" },
   { value: "Consulting/Freelancer", label: "Consulting/Freelancer" },
+  { value: "DPMS - Bullion Wholesale", label: "DPMS - Bullion Wholesale" },
+  { value: "DPMS - Factory, Workshop, Goldsmith", label: "DPMS - Factory, Workshop, Goldsmith" },
+  { value: "DPMS - Mining, Refining", label: "DPMS - Mining, Refining" },
+  { value: "DPMS - Retail Store", label: "DPMS - Retail Store" },
   { value: "Data Analytics, Management and Internet", label: "Data Analytics, Management and Internet" },
   { value: "Defense", label: "Defense" },
   { value: "Education", label: "Education" },
   { value: "Facilities Management and Maintenance", label: "Facilities Management and Maintenance" },
+  { value: "General Trading", label: "General Trading" },
+  { value: "Gold Bullion Trading", label: "Gold Bullion Trading" },
   { value: "Government Service", label: "Government Service" },
   { value: "HR and Recruiting Services", label: "HR and Recruiting Services" },
   { value: "HealthCare", label: "HealthCare" },
   { value: "IT and Network Services and Support", label: "IT and Network Services and Support" },
   { value: "Jewellery Trading", label: "Jewellery Trading" },
+  { value: "Law Firm", label: "Law Firm" },
+  { value: "Law Firms / Notary Public", label: "Law Firms / Notary Public" },
   { value: "Outside UAE", label: "Outside UAE" },
-  { value: "Sale and Services", label: "Sale and Services" },
-  { value: "Others", label: "Others" },
   { value: "Owner/Partner/Director", label: "Owner/Partner/Director" },
+  { value: "Real Estate", label: "Real Estate" },
+  { value: "Real Estate Sales", label: "Real Estate Sales" },
+  { value: "Sale and Services", label: "Sale and Services" },
+  { value: "Self Employed", label: "Self Employed" },
+  { value: "Hawala and Exchange", label: "Hawala and Exchange" },
+  { value: "Others", label: "Others" },
 ]
 const sourceOfIncome = [
   { value: "Salary", label: "Salary" },
@@ -90,13 +104,15 @@ const sourceOfIncome = [
   { value: "Lottery/Raffles", label: "Lottery/Raffles" },
 ]
 
+
+
 const idTypes = [
   { value: "Passport", label: "Passport" },
   { value: "EID", label: "EID" },
   { value: "GCC ID", label: "GCC ID" },
   { value: "Govt. Issued ID", label: "Govt. Issued ID" },
-  { value: "Commercial License", label: "Commercial License" },
 ]
+
 
 const purposes = [
   { value: "Personal Use", label: "Personal Use" },
@@ -266,6 +282,7 @@ function IndividualForm({
   const [residentialStatus, setResidentialStatus] = useState("resident")
   const [address, setAddress] = useState("")
   const [city, setCity] = useState("")
+  const [state, setState] = useState("")
   const [country, setCountry] = useState("")
   const [nationality, setNationality] = useState("")
   const [countryCode, setCountryCode] = useState("")
@@ -297,7 +314,6 @@ function IndividualForm({
   const [expectedNoOfTransactions, setExpectedNoOfTransactions] = useState("")
   const [expectedVolume, setExpectedVolume] = useState("")
   // Screening & remarks
-  // const [fuzziness, setFuzziness] = useState("")
   const [remarks, setRemarks] = useState("")
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -306,8 +322,61 @@ function IndividualForm({
   const [activeTab, setActiveTab] = useState("personal")
   const [submitting, setSubmitting] = useState(false)
 
+  // State for dynamic issuing authority options
+  const [issuingAuthorityOptions, setIssuingAuthorityOptions] = useState<Array<{ value: string; label: string }>>([])
+
   const router = useRouter()
   const { toast } = useToast()
+
+  // Get issuing authorities based on ID type
+  const getIssuingAuthorities = (idTypeValue: string) => {
+    switch(idTypeValue) {
+      case "EID":
+        return [
+          { value: "Federal Authority for Identity", label: "Federal Authority for Identity" },
+          { value: "Citizenship", label: "Citizenship" },
+          { value: "Customs and Port Security", label: "Customs and Port Security" },
+        ];
+      case "Passport":
+        // Use existing countries - show country label and set country value as value
+        return countries.map(country => ({
+          value: country.value,  // e.g., "AE" or country code
+          label: country.label   // e.g., "United Arab Emirates"
+        }));
+      case "GCC ID":
+        // Filter GCC countries
+        const gccCountryNames = ["United Arab Emirates", "Saudi Arabia", "Kuwait", "Qatar", "Bahrain", "Oman"];
+        const gccCountries = countries.filter(country => 
+          gccCountryNames.includes(country.label)
+        );
+        return gccCountries.map(country => ({
+          value: country.value,  // e.g., "AE", "SA", etc.
+          label: country.label   // e.g., "United Arab Emirates"
+        }));
+      case "Govt. Issued ID":
+        return [
+          { value: "Ministry of Interior", label: "Ministry of Interior" },
+          { value: "Dubai Health Authority", label: "Dubai Health Authority" },
+          { value: "Department of Economy and Tourism", label: "Department of Economy and Tourism" },
+          { value: "Roads and Transport Authority", label: "Roads and Transport Authority" },
+          { value: "Dubai Municipality", label: "Dubai Municipality" },
+          { value: "Other Government Authority", label: "Other Government Authority" },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // Update issuing authorities when ID type changes
+  useEffect(() => {
+    if (idType && countries.length > 0) {
+      const authorities = getIssuingAuthorities(idType);
+      setIssuingAuthorityOptions(authorities);
+      setIssuingAuthority(""); // Reset when ID type changes
+    } else {
+      setIssuingAuthorityOptions([]);
+    }
+  }, [idType, countries]);
 
   // Handlers for single/multi select
   const handleSingleSelect = (setter: (v: string) => void) => (value: string | string[]) => {
@@ -356,6 +425,7 @@ function IndividualForm({
       'Date of Birth': dob,
       'Address': address,
       'City': city,
+      'State': state,
       'Country': country,
       'Nationality': nationality,
       'Country Code': countryCode,
@@ -376,7 +446,6 @@ function IndividualForm({
       'ID Expiry Date': idExpiryDate,
       'Place of Birth': placeOfBirth,
       'Country of Residence': countryOfResidence,
-      // 'Screening Fuzziness': fuzziness,
     }
 
     const emptyFields = Object.entries(requiredFields)
@@ -387,7 +456,6 @@ function IndividualForm({
       toast({
         title: "Required fields missing",
         description: `Please fill in: ${emptyFields.join(', ')}`,
-        // variant: "destructive"
       })
       setSubmitting(false)
       return
@@ -405,6 +473,7 @@ function IndividualForm({
         residential_status: residentialStatus,
         address,
         city,
+        state: state,
         country,
         nationality,
         country_code: countryCode,
@@ -492,7 +561,7 @@ function IndividualForm({
               Occupation
             </TabsTrigger>
             <TabsTrigger value="financial" className={TABS_GRID_TRIGGER_CLASS}>
-              Financial
+              Financial Details
             </TabsTrigger>
             <TabsTrigger value="transactions" className={TABS_GRID_TRIGGER_CLASS}>
               Transactions & ID
@@ -510,8 +579,8 @@ function IndividualForm({
         </div>
 
         <form className="space-y-6 pb-0" onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}>
+          {/* Personal Information Tab */}
           <TabsContent value="personal" className="mt-0">
-            {/* Personal Information */}
             <Card className={CARD_STYLE}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
@@ -545,8 +614,8 @@ function IndividualForm({
             </Card>
           </TabsContent>
 
+          {/* Address Information Tab */}
           <TabsContent value="address" className="mt-0">
-            {/* Address Information */}
             <Card className={CARD_STYLE}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
@@ -563,6 +632,10 @@ function IndividualForm({
                   <div>
                     <RequiredLabel text="City" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter city" value={city} onChange={e => setCity(e.target.value)} />
+                  </div>
+                  <div>
+                    <RequiredLabel text="State" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter state" value={state} onChange={e => setState(e.target.value)} />
                   </div>
                   <div>
                     <RequiredLabel text="Country" className={FIELD_LABEL_CLASS} />
@@ -591,8 +664,8 @@ function IndividualForm({
             </Card>
           </TabsContent>
 
+          {/* Contact Information Tab */}
           <TabsContent value="contact" className="mt-0">
-            {/* Contact Information */}
             <Card className={CARD_STYLE}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
@@ -615,7 +688,7 @@ function IndividualForm({
                   </div>
                   <div>
                     <RequiredLabel text="Contact No" className={FIELD_LABEL_CLASS} />
-                    <input className={FIELD_CLASS} placeholder="Enter contact number" value={contactNo} onChange={e => setContactNo(formatContactNumber(e.target.value))} />
+                    <input className={FIELD_CLASS} placeholder="Enter contact number" value={contactNo} onChange={e => setContactNo(e.target.value)} />
                   </div>
                   <div>
                     <RequiredLabel text="Email" className={FIELD_LABEL_CLASS} />
@@ -626,8 +699,8 @@ function IndividualForm({
             </Card>
           </TabsContent>
 
+          {/* Gender and PEP Tab */}
           <TabsContent value="gender-pep" className="mt-0">
-            {/* Gender and PEP Status */}
             <Card className={CARD_STYLE}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
@@ -658,8 +731,8 @@ function IndividualForm({
             </Card>
           </TabsContent>
 
+          {/* Occupation Tab */}
           <TabsContent value="occupation" className="mt-0">
-            {/* Occupation and Income */}
             <Card className={CARD_STYLE}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
@@ -696,8 +769,8 @@ function IndividualForm({
             </Card>
           </TabsContent>
 
+          {/* Financial Tab */}
           <TabsContent value="financial" className="mt-0">
-            {/* Financial Details */}
             <Card className={CARD_STYLE}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
@@ -734,8 +807,8 @@ function IndividualForm({
             </Card>
           </TabsContent>
 
+          {/* Transactions Tab */}
           <TabsContent value="transactions" className="mt-0">
-            {/* Transactions and ID Details */}
             <Card className={CARD_STYLE}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
@@ -776,7 +849,6 @@ function IndividualForm({
                       placeholder="0"
                       value={expectedNoOfTransactions}
                       onChange={e => setExpectedNoOfTransactions(e.target.value)}
-                      onKeyDown={blockExponentInput}
                     />
                   </div>
                   <div>
@@ -787,7 +859,6 @@ function IndividualForm({
                       placeholder="0"
                       value={expectedVolume}
                       onChange={e => setExpectedVolume(e.target.value)}
-                      onKeyDown={blockExponentInput}
                     />
                   </div>
                 </div>
@@ -795,8 +866,8 @@ function IndividualForm({
             </Card>
           </TabsContent>
 
+          {/* Identification Tab - WITH DEPENDENT DROPDOWN */}
           <TabsContent value="identification" className="mt-0">
-            {/* Identification Details */}
             <Card className={CARD_STYLE}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
@@ -806,25 +877,56 @@ function IndividualForm({
                   <h4 className="font-semibold text-lg text-foreground tracking-tight">Identification Details</h4>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* ID Type Dropdown */}
                   <div>
                     <RequiredLabel text="ID Type" className={FIELD_LABEL_CLASS} />
                     <Combobox
                       options={idTypes}
                       value={idType}
-                      onValueChange={handleSingleSelect(setIdType)}
+                      onValueChange={(value) => {
+                        // Handle both string and string[] cases
+                        if (typeof value === 'string') {
+                          setIdType(value);
+                          setIssuingAuthority(""); // Reset issuing authority when ID type changes
+                        }
+                      }}
                       placeholder="Select an ID type"
                       searchPlaceholder="Search type..."
                       className={FIELD_CLASS}
                     />
                   </div>
+
+                  {/* ID No */}
                   <div>
                     <RequiredLabel text="ID No" className={FIELD_LABEL_CLASS} />
-                    <input className={FIELD_CLASS} placeholder="Enter ID number" value={idNo} onChange={e => setIdNo(e.target.value)} />
+                    <input 
+                      className={FIELD_CLASS} 
+                      placeholder="Enter ID number" 
+                      value={idNo} 
+                      onChange={e => setIdNo(e.target.value)} 
+                    />
                   </div>
+
+                  {/* ID Issued By - DYNAMIC DEPENDENT DROPDOWN */}
                   <div>
                     <RequiredLabel text="ID Issued By" className={FIELD_LABEL_CLASS} />
-                    <input className={FIELD_CLASS} placeholder="Enter issuing authority" value={issuingAuthority} onChange={e => setIssuingAuthority(e.target.value)} />
+                    <Combobox
+                      options={issuingAuthorityOptions}
+                      value={issuingAuthority}
+                      onValueChange={(value) => {
+                        // Handle both string and string[] cases
+                        if (typeof value === 'string') {
+                          setIssuingAuthority(value);
+                        }
+                      }}
+                      placeholder={idType ? "Select issuing authority" : "Select ID type first"}
+                      searchPlaceholder="Search authority..."
+                      className={FIELD_CLASS}
+                      disabled={!idType}
+                    />
                   </div>
+
+                  {/* ID Issued At Country */}
                   <div>
                     <RequiredLabel text="ID Issued At" className={FIELD_LABEL_CLASS} />
                     <Combobox
@@ -836,21 +938,35 @@ function IndividualForm({
                       className={FIELD_CLASS}
                     />
                   </div>
+
+                  {/* ID Issued Date */}
                   <div>
                     <RequiredLabel text="ID Issued Date" className={FIELD_LABEL_CLASS} />
-                    <Input type="date" className={FIELD_CLASS} value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
+                    <Input 
+                      type="date" 
+                      className={FIELD_CLASS} 
+                      value={idIssueDate} 
+                      onChange={e => setIdIssueDate(e.target.value)} 
+                    />
                   </div>
+
+                  {/* ID Expiry Date */}
                   <div>
                     <RequiredLabel text="ID Expiry Date" className={FIELD_LABEL_CLASS} />
-                    <Input type="date" className={FIELD_CLASS} value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
+                    <Input 
+                      type="date" 
+                      className={FIELD_CLASS} 
+                      value={idExpiryDate} 
+                      onChange={e => setIdExpiryDate(e.target.value)} 
+                    />
                   </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
+          {/* Additional Info Tab */}
           <TabsContent value="additional-info" className="mt-0">
-            {/* Additional Information */}
             <Card className={CARD_STYLE}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
@@ -924,8 +1040,8 @@ function IndividualForm({
             </Card>
           </TabsContent>
 
+          {/* Documents Tab */}
           <TabsContent value="documents" className="mt-0">
-            {/* Upload Documents */}
             <Card className={CARD_STYLE}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
@@ -1103,15 +1219,15 @@ function CorporateForm({
   const delivery_channels = [
     { value: "Face to Face", label: "Face to Face" },
     { value: "Non Face to Face", label: "Non Face to Face" },
-    // { value: "Walk-in-customer", label: "Walk-in-customer" },
+    { value: "Walk-in Customer", label: "Walk-in Customer" },
   ]
   const roles = [
-    { value: "UBO", label: "UBO" },
-    { value: "SHARE HOLDER", label: "SHARE HOLDER" },
-    { value: "PARTNER", label: "PARTNER" },
-    { value: "DIRECTOR", label: "DIRECTOR" },
-    { value: "MANAGER", label: "MANAGER" },
-    { value: "REPRESENTATIVE", label: "REPRESENTATIVE" },
+    // { value: "UBO", label: "UBO" },
+    { value: "SHRHL", label: "SHARE HOLDER" },
+    // { value: "PARTNER", label: "PARTNER" },
+    // { value: "DIR", label: "DIRECTOR" },
+    // { value: "MAN", label: "MANAGER" },
+    // { value: "REPRESENTATIVE", label: "REPRESENTATIVE" },
   ]
 
   // AML questionnaires (answer per question)
@@ -1138,6 +1254,7 @@ function CorporateForm({
 
   const [companyName, setCompanyName] = useState("")
   const [companyAddress, setCompanyAddress] = useState("")
+  const [state, setState] = useState("")
   const [city, setCity] = useState("")
   const [poBox, setPoBox] = useState("")
   const [officeNo, setOfficeNo] = useState("")
@@ -1211,6 +1328,7 @@ function CorporateForm({
       // Company Information
       'Company Name': companyName,
       'Company Address': companyAddress,
+      'State': state,
       'City': city,
       'Country of Incorporation': companyCountry,
       // 'PO Box No': poBox,
@@ -1308,6 +1426,7 @@ function CorporateForm({
       corporate_details: {
         company_name: companyName,
         company_address: companyAddress,
+        state: state,
         city,
         country_incorporated: companyCountry,
         po_box: poBox,
@@ -1329,7 +1448,7 @@ function CorporateForm({
         is_entity_dealting_with_import_export: isImportExport,
         has_sister_concern: hasSisterConcern,
         account_holding_bank_name: accountHoldingBankName,
-        purpose_of_relation: purposeOfRelation,
+        purpose_of_onboarding: purposeOfRelation,
         product_source: productSource,
         payment_mode: paymentMode,
         delivery_channel: deliveryChannel,
@@ -1461,6 +1580,10 @@ function CorporateForm({
                   <div className="md:col-span-2">
                     <RequiredLabel text="Company Address" className={FIELD_LABEL_CLASS} />
                     <input className={FIELD_CLASS} placeholder="Enter the Company address" value={companyAddress} onChange={e => setCompanyAddress(e.target.value)} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <RequiredLabel text="State" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter the State" value={state} onChange={e => setState(e.target.value)} />
                   </div>
                   <div>
                     <RequiredLabel text="City" className={FIELD_LABEL_CLASS} />

@@ -44,6 +44,7 @@ type ScreeningResponse = {
   data?: {
     user_id?: number | string
     user_company?: string
+    trade_license_number?: string
     searched_for?: string
     subject_type?: string
     screening_log_id?: string
@@ -137,6 +138,7 @@ export default function QuickScreeningResultsPage() {
   const userId = String(payload?.data?.user_id || payload?.user_id || "N/A")
   const userName = String(payload?.data?.user_name || "N/A")
   const userCompany = String(payload?.data?.user_company || "N/A")
+  const tradeLicense = String(payload?.data?.trade_license_number || "N/A")
   const searchedFor = payload?.data?.searched_for || "-"
   const screeningLogId = payload?.data?.screening_log_id || "N/A"
   const customerType = payload?.data?.subject_type || "individual"
@@ -277,6 +279,7 @@ export default function QuickScreeningResultsPage() {
       user_id: userId,
       user_name: userName,
       user_company: userCompany,
+      trade_license: tradeLicense,
       savedCandidateKeys: savedKeys,
       relevantCount: relCount,
       irrelevantCount: irrelCount,

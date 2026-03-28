@@ -39,6 +39,7 @@ export default function AddCompanyPage() {
   const [tradeLicenseNumber, setTradeLicenseNumber] = useState("")
   const [dob, setDob] = useState("")
   const [passportNumber, setPassportNumber] = useState("")
+  const [ssnNumber, setSsnNumber] = useState("")
   const [passportCountry, setPassportCountry] = useState("")
   const [nationality, setNationality] = useState("")
   const [contactType, setContactType] = useState("")
@@ -86,6 +87,7 @@ export default function AddCompanyPage() {
       trade_license_number: tradeLicenseNumber,
       dob,
       passport_number: passportNumber,
+      ssn: ssnNumber,
       passport_country: passportCountry,
       nationality,
       contact_type: contactType,
@@ -140,9 +142,9 @@ export default function AddCompanyPage() {
   }
 
   const contactTypes = [
-    { value: "OFFIC", label: "Office" },
+    { value: "OFFICE", label: "Office" },
     { value: "HOME", label: "Home" },
-    { value: "MOBIL", label: "Mobile" },
+    { value: "MOBILE", label: "Mobile" },
   ]
 
   const communicationTypes = [
@@ -318,6 +320,10 @@ export default function AddCompanyPage() {
                   className={FIELD_CLASS}
                   matchTriggerWidth
                 />
+              </div>
+              <div className={FIELD_GROUP_CLASS}>
+                <Label className={FIELD_LABEL_CLASS}>SSN Number</Label>
+                <Input value={ssnNumber} onChange={(e) => setSsnNumber(e.target.value)} placeholder="Enter SSN number" className={FIELD_CLASS} />
               </div>
               <div className={FIELD_GROUP_CLASS}>
                 <RequiredLabel text="Nationality" className={FIELD_LABEL_CLASS} />

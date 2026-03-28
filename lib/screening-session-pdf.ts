@@ -38,6 +38,7 @@ export async function generateScreeningSessionPDF({
   user_id,
   user_name,
   user_company,
+  trade_license,
   savedCandidateKeys,
   relevantCount,
   irrelevantCount,
@@ -54,7 +55,8 @@ export async function generateScreeningSessionPDF({
   total_found?: number
   user_id?: string
   user_name?: string
-  user_company?: string
+  user_company: string
+  trade_license: string
   savedCandidateKeys?: string[]
   relevantCount?: number
   irrelevantCount?: number
@@ -118,7 +120,7 @@ export async function generateScreeningSessionPDF({
 
   // --- HEADER ---
   doc.setFillColor(60, 0, 126)
-  doc.rect(0, 0, pageWidth, 40, "F") // Full width header, increased height to 40mm
+  doc.rect(0, 0, pageWidth, 43, "F") // Full width header, increased height to 45mm
 
   const headerPadding = 15 // Padding inside the purple header
 
@@ -178,12 +180,24 @@ export async function generateScreeningSessionPDF({
   doc.setFont(PDF_FONT_PRIMARY, "normal")
   doc.text(`Case ID: AML-CASE-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`, pageWidth - headerPadding, 16, { align: "right" })
 
+  doc.setFontSize(9)
+  doc.setFont(PDF_FONT_PRIMARY, "normal")
+  doc.text("Name Screening Result", pageWidth / 2, 24, { align: "center" })
+
+  doc.setFontSize(9)
+  doc.setFont(PDF_FONT_PRIMARY, "normal")
+  doc.text(user_company, pageWidth / 2, 32, { align: "center" })
+
+  doc.setFontSize(9)
+  doc.setFont(PDF_FONT_PRIMARY, "normal")
+  doc.text(`Trade License No: ${trade_license}`, pageWidth / 2, 40, { align: "center" })
+
   // --- TITLE ---
   let y = 50
   doc.setTextColor(40, 40, 40)
   doc.setFontSize(18)
   doc.setFont(PDF_FONT_PRIMARY, "bold")
-  const titleText = `Subject: `
+  const titleText = `Customer Name: `
   const titleWidth = doc.getTextWidth(titleText)
   doc.text(titleText, margin, y)
   doc.setFont(PDF_FONT_PRIMARY, "normal")

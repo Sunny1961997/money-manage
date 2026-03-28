@@ -65,6 +65,7 @@ export default function ViewGoamlReportPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [xmlBusy, setXmlBusy] = useState(false)
+  const [countryCodeByName, setCountryCodeByName] = useState<Record<string, string>>({})
 
   const { user } = useAuthStore()
   const normalizedRole = user?.role?.toLowerCase().trim() || ""
@@ -85,7 +86,7 @@ export default function ViewGoamlReportPage() {
           headers: { "Content-Type": "application/json" },
         })
         const json = await readJsonSafely(res)
-
+        console.log("Report response: ", json);
         if (!res.ok) {
           setError(json?.message || json?.error || `Failed to load report (${res.status})`)
           return
@@ -111,6 +112,30 @@ export default function ViewGoamlReportPage() {
     void fetchReport()
   }, [id])
 
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const res = await fetch("/api/countries", { method: "GET", credentials: "include" })
+        const json = await readJsonSafely(res)
+
+        const list = (json?.data?.countries || json?.countries || []) as any[]
+        const map: Record<string, string> = {}
+
+        list.forEach((c: any) => {
+          const name = String(c?.name || "").trim()
+          const code = String(c?.sortname || "").trim()
+          if (name && code && /^[A-Za-z]{2}$/.test(code)) {
+            map[name.toLowerCase()] = code.toUpperCase()
+          }
+        })
+
+        setCountryCodeByName(map)
+      } catch {
+        setCountryCodeByName({})
+      }
+    })()
+  }, [])
+
   const xmlFilename = useMemo(() => buildGoamlXmlFilename(report, id), [report, id])
 
   const handleBack = () => {
@@ -125,7 +150,7 @@ export default function ViewGoamlReportPage() {
     if (!report) return
     setXmlBusy(true)
     try {
-      const xml = buildGoamlXml(report)
+      const xml = buildGoamlXml(report, { countryCodeByName })
       downloadXml(xmlFilename, xml)
     } finally {
       setXmlBusy(false)

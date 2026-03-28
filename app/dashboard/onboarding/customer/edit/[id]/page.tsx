@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Combobox } from "@/components/ui/combobox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
+import { RequiredLabel } from "@/components/ui/required-label"
 import {
   User,
   Building2,
@@ -24,11 +25,24 @@ import {
   Plus,
   Trash2,
   FileCheck,
+  Loader2,
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type CustomerType = "individual" | "corporate"
+
+const PAGE_CLASS = "space-y-8 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
+const CARD_STYLE =
+  "rounded-3xl border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
+const FIELD_LABEL_CLASS = "mb-1 block text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+const FIELD_CLASS =
+  "h-10 w-full rounded-xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground"
+const TEXTAREA_CLASS =
+  "w-full rounded-xl border border-border/70 bg-background/90 px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground"
+const TABS_GRID_LIST_CLASS = "grid h-auto w-full grid-cols-2 gap-1 bg-transparent p-0 md:grid-cols-3 lg:grid-cols-5"
+const TABS_GRID_TRIGGER_CLASS =
+  "h-10 bg-primary/20 w-full rounded-xl px-2 text-center text-sm whitespace-nowrap justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 
 const occupations = [
   { value: "Accounting", label: "Accounting" },
@@ -73,7 +87,6 @@ const idTypes = [
   { value: "EID", label: "EID" },
   { value: "GCC ID", label: "GCC ID" },
   { value: "Govt. Issued ID", label: "Govt. Issued ID" },
-  { value: "Commercial License", label: "Commercial License" },
 ]
 
 const purposes = [
@@ -148,6 +161,7 @@ export default function EditCustomerPage() {
         // Fetch customer data
         const customerRes = await fetch(`/api/onboarding/customers/${id}`, { credentials: "include" })
         const customerJson = await customerRes.json()
+        console.log("Fetched customer data:", customerJson)
         
         if (customerJson.status) {
           const customer = customerJson.data
@@ -194,7 +208,7 @@ export default function EditCustomerPage() {
   if (!customerData) return <div className="max-w-5xl mx-auto p-6">Customer not found</div>
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className={PAGE_CLASS}>
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <UsersIcon className="w-5 h-5" />
@@ -272,6 +286,7 @@ function IndividualEditForm({
   const [residentialStatus, setResidentialStatus] = useState(ind.residential_status || "resident")
   const [address, setAddress] = useState(ind.address || "")
   const [city, setCity] = useState(ind.city || "")
+  const [state, setState] = useState(ind.state || "")
   const [country, setCountry] = useState(ind.country || "")
   const [nationality, setNationality] = useState(ind.nationality || "")
   const [countryCode, setCountryCode] = useState(ind.country_code || "")
@@ -302,12 +317,70 @@ function IndividualEditForm({
   const [approach, setApproach] = useState(ind.mode_of_approach || "")
   const [expectedNoOfTransactions, setExpectedNoOfTransactions] = useState(ind.expected_no_of_transactions?.toString() || "")
   const [expectedVolume, setExpectedVolume] = useState(ind.expected_volume?.toString() || "")
-  // const [fuzziness, setFuzziness] = useState(customerData.screening_fuzziness || "")
   const [remarks, setRemarks] = useState(customerData.remarks || "")
   const [files, setFiles] = useState<File[]>([])
+  const [existingDocuments, setExistingDocuments] = useState<any[]>(customerData.documents || [])
+  const [deletedDocumentIds, setDeletedDocumentIds] = useState<number[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   
   const [activeTab, setActiveTab] = useState("personal")
+
+  // State for dynamic issuing authority options
+  const [issuingAuthorityOptions, setIssuingAuthorityOptions] = useState<Array<{ value: string; label: string }>>([])
+
+  // Get issuing authorities based on ID type
+  const getIssuingAuthorities = (idTypeValue: string) => {
+    switch(idTypeValue) {
+      case "EID":
+        return [
+          { value: "Federal Authority for Identity", label: "Federal Authority for Identity" },
+          { value: "Citizenship", label: "Citizenship" },
+          { value: "Customs and Port Security", label: "Customs and Port Security" },
+        ];
+      case "Passport":
+        // Use existing countries - show country label and set country value as value
+        return countries.map(country => ({
+          value: country.value,  // e.g., "AE" or country code
+          label: country.label   // e.g., "United Arab Emirates"
+        }));
+      case "GCC ID":
+        // Filter GCC countries
+        const gccCountryNames = ["United Arab Emirates", "Saudi Arabia", "Kuwait", "Qatar", "Bahrain", "Oman"];
+        const gccCountries = countries.filter(country => 
+          gccCountryNames.includes(country.label)
+        );
+        return gccCountries.map(country => ({
+          value: country.value,  // e.g., "AE", "SA", etc.
+          label: country.label   // e.g., "United Arab Emirates"
+        }));
+      case "Govt. Issued ID":
+        return [
+          { value: "Ministry of Interior", label: "Ministry of Interior" },
+          { value: "Dubai Health Authority", label: "Dubai Health Authority" },
+          { value: "Department of Economy and Tourism", label: "Department of Economy and Tourism" },
+          { value: "Roads and Transport Authority", label: "Roads and Transport Authority" },
+          { value: "Dubai Municipality", label: "Dubai Municipality" },
+          { value: "Other Government Authority", label: "Other Government Authority" },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // Update issuing authorities when ID type changes
+  useEffect(() => {
+    if (idType && countries.length > 0) {
+      const authorities = getIssuingAuthorities(idType);
+      setIssuingAuthorityOptions(authorities);
+      // Only reset if the current issuingAuthority is not in the new options
+      const isCurrentValid = authorities.some(auth => auth.value === issuingAuthority);
+      if (!isCurrentValid && issuingAuthority) {
+        setIssuingAuthority("");
+      }
+    } else {
+      setIssuingAuthorityOptions([]);
+    }
+  }, [idType, countries]);
 
   const handleSingleSelect = (setter: (v: string) => void) => (value: string | string[]) => {
     if (typeof value === "string") setter(value)
@@ -334,14 +407,62 @@ function IndividualEditForm({
 
   const openFilePicker = () => fileInputRef.current?.click()
 
+  const deleteExistingDocument = (docId: number) => {
+    setExistingDocuments(existingDocuments.filter((doc) => doc.id !== docId))
+    setDeletedDocumentIds([...deletedDocumentIds, docId])
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validation
+    const requiredFields: Record<string, string> = {
+      'First Name': firstName,
+      'Last Name': lastName,
+      'Date of Birth': dob,
+      'Address': address,
+      'City': city,
+      'State': state,
+      'Country': country,
+      'Nationality': nationality,
+      'Country Code': countryCode,
+      'Contact No': contactNo,
+      'Email': email,
+      'Gender': gender,
+      'Occupation': occupation,
+      'Source of Income': sourceIncome,
+      'Purpose': purpose,
+      'Payment Mode': paymentMethod,
+      'Product Type': productTypes.length > 0 ? 'filled' : '',
+      'Mode of Approach': approach,
+      'ID Type': idType,
+      'ID No': idNo,
+      'ID Issued By': issuingAuthority,
+      'ID Issued At': idIssueAtCountry,
+      'ID Issued Date': idIssueDate,
+      'ID Expiry Date': idExpiryDate,
+      'Place of Birth': placeOfBirth,
+      'Country of Residence': countryOfResidence,
+    }
+
+    const emptyFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value)
+      .map(([field, _]) => field)
+
+    if (emptyFields.length > 0) {
+      toast({
+        title: "Required fields missing",
+        description: `Please fill in: ${emptyFields.join(', ')}`,
+      })
+      return
+    }
 
     const payload = {
       customer_type: "individual",
       onboarding_type: "full",
       screening_fuzziness: "OFF",
       remarks,
+      deleted_document_ids: deletedDocumentIds,
       individual_details: {
         first_name: firstName,
         last_name: lastName,
@@ -349,6 +470,7 @@ function IndividualEditForm({
         residential_status: residentialStatus,
         address,
         city,
+        state:state,
         country,
         nationality,
         country_code: countryCode,
@@ -418,37 +540,37 @@ function IndividualEditForm({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur py-3 border-b mb-4">
-          <TabsList className="w-full h-auto flex flex-wrap justify-start gap-2 bg-transparent p-0">
-            <TabsTrigger value="personal" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-md py-3 mb-4 rounded-2xl border border-border/50 px-2">
+          <TabsList className={TABS_GRID_LIST_CLASS}>
+            <TabsTrigger value="personal" className={TABS_GRID_TRIGGER_CLASS}>
               Personal Information
             </TabsTrigger>
-            <TabsTrigger value="address" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="address" className={TABS_GRID_TRIGGER_CLASS}>
               Address Information
             </TabsTrigger>
-            <TabsTrigger value="contact" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="contact" className={TABS_GRID_TRIGGER_CLASS}>
               Contact Information
             </TabsTrigger>
-            <TabsTrigger value="gender-pep" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Gender and PEP Status
+            <TabsTrigger value="gender-pep" className={TABS_GRID_TRIGGER_CLASS}>
+              Gender & PEP
             </TabsTrigger>
-            <TabsTrigger value="occupation" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Occupation and Income
+            <TabsTrigger value="occupation" className={TABS_GRID_TRIGGER_CLASS}>
+              Occupation
             </TabsTrigger>
-            <TabsTrigger value="financial" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="financial" className={TABS_GRID_TRIGGER_CLASS}>
               Financial Details
             </TabsTrigger>
-            <TabsTrigger value="transactions" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Transactions and ID Details
+            <TabsTrigger value="transactions" className={TABS_GRID_TRIGGER_CLASS}>
+              Transactions & ID
             </TabsTrigger>
-            <TabsTrigger value="identification" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Identification Details
+            <TabsTrigger value="identification" className={TABS_GRID_TRIGGER_CLASS}>
+              Identification
             </TabsTrigger>
-            <TabsTrigger value="additional-info" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Additional Information
+            <TabsTrigger value="additional-info" className={TABS_GRID_TRIGGER_CLASS}>
+              Additional Info
             </TabsTrigger>
-            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Upload Documents
+            <TabsTrigger value="documents" className={TABS_GRID_TRIGGER_CLASS}>
+              Documents
             </TabsTrigger>
           </TabsList>
         </div>
@@ -457,415 +579,547 @@ function IndividualEditForm({
 
           {/* Personal Information Tab */}
           <TabsContent value="personal" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Personal Information</h4>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>First Name *</Label>
-                  <Input placeholder="Enter first name" value={firstName} onChange={e => setFirstName(e.target.value)} />
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Personal Information</h4>
                 </div>
-                <div className="space-y-2">
-                  <Label>Last Name *</Label>
-                  <Input placeholder="Enter last name" value={lastName} onChange={e => setLastName(e.target.value)} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <RequiredLabel text="First Name" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter first name" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                  </div>
+                  <div>
+                    <RequiredLabel text="Last Name" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter last name" value={lastName} onChange={e => setLastName(e.target.value)} />
+                  </div>
+                  <div>
+                    <RequiredLabel text="Date of Birth" className={FIELD_LABEL_CLASS} />
+                    <Input type="date" className={FIELD_CLASS} value={dob} onChange={e => setDob(e.target.value)} />
+                  </div>
+                  <div>
+                    <RequiredLabel text="Residential Status" className={FIELD_LABEL_CLASS} />
+                    <select className={FIELD_CLASS} value={residentialStatus} onChange={e => setResidentialStatus(e.target.value)}>
+                      <option value="resident">Resident</option>
+                      <option value="non-resident">Non-Resident</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Date of Birth *</Label>
-                  <Input type="date" placeholder="mm/dd/yyyy" value={dob} onChange={e => setDob(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Residential Status *</Label>
-                  <RadioGroup value={residentialStatus} onValueChange={setResidentialStatus} className="flex gap-6 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="resident" id="resident" />
-                      <Label htmlFor="resident">Resident</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="non-resident" id="non-resident" />
-                      <Label htmlFor="non-resident">Non-Resident</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="address" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Address Information</h4>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-2">
-                  <Label>Address *</Label>
-                  <Input placeholder="Enter address" value={address} onChange={e => setAddress(e.target.value)} />
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Address Information</h4>
                 </div>
-                <div className="space-y-2">
-                  <Label>City *</Label>
-                  <Input placeholder="Enter city" value={city} onChange={e => setCity(e.target.value)} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <RequiredLabel text="Address" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter address" value={address} onChange={e => setAddress(e.target.value)} />
+                  </div>
+                  <div>
+                    <RequiredLabel text="City" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter city" value={city} onChange={e => setCity(e.target.value)} />
+                  </div>
+                  <div>
+                    <RequiredLabel text="State" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter state" value={state} onChange={e => setState(e.target.value)} />
+                  </div>
+                  <div>
+                    <RequiredLabel text="Country" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={countries}
+                      value={country}
+                      onValueChange={handleSingleSelect(setCountry)}
+                      placeholder="Select a country"
+                      searchPlaceholder="Search country..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div>
+                    <RequiredLabel text="Nationality" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={countries}
+                      value={nationality}
+                      onValueChange={handleSingleSelect(setNationality)}
+                      placeholder="Select a nationality"
+                      searchPlaceholder="Search nationality..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Country *</Label>
-                  <Combobox
-                    options={countries}
-                    value={country}
-                    onValueChange={handleSingleSelect(setCountry)}
-                    placeholder="Select a country"
-                    searchPlaceholder="Search country..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Nationality *</Label>
-                  <Combobox
-                    options={countries}
-                    value={nationality}
-                    onValueChange={handleSingleSelect(setNationality)}
-                    placeholder="Select a nationality"
-                    searchPlaceholder="Search nationality..."
-                  />
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="contact" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <Phone className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Contact Information</h4>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Country Code *</Label>
-                  <Combobox
-                    options={countryCodes}
-                    value={countryCode}
-                    onValueChange={handleSingleSelect(setCountryCode)}
-                    placeholder="Select"
-                    searchPlaceholder="Search code..."
-                  />
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Contact Information</h4>
                 </div>
-                <div className="space-y-2">
-                  <Label>Contact No *</Label>
-                  <Input placeholder="Enter contact number" value={contactNo} onChange={e => setContactNo(e.target.value)} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <RequiredLabel text="Country Code" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={countryCodes}
+                      value={countryCode}
+                      onValueChange={handleSingleSelect(setCountryCode)}
+                      placeholder="Select"
+                      searchPlaceholder="Search code..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div>
+                    <RequiredLabel text="Contact No" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter contact number" value={contactNo} onChange={e => setContactNo(e.target.value)} />
+                  </div>
+                  <div>
+                    <RequiredLabel text="Email" className={FIELD_LABEL_CLASS} />
+                    <input type="email" className={FIELD_CLASS} placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Email *</Label>
-                  <Input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} />
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="gender-pep" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Gender and PEP Status</h4>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Gender *</Label>
-                  <RadioGroup value={gender} onValueChange={handleGenderRadio} className="flex flex-col gap-2 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Male" id="male" />
-                      <Label htmlFor="male">Male</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Female" id="female" />
-                      <Label htmlFor="female">Female</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Other" id="other" />
-                      <Label htmlFor="other">Other</Label>
-                    </div>
-                  </RadioGroup>
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Gender and PEP Status</h4>
                 </div>
-                <div className="space-y-2">
-                  <Label>Politically Exposed Person (PEP)? *</Label>
-                  <RadioGroup value={isPep ? "yes" : "no"} onValueChange={handlePepRadio} className="flex gap-6 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="pep-yes" />
-                      <Label htmlFor="pep-yes">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="pep-no" />
-                      <Label htmlFor="pep-no">No</Label>
-                    </div>
-                  </RadioGroup>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <RequiredLabel text="Gender" className={FIELD_LABEL_CLASS} />
+                    <select className={FIELD_CLASS} value={gender} onChange={e => setGender(e.target.value)}>
+                      <option value="">Select gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <RequiredLabel text="Politically Exposed Person (PEP)?" className={FIELD_LABEL_CLASS} />
+                    <select className={FIELD_CLASS} value={isPep ? "yes" : "no"} onChange={e => setIsPep(e.target.value === "yes")}>
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="occupation" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <Briefcase className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Occupation and Income</h4>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Occupation *</Label>
-                  <Combobox
-                    options={occupations}
-                    value={occupation}
-                    onValueChange={handleOccupation}
-                    placeholder="Select an occupation"
-                    searchPlaceholder="Search occupation..."
-                  />
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Briefcase className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Occupation and Income</h4>
                 </div>
-                <div className="space-y-2">
-                  <Label>Source of Income *</Label>
-                  <Combobox
-                    options={sourceOfIncome}
-                    value={sourceIncome}
-                    onValueChange={handleSourceIncome}
-                    placeholder="Select a source"
-                    searchPlaceholder="Search source..."
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <RequiredLabel text="Occupation" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={occupations}
+                      value={occupation}
+                      onValueChange={handleOccupation}
+                      placeholder="Select an occupation"
+                      searchPlaceholder="Search occupation..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div>
+                    <RequiredLabel text="Source of Income" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={sourceOfIncome}
+                      value={sourceIncome}
+                      onValueChange={handleSourceIncome}
+                      placeholder="Select a source"
+                      searchPlaceholder="Search source..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
                 </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="financial" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <DollarSign className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Financial Details</h4>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Purpose *</Label>
-                  <Combobox
-                    options={purposes}
-                    value={purpose}
-                    onValueChange={handleSingleSelect(setPurpose)}
-                    placeholder="Select a purpose"
-                    searchPlaceholder="Search purpose..."
-                  />
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <DollarSign className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Financial Details</h4>
                 </div>
-                <div className="space-y-2">
-                  <Label>Payment Mode *</Label>
-                  <Combobox
-                    options={paymentMethods}
-                    value={paymentMethod}
-                    onValueChange={handleSingleSelect(setPaymentMethod)}
-                    placeholder="Select a payment mode"
-                    searchPlaceholder="Search mode..."
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <RequiredLabel text="Purpose" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={purposes}
+                      value={purpose}
+                      onValueChange={handleSingleSelect(setPurpose)}
+                      placeholder="Select a purpose"
+                      searchPlaceholder="Search purpose..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div>
+                    <RequiredLabel text="Payment Mode" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={paymentMethods}
+                      value={paymentMethod}
+                      onValueChange={handleSingleSelect(setPaymentMethod)}
+                      placeholder="Select a payment mode"
+                      searchPlaceholder="Search mode..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
                 </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="transactions" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Transactions and ID Details</h4>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Product Type *</Label>
-                  <Combobox
-                    options={products}
-                    value={productTypes}
-                    onValueChange={handleMultiSelect(setProductTypes)}
-                    multiple
-                    placeholder="Select product type"
-                    searchPlaceholder="Search type..."
-                  />
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Transactions and ID Details</h4>
                 </div>
-                <div className="space-y-2">
-                  <Label>Mode of Approach *</Label>
-                  <Combobox
-                    options={modeOfApproach}
-                    value={approach}
-                    onValueChange={handleSingleSelect(setApproach)}
-                    placeholder="Select mode of approach"
-                    searchPlaceholder="Search approach..."
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <RequiredLabel text="Product Type" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={products}
+                      value={productTypes}
+                      onValueChange={handleMultiSelect(setProductTypes)}
+                      multiple
+                      placeholder="Select product type"
+                      searchPlaceholder="Search type..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div>
+                    <RequiredLabel text="Mode of Approach" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={modeOfApproach}
+                      value={approach}
+                      onValueChange={handleSingleSelect(setApproach)}
+                      placeholder="Select mode of approach"
+                      searchPlaceholder="Search approach..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div>
+                    <label className={FIELD_LABEL_CLASS}>Expected No of Transactions</label>
+                    <input
+                      type="number"
+                      className={FIELD_CLASS}
+                      placeholder="0"
+                      value={expectedNoOfTransactions}
+                      onChange={e => setExpectedNoOfTransactions(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={FIELD_LABEL_CLASS}>Expected Volume</label>
+                    <input
+                      type="number"
+                      className={FIELD_CLASS}
+                      placeholder="0"
+                      value={expectedVolume}
+                      onChange={e => setExpectedVolume(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Expected No of Transactions</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="0" 
-                    value={expectedNoOfTransactions}
-                    onChange={(e) => setExpectedNoOfTransactions(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Expected Volume</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="0" 
-                    value={expectedVolume}
-                    onChange={(e) => setExpectedVolume(e.target.value)}
-                  />
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
+          {/* Identification Tab - WITH DEPENDENT DROPDOWN */}
           <TabsContent value="identification" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <IdCard className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Identification Details</h4>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>ID Type *</Label>
-                  <Combobox
-                    options={idTypes}
-                    value={idType}
-                    onValueChange={handleSingleSelect(setIdType)}
-                    placeholder="Select an ID type"
-                    searchPlaceholder="Search type..."
-                  />
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <IdCard className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Identification Details</h4>
                 </div>
-                <div className="space-y-2">
-                  <Label>ID No*</Label>
-                  <Input placeholder="Enter ID number" value={idNo} onChange={e => setIdNo(e.target.value)} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* ID Type Dropdown */}
+                  <div>
+                    <RequiredLabel text="ID Type" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={idTypes}
+                      value={idType}
+                      onValueChange={(value) => {
+                        if (typeof value === 'string') {
+                          setIdType(value);
+                          setIssuingAuthority(""); // Reset when ID type changes
+                        }
+                      }}
+                      placeholder="Select an ID type"
+                      searchPlaceholder="Search type..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+
+                  {/* ID No */}
+                  <div>
+                    <RequiredLabel text="ID No" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter ID number" value={idNo} onChange={e => setIdNo(e.target.value)} />
+                  </div>
+
+                  {/* ID Issued By - DYNAMIC DEPENDENT DROPDOWN */}
+                  <div>
+                    <RequiredLabel text="ID Issued By" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={issuingAuthorityOptions}
+                      value={issuingAuthority}
+                      onValueChange={(value) => {
+                        if (typeof value === 'string') {
+                          setIssuingAuthority(value);
+                        }
+                      }}
+                      placeholder={idType ? "Select issuing authority" : "Select ID type first"}
+                      searchPlaceholder="Search authority..."
+                      className={FIELD_CLASS}
+                      disabled={!idType}
+                    />
+                  </div>
+
+                  {/* ID Issued At Country */}
+                  <div>
+                    <RequiredLabel text="ID Issued At" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={countries}
+                      value={idIssueAtCountry}
+                      onValueChange={handleSingleSelect(setIdIssueAtCountry)}
+                      placeholder="Select a country"
+                      searchPlaceholder="Search country..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+
+                  {/* ID Issued Date */}
+                  <div>
+                    <RequiredLabel text="ID Issued Date" className={FIELD_LABEL_CLASS} />
+                    <Input type="date" className={FIELD_CLASS} value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
+                  </div>
+
+                  {/* ID Expiry Date */}
+                  <div>
+                    <RequiredLabel text="ID Expiry Date" className={FIELD_LABEL_CLASS} />
+                    <Input type="date" className={FIELD_CLASS} value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>ID Issued By *</Label>
-                  <Input placeholder="Enter issuing authority" value={issuingAuthority} onChange={e => setIssuingAuthority(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>ID Issued At *</Label>
-                  <Combobox
-                    options={countries}
-                    value={idIssueAtCountry}
-                    onValueChange={handleSingleSelect(setIdIssueAtCountry)}
-                    placeholder="Select a country"
-                    searchPlaceholder="Search country..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>ID Issued Date *</Label>
-                  <Input type="date" placeholder="mm/dd/yyyy" value={idIssueDate} onChange={e => setIdIssueDate(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>ID Expiry Date *</Label>
-                  <Input type="date" placeholder="mm/dd/yyyy" value={idExpiryDate} onChange={e => setIdExpiryDate(e.target.value)} />
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="additional-info" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Additional Information</h4>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Place of Birth *</Label>
-                  <Combobox
-                    options={countries}
-                    value={placeOfBirth}
-                    onValueChange={handleSingleSelect(setPlaceOfBirth)}
-                    placeholder="Select a country"
-                    searchPlaceholder="Search country..."
-                  />
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Additional Information</h4>
                 </div>
-                <div className="space-y-2">
-                  <Label>Country of Residence *</Label>
-                  <Combobox
-                    options={countries}
-                    value={countryOfResidence}
-                    onValueChange={handleSingleSelect(setCountryOfResidence)}
-                    placeholder="Select a country"
-                    searchPlaceholder="Search country..."
-                  />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Dual Nationality *</Label>
-                  <RadioGroup value={dualNationality ? "yes" : "no"} onValueChange={handleBooleanRadio(setDualNationality)} className="flex gap-6 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="dual-yes" />
-                      <Label htmlFor="dual-yes">Yes</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <RequiredLabel text="Place of Birth" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={countries}
+                      value={placeOfBirth}
+                      onValueChange={handleSingleSelect(setPlaceOfBirth)}
+                      placeholder="Select a country"
+                      searchPlaceholder="Search country..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div>
+                    <RequiredLabel text="Country of Residence" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={countries}
+                      value={countryOfResidence}
+                      onValueChange={handleSingleSelect(setCountryOfResidence)}
+                      placeholder="Select a country"
+                      searchPlaceholder="Search country..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <RequiredLabel text="Dual Nationality" className={FIELD_LABEL_CLASS} />
+                    <div className="mt-2 flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="dualNationality" value="yes" checked={dualNationality} onChange={() => setDualNationality(true)} className="accent-primary" />
+                        <span className="text-sm font-medium">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="dualNationality" value="no" checked={!dualNationality} onChange={() => setDualNationality(false)} className="accent-primary" />
+                        <span className="text-sm font-medium">No</span>
+                      </label>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="dual-no" />
-                      <Label htmlFor="dual-no">No</Label>
+                  </div>
+                  <div className="md:col-span-2">
+                    <RequiredLabel text="Is Customer Facing any adverse event?" className={FIELD_LABEL_CLASS} />
+                    <p className="text-xs text-primary/80 mb-3">We don't Check adverse news feed</p>
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="adverseNews" value="yes" checked={adverseNews} onChange={() => setAdverseNews(true)} className="accent-primary" />
+                        <span className="text-sm font-medium">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="adverseNews" value="no" checked={!adverseNews} onChange={() => setAdverseNews(false)} className="accent-primary" />
+                        <span className="text-sm font-medium">No</span>
+                      </label>
                     </div>
-                  </RadioGroup>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className={FIELD_LABEL_CLASS}>Remarks</label>
+                    <textarea
+                      className={TEXTAREA_CLASS}
+                      placeholder="Enter any remarks"
+                      rows={3}
+                      value={remarks}
+                      onChange={e => setRemarks(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Is Customer Facing any adverse event? *</Label>
-                  <p className="text-xs text-blue-600 mb-2">We don't Check adverse news feed</p>
-                  <RadioGroup value={adverseNews ? "yes" : "no"} onValueChange={handleBooleanRadio(setAdverseNews)} className="flex gap-6 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="adverse-yes" />
-                      <Label htmlFor="adverse-yes">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="adverse-no" />
-                      <Label htmlFor="adverse-no">No</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                {/* <div className="col-span-2 space-y-2">
-                  <Label>Screening Fuzziness *</Label>
-                  <Combobox
-                    options={screeningFuzziness}
-                    value={fuzziness}
-                    onValueChange={handleSingleSelect(setFuzziness)}
-                    placeholder="Select fuzziness level"
-                    searchPlaceholder="Search fuzziness..."
-                  />
-                </div> */}
-                <div className="col-span-2 space-y-2">
-                  <Label>Remarks</Label>
-                  <Textarea placeholder="Enter any remarks" rows={3} value={remarks} onChange={e => setRemarks(e.target.value)} />
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="documents" className="mt-0">
-            <Card className="p-6 bg-blue-50/30">
-              <div className="flex items-center gap-2 mb-4">
-                <Upload className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold">Upload Documents</h4>
-              </div>
-              <div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
-                onClick={openFilePicker}
-              >
-                <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                <p className="text-sm text-blue-600 mb-1">Add Documents</p>
-                <p className="text-xs text-muted-foreground">Max 5 files, each up to 2MB (Images, PDFs, Docs)</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,.txt,.gif,.bmp,.tiff,.svg,.webp,.heic"
-                  onChange={handleFileChange}
-                  className="mt-2 hidden"
-                />
-                <div className="mt-2 flex flex-col items-center gap-1">
-                  {files.map((file, idx) => (
-                    <span key={idx} className="text-xs text-gray-700">
-                      {file.name} ({(file.size / 1024).toFixed(1)} KB)
-                    </span>
-                  ))}
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Upload className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Upload Documents</h4>
                 </div>
-              </div>
+
+                {/* Existing Documents */}
+                {existingDocuments.length > 0 && (
+                  <div className="mb-6">
+                    <label className={FIELD_LABEL_CLASS}>Existing Documents</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-3">
+                      {existingDocuments.map((doc: any, idx: number) => (
+                        <div key={doc.id || idx} className="relative group rounded-xl border border-border/60 bg-background/50 p-3">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive/10 hover:bg-destructive/20"
+                            onClick={() => deleteExistingDocument(doc.id)}
+                          >
+                            <Trash2 className="w-3 h-3 text-destructive" />
+                          </Button>
+                          {doc.file_url && /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.file_name || "") ? (
+                            <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                              <img
+                                src={doc.file_url}
+                                alt={doc.file_name || "Document"}
+                                className="w-full h-24 object-cover rounded-lg mb-2"
+                              />
+                            </a>
+                          ) : (
+                            <a
+                              href={doc.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center h-24 bg-muted/30 rounded-lg mb-2"
+                            >
+                              <FileCheck className="w-8 h-8 text-muted-foreground" />
+                            </a>
+                          )}
+                          <p className="text-xs text-muted-foreground truncate">{doc.file_name || "Document"}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Upload New Documents */}
+                <div className="space-y-4">
+                  <label className={FIELD_LABEL_CLASS}>Attachments</label>
+                  <div
+                    className="border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors rounded-2xl p-8 text-center cursor-pointer flex flex-col items-center justify-center"
+                    onClick={openFilePicker}
+                  >
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                      <Upload className="w-6 h-6 text-primary" />
+                    </div>
+                    <p className="text-sm font-semibold text-foreground mb-1">Click to Upload Documents</p>
+                    <p className="text-xs text-muted-foreground">Max 5 files, each up to 2MB (Images, PDFs, Docs)</p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,.txt,.gif,.bmp,.tiff,.svg,.webp,.heic"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {files.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                      {files.map((file, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-background/50">
+                          <FileCheck className="w-5 h-5 text-primary shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">{file.name}</p>
+                            <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
-          <div className="sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t mt-6">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">Update Information</Button>
+          <div className="sticky bottom-0 bg-background/95 backdrop-blur py-4 border-t mt-6 z-10 flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="min-w-[150px] h-12"
+              onClick={() => router.push("/dashboard/customers")}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="min-w-[200px] h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+              type="submit"
+            >
+              Update Information
+            </Button>
           </div>
         </form>
       </Tabs>
@@ -899,6 +1153,7 @@ function CorporateEditForm({
   // Pre-fill corporate fields
   const [companyName, setCompanyName] = useState(corp.company_name || "")
   const [companyAddress, setCompanyAddress] = useState(corp.company_address || "")
+  const [state, setState] = useState(corp.state || "")
   const [city, setCity] = useState(corp.city || "")
   const [countryIncorporated, setCountryIncorporated] = useState(corp.country_incorporated || "")
   const [poBox, setPoBox] = useState(corp.po_box || "")
@@ -923,6 +1178,7 @@ function CorporateEditForm({
   const [isImportExport, setIsImportExport] = useState(!!corp.is_entity_dealting_with_import_export)
   const [hasSisterConcern, setHasSisterConcern] = useState(!!corp.has_sister_concern)
   const [accountHoldingBankName, setAccountHoldingBankName] = useState(corp.account_holding_bank_name || "")
+  const [purposeOfRelation, setPurposeOfRelation] = useState(corp.purpose_of_onboarding || "")
   
   const [productSource, setProductSource] = useState(corp.product_source || "")
   const [paymentMode, setPaymentMode] = useState(corp.payment_mode || "")
@@ -933,6 +1189,29 @@ function CorporateEditForm({
   const [kycDocumentsCollected, setKycDocumentsCollected] = useState(!!corp.kyc_documents_collected_with_form)
   const [isRegisteredInGoaml, setIsRegisteredInGoaml] = useState(!!corp.is_entity_registered_in_GOAML)
   const [hasAdverseNews, setHasAdverseNews] = useState(!!corp.is_entity_having_adverse_news)
+  
+  // AML Questionnaires from question_answers
+  const questionnaires = (corp.question_answers || []).map((qa: any) => ({
+    id: qa.compliance_question_id || qa.question?.id,
+    question: qa.question?.question || "",
+    category: qa.question?.category || "",
+    default_answer: qa.answer,
+  })).filter((q: any) => q.id && q.question)
+
+  const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<number, 1 | 0 | null>>(() => {
+    const answers: Record<number, 1 | 0 | null> = {}
+    const questionAnswers = corp.question_answers || []
+    questionAnswers.forEach((qa: any) => {
+      if (qa.compliance_question_id) {
+        answers[qa.compliance_question_id] = qa.answer ? 1 : 0
+      }
+    })
+    return answers
+  })
+
+  const setQuestionnaireAnswer = (questionId: number, value: 1 | 0) => {
+    setQuestionnaireAnswers((prev) => ({ ...prev, [questionId]: value }))
+  }
   
   // Dropdown options matching create form
   const entity_types = [
@@ -980,12 +1259,12 @@ function CorporateEditForm({
     { value: "Non Face to Face", label: "Non Face to Face" },
   ]
   const roles = [
-    { value: "UBO", label: "UBO" },
-    { value: "SHARE HOLDER", label: "SHARE HOLDER" },
-    { value: "PARTNER", label: "PARTNER" },
-    { value: "DIRECTOR", label: "DIRECTOR" },
-    { value: "MANAGER", label: "MANAGER" },
-    { value: "REPRESENTATIVE", label: "REPRESENTATIVE" },
+    // { value: "UBO", label: "UBO" },
+    { value: "SHRHL", label: "SHARE HOLDER" },
+    // { value: "PARTNER", label: "PARTNER" },
+    // { value: "DIR", label: "DIRECTOR" },
+    // { value: "MAN", label: "MANAGER" },
+    // { value: "REPRESENTATIVE", label: "REPRESENTATIVE" },
   ]
   
   const [productTypes, setProductTypes] = useState<string[]>(
@@ -997,6 +1276,8 @@ function CorporateEditForm({
   // const [fuzziness, setFuzziness] = useState(customerData.screening_fuzziness || "")
   const [remarks, setRemarks] = useState(customerData.remarks || "")
   const [files, setFiles] = useState<File[]>([])
+  const [existingDocuments, setExistingDocuments] = useState<any[]>(customerData.documents || [])
+  const [deletedDocumentIds, setDeletedDocumentIds] = useState<number[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   
   // Related persons
@@ -1038,6 +1319,13 @@ function CorporateEditForm({
 
   const openFilePicker = () => fileInputRef.current?.click()
 
+  const deleteExistingDocument = (docId: number) => {
+    setExistingDocuments(existingDocuments.filter((doc) => doc.id !== docId))
+    setDeletedDocumentIds([...deletedDocumentIds, docId])
+    console.log("Deleting document with ID:", docId)
+    console.log("Updated deletedDocumentIds:", deletedDocumentIds)
+  }
+
   const addRelatedPerson = () => {
     setRelatedPersons([
       ...relatedPersons,
@@ -1069,15 +1357,104 @@ function CorporateEditForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log("deletedDocumentIds data when submitting:", deletedDocumentIds)
+
+    // Validation - check required fields
+    const requiredFields: Record<string, string> = {
+      // Company Information
+      'Company Name': companyName,
+      'Company Address': companyAddress,
+      'State': state,
+      'City': city,
+      'Country of Incorporation': countryIncorporated,
+      'Customer Type': customerType,
+      // Contact Information
+      'Country Code (Mobile)': mobileCountryCode,
+      'Contact Mobile No': mobileNo,
+      'Email': email,
+      // Identity Information
+      'Trade License/CR No': tradeLicenseNo,
+      'Trade License/CR Issued At': tradeLicenseIssuedAt,
+      'Trade License/COI Issued By': tradeLicenseIssuedBy,
+      'Trade License/CR Issued Date': licenseIssueDate,
+      'Trade License/CR Expiry Date': licenseExpiryDate,
+      // Business Information
+      'Entity Type': entityType,
+      'Countries of Operation': operationCountries.length > 0 ? 'filled' : '',
+      'Business Activity': businessActivity,
+      'Purpose of Relation': purposeOfRelation,
+      // Product Details
+      'Product Type': productTypes.length > 0 ? 'filled' : '',
+      'Product Source': productSource,
+      'Payment Mode': paymentMode,
+      'Delivery Channel': deliveryChannel,
+      'Expected No of Transactions': expectedNoOfTransactions,
+      'Expected Volume': expectedVolume,
+    }
+
+    const emptyFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value)
+      .map(([field, _]) => field)
+
+    if (emptyFields.length > 0) {
+      toast({
+        title: "Required fields missing",
+        description: `Please fill in: ${emptyFields.join(', ')}`,
+      })
+      return
+    }
+
+    // Validate UBO/Related persons
+    for (let i = 0; i < relatedPersons.length; i++) {
+      const person = relatedPersons[i]
+      const uboRequiredFields: Record<string, string> = {
+        [`UBO ${i + 1} - Type`]: person.type,
+        [`UBO ${i + 1} - Name`]: person.name,
+        [`UBO ${i + 1} - Nationality`]: person.nationality,
+        [`UBO ${i + 1} - ID Type`]: person.id_type,
+        [`UBO ${i + 1} - ID No`]: person.id_no,
+        [`UBO ${i + 1} - ID Issue Date`]: person.id_issue,
+        [`UBO ${i + 1} - ID Expiry Date`]: person.id_expiry,
+        [`UBO ${i + 1} - Date of Birth`]: person.dob,
+        [`UBO ${i + 1} - Role`]: person.role,
+        [`UBO ${i + 1} - Percentage of Share`]: person.ownership_percentage,
+      }
+
+      const uboEmptyFields = Object.entries(uboRequiredFields)
+        .filter(([_, value]) => !value)
+        .map(([field, _]) => field)
+
+      if (uboEmptyFields.length > 0) {
+        toast({
+          title: "Required fields missing",
+          description: `Please fill in: ${uboEmptyFields.join(', ')}`,
+        })
+        return
+      }
+    }
+
+    // Validate AML questionnaires (require yes/no for each question if questionnaires exist)
+    if (Array.isArray(questionnaires) && questionnaires.length > 0) {
+      const missing = questionnaires.filter(q => questionnaireAnswers[q.id] === undefined || questionnaireAnswers[q.id] === null)
+      if (missing.length > 0) {
+        toast({
+          title: "Required fields missing",
+          description: `Please answer AML Questionnaires (${missing.length} unanswered).`,
+        })
+        return
+      }
+    }
 
     const payload = {
       customer_type: "corporate",
       onboarding_type: "full",
       screening_fuzziness: "OFF",
       remarks,
+      deleted_document_ids: deletedDocumentIds,
       corporate_details: {
         company_name: companyName,
         company_address: companyAddress,
+        state: state,
         city,
         country_incorporated: countryIncorporated,
         po_box: poBox,
@@ -1108,6 +1485,7 @@ function CorporateEditForm({
         kyc_documents_collected_with_form: kycDocumentsCollected,
         is_entity_registered_in_GOAML: isRegisteredInGoaml,
         is_entity_having_adverse_news: hasAdverseNews,
+        purpose_of_onboarding: purposeOfRelation,
       },
       corporate_related_persons: relatedPersons.map((rp: any) => ({
         type: rp.type,
@@ -1166,34 +1544,34 @@ function CorporateEditForm({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur py-3 border-b mb-4">
-          <TabsList className="w-full h-auto flex flex-wrap justify-start gap-2 bg-transparent p-0">
-            <TabsTrigger value="company" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-md py-3 mb-4 rounded-2xl border border-border/50 px-2">
+          <TabsList className={TABS_GRID_LIST_CLASS}>
+            <TabsTrigger value="company" className={TABS_GRID_TRIGGER_CLASS}>
               Company Information
             </TabsTrigger>
-            <TabsTrigger value="contact" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="contact" className={TABS_GRID_TRIGGER_CLASS}>
               Contact Information
             </TabsTrigger>
-            <TabsTrigger value="identity" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="identity" className={TABS_GRID_TRIGGER_CLASS}>
               Identity Information
             </TabsTrigger>
-            <TabsTrigger value="operations" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Operations Information
+            <TabsTrigger value="operations" className={TABS_GRID_TRIGGER_CLASS}>
+              Business Information
             </TabsTrigger>
-            <TabsTrigger value="product" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="product" className={TABS_GRID_TRIGGER_CLASS}>
               Product Details
             </TabsTrigger>
-            <TabsTrigger value="aml" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              AML Compliance
+            <TabsTrigger value="aml" className={TABS_GRID_TRIGGER_CLASS}>
+              AML Questionnaire
             </TabsTrigger>
-            <TabsTrigger value="related" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Partner/Representative
+            <TabsTrigger value="related" className={TABS_GRID_TRIGGER_CLASS}>
+              Partners/Reps
             </TabsTrigger>
-            <TabsTrigger value="additional" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Additional Information
+            <TabsTrigger value="additional" className={TABS_GRID_TRIGGER_CLASS}>
+              Additional Info
             </TabsTrigger>
-            <TabsTrigger value="documents" className="px-4 py-2 rounded-md border-2xl bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Upload Documents
+            <TabsTrigger value="documents" className={TABS_GRID_TRIGGER_CLASS}>
+              Documents
             </TabsTrigger>
           </TabsList>
         </div>
@@ -1201,566 +1579,587 @@ function CorporateEditForm({
         <form className="space-y-6 pb-0" onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}>
 
           {/* Company Info Tab */}
-          <TabsContent value="company" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <Label htmlFor="companyName">Company Name *</Label>
-                  <Input
-                    id="companyName"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="Enter company name"
-                    className="mt-1.5"
-                  />
+          <TabsContent value="company" className="mt-0">
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Company Information</h4>
                 </div>
-                <div className="col-span-2">
-                  <Label htmlFor="companyAddress">Company Address *</Label>
-                  <Input
-                    id="companyAddress"
-                    value={companyAddress}
-                    onChange={(e) => setCompanyAddress(e.target.value)}
-                    placeholder="Enter company address"
-                    className="mt-1.5"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <RequiredLabel text="Company Name" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter the Company Name" value={companyName} onChange={e => setCompanyName(e.target.value)} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <RequiredLabel text="Company Address" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter the Company address" value={companyAddress} onChange={e => setCompanyAddress(e.target.value)} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <RequiredLabel text="State" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter the State" value={state} onChange={e => setState(e.target.value)} />
+                  </div>
+                  <div>
+                    <RequiredLabel text="City" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter the city" value={city} onChange={e => setCity(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Country of Incorporation" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={countries}
+                      value={countryIncorporated}
+                      onValueChange={handleSingleSelect(setCountryIncorporated)}
+                      placeholder="Select a country"
+                      searchPlaceholder="Search country..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={FIELD_LABEL_CLASS}>PO Box No</label>
+                    <input className={FIELD_CLASS} placeholder="Enter the PO Box No" value={poBox} onChange={e => setPoBox(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Customer Type" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter customer type" value={customerType} onChange={e => setCustomerType(e.target.value)} />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Enter city"
-                    className="mt-1.5"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="countryIncorporated">Country Incorporated *</Label>
-                  <Combobox
-                    options={countries}
-                    value={countryIncorporated}
-                    onValueChange={handleSingleSelect(setCountryIncorporated)}
-                    placeholder="Select country"
-                    searchPlaceholder="Search country..."
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="poBox">P.O. Box</Label>
-                  <Input
-                    id="poBox"
-                    value={poBox}
-                    onChange={(e) => setPoBox(e.target.value)}
-                    placeholder="Enter P.O. Box"
-                    className="mt-1.5"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="customerType">Customer Type</Label>
-                  <Input
-                    id="customerType"
-                    value={customerType}
-                    onChange={(e) => setCustomerType(e.target.value)}
-                    placeholder="Enter customer type"
-                    className="mt-1.5"
-                  />
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           {/* Contact Tab */}
-          <TabsContent value="contact" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="officeCountryCode">Office Country Code</Label>
-                  <Combobox
-                    options={countryCodes}
-                    value={officeCountryCode}
-                    onValueChange={handleSingleSelect(setOfficeCountryCode)}
-                    placeholder="Select code"
-                    searchPlaceholder="Search code..."
-                  />
+          <TabsContent value="contact" className="mt-0">
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Contact Information</h4>
                 </div>
-                <div>
-                  <Label htmlFor="officeNo">Office Number</Label>
-                  <Input
-                    id="officeNo"
-                    value={officeNo}
-                    onChange={(e) => setOfficeNo(e.target.value)}
-                    placeholder="Enter office number"
-                    className="mt-1.5"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>Office Contact Country Code</label>
+                      <Combobox
+                        options={countryCodes}
+                        value={officeCountryCode}
+                        onValueChange={handleSingleSelect(setOfficeCountryCode)}
+                        placeholder="Select"
+                        searchPlaceholder="Search code..."
+                        className={FIELD_CLASS}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>Office Contact No</label>
+                      <input className={FIELD_CLASS} placeholder="Enter the Office Contact No" value={officeNo} onChange={e => setOfficeNo(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <RequiredLabel text="Mobile Contact Country Code" className={FIELD_LABEL_CLASS} />
+                      <Combobox
+                        options={countryCodes}
+                        value={mobileCountryCode}
+                        onValueChange={handleSingleSelect(setMobileCountryCode)}
+                        placeholder="Select"
+                        searchPlaceholder="Search code..."
+                        className={FIELD_CLASS}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <RequiredLabel text="Mobile Contact No" className={FIELD_LABEL_CLASS} />
+                      <input className={FIELD_CLASS} placeholder="Enter the Mobile Contact No" value={mobileNo} onChange={e => setMobileNo(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <RequiredLabel text="Email" className={FIELD_LABEL_CLASS} />
+                    <input type="email" className={FIELD_CLASS} placeholder="Enter your email (abc@dom.com)" value={email} onChange={e => setEmail(e.target.value)} />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="mobileCountryCode">Mobile Country Code</Label>
-                  <Combobox
-                    options={countryCodes}
-                    value={mobileCountryCode}
-                    onValueChange={handleSingleSelect(setMobileCountryCode)}
-                    placeholder="Select code"
-                    searchPlaceholder="Search code..."
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="mobileNo">Mobile Number</Label>
-                  <Input
-                    id="mobileNo"
-                    value={mobileNo}
-                    onChange={(e) => setMobileNo(e.target.value)}
-                    placeholder="Enter mobile number"
-                    className="mt-1.5"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter email address"
-                    className="mt-1.5"
-                  />
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           {/* Identity Information Tab */}
-          <TabsContent value="identity" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="tradeLicenseNo">Trade License Number</Label>
-                  <Input
-                    id="tradeLicenseNo"
-                    value={tradeLicenseNo}
-                    onChange={(e) => setTradeLicenseNo(e.target.value)}
-                    placeholder="Enter trade license number"
-                    className="mt-1.5"
-                  />
+          <TabsContent value="identity" className="mt-0">
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <IdCard className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Identity Information</h4>
                 </div>
-                <div>
-                  <Label htmlFor="tradeLicenseIssuedAt">Trade License Issued At</Label>
-                  <Input
-                    id="tradeLicenseIssuedAt"
-                    value={tradeLicenseIssuedAt}
-                    onChange={(e) => setTradeLicenseIssuedAt(e.target.value)}
-                    placeholder="Enter issuing location"
-                    className="mt-1.5"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <RequiredLabel text="Trade License/CR No" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter Trade License/CR No" value={tradeLicenseNo} onChange={e => setTradeLicenseNo(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Trade License/CR Issued At" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter issuing location" value={tradeLicenseIssuedAt} onChange={e => setTradeLicenseIssuedAt(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Trade License/COI Issued By" className={FIELD_LABEL_CLASS} />
+                    <input className={FIELD_CLASS} placeholder="Enter issuing authority" value={tradeLicenseIssuedBy} onChange={e => setTradeLicenseIssuedBy(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Trade License/CR Issued Date" className={FIELD_LABEL_CLASS} />
+                    <Input type="date" className={FIELD_CLASS} value={licenseIssueDate} onChange={e => setLicenseIssueDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Trade License/CR Expiry Date" className={FIELD_LABEL_CLASS} />
+                    <Input type="date" className={FIELD_CLASS} value={licenseExpiryDate} onChange={e => setLicenseExpiryDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={FIELD_LABEL_CLASS}>VAT Registration Number</label>
+                    <input className={FIELD_CLASS} placeholder="Enter VAT Registration Number" value={vatRegistrationNo} onChange={e => setVatRegistrationNo(e.target.value)} />
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <label className={FIELD_LABEL_CLASS}>Tenancy Contract Expiry Date</label>
+                    <Input type="date" className={FIELD_CLASS} value={tenancyContractExpiryDate} onChange={e => setTenancyContractExpiryDate(e.target.value)} />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="tradeLicenseIssuedBy">Trade License Issued By</Label>
-                  <Input
-                    id="tradeLicenseIssuedBy"
-                    value={tradeLicenseIssuedBy}
-                    onChange={(e) => setTradeLicenseIssuedBy(e.target.value)}
-                    placeholder="Enter issuing authority"
-                    className="mt-1.5"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="licenseIssueDate">License Issue Date</Label>
-                  <Input
-                    id="licenseIssueDate"
-                    type="date"
-                    value={licenseIssueDate}
-                    onChange={(e) => setLicenseIssueDate(e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="licenseExpiryDate">License Expiry Date</Label>
-                  <Input
-                    id="licenseExpiryDate"
-                    type="date"
-                    value={licenseExpiryDate}
-                    onChange={(e) => setLicenseExpiryDate(e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="vatRegistrationNo">VAT Registration Number</Label>
-                  <Input
-                    id="vatRegistrationNo"
-                    value={vatRegistrationNo}
-                    onChange={(e) => setVatRegistrationNo(e.target.value)}
-                    placeholder="Enter VAT registration number"
-                    className="mt-1.5"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="tenancyContractExpiryDate">Tenancy Contract Expiry Date</Label>
-                  <Input
-                    id="tenancyContractExpiryDate"
-                    type="date"
-                    value={tenancyContractExpiryDate}
-                    onChange={(e) => setTenancyContractExpiryDate(e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Operations Information Tab */}
-          <TabsContent value="operations" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="entityType">Entity Type *</Label>
-                  <Combobox
-                    options={entity_types}
-                    value={entityType}
-                    onValueChange={handleSingleSelect(setEntityType)}
-                    placeholder="Select entity type"
-                    searchPlaceholder="Search type..."
-                  />
+          {/* Business Information Tab */}
+          <TabsContent value="operations" className="mt-0">
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Business Information</h4>
                 </div>
-                <div>
-                  <Label htmlFor="countriesOfOperation">Countries of Operation *</Label>
-                  <Combobox
-                    options={countries}
-                    value={operationCountries}
-                    onValueChange={handleMultiSelect(setOperationCountries)}
-                    multiple
-                    placeholder="Select a country"
-                    searchPlaceholder="Search country..."
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="businessActivity">Business Activity *</Label>
-                  <Combobox
-                    options={business_activities}
-                    value={businessActivity}
-                    onValueChange={handleSingleSelect(setBusinessActivity)}
-                    placeholder="Select business activity"
-                    searchPlaceholder="Search business activity..."
-                  />
-                </div>
-                <div>
-                  <Label>Is entity dealing with Import/Export? *</Label>
-                  <RadioGroup value={isImportExport ? "yes" : "no"} onValueChange={handleBooleanRadio(setIsImportExport)} className="flex gap-6 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="import-yes" />
-                      <Label htmlFor="import-yes" className="font-normal cursor-pointer">Yes</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <RequiredLabel text="Entity legal status" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={entity_types}
+                      value={entityType}
+                      onValueChange={handleSingleSelect(setEntityType)}
+                      placeholder="Select entity type"
+                      searchPlaceholder="Search type..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Countries of Operation" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={countries}
+                      value={operationCountries}
+                      onValueChange={handleMultiSelect(setOperationCountries)}
+                      multiple
+                      placeholder="Select a country"
+                      searchPlaceholder="Search country..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Business Activity" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={business_activities}
+                      value={businessActivity}
+                      onValueChange={handleSingleSelect(setBusinessActivity)}
+                      placeholder="Select business activity"
+                      searchPlaceholder="Search business activity..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Is entity dealing with Import/Export?" className={FIELD_LABEL_CLASS} />
+                    <div className="mt-2 flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="isImportExport" value="yes" checked={isImportExport} onChange={() => setIsImportExport(true)} className="accent-primary" />
+                        <span className="text-sm font-medium">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="isImportExport" value="no" checked={!isImportExport} onChange={() => setIsImportExport(false)} className="accent-primary" />
+                        <span className="text-sm font-medium">No</span>
+                      </label>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="import-no" />
-                      <Label htmlFor="import-no" className="font-normal cursor-pointer">No</Label>
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <label className={FIELD_LABEL_CLASS}>Any other sister concern/branch?</label>
+                    <div className="mt-2 flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="hasSisterConcern" value="yes" checked={hasSisterConcern} onChange={() => setHasSisterConcern(true)} className="accent-primary" />
+                        <span className="text-sm font-medium">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="hasSisterConcern" value="no" checked={!hasSisterConcern} onChange={() => setHasSisterConcern(false)} className="accent-primary" />
+                        <span className="text-sm font-medium">No</span>
+                      </label>
                     </div>
-                  </RadioGroup>
-                </div>
-                <div className="col-span-2">
-                  <Label>Any other sister concern/branch? *</Label>
-                  <RadioGroup value={hasSisterConcern ? "yes" : "no"} onValueChange={handleBooleanRadio(setHasSisterConcern)} className="flex gap-6 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="sister-yes" />
-                      <Label htmlFor="sister-yes" className="font-normal cursor-pointer">Yes</Label>
+                  </div>
+                  <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className={FIELD_LABEL_CLASS}>Account Holding Bank Name</label>
+                      <input
+                        className={FIELD_CLASS}
+                        placeholder="Enter bank name (max 50 characters)"
+                        value={accountHoldingBankName}
+                        onChange={e => setAccountHoldingBankName(e.target.value)}
+                      />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="sister-no" />
-                      <Label htmlFor="sister-no" className="font-normal cursor-pointer">No</Label>
+                    <div className="space-y-2">
+                      <RequiredLabel text="Purpose of Relationship" className={FIELD_LABEL_CLASS} />
+                      <Combobox
+                        options={[
+                          { value: "Buy", label: "Buy" },
+                          { value: "Sell", label: "Sell" },
+                          { value: "Buy and Sell", label: "Buy and Sell" },
+                          { value: "Investment", label: "Investment" },
+                          { value: "Trading", label: "Trading" },
+                          { value: "Manufacturing", label: "Manufacturing" },
+                          { value: "Other", label: "Other" },
+                        ]}
+                        value={purposeOfRelation}
+                        onValueChange={handleSingleSelect(setPurposeOfRelation)}
+                        placeholder="Select purpose of relation"
+                        searchPlaceholder="Search purpose..."
+                        className={FIELD_CLASS}
+                      />
                     </div>
-                  </RadioGroup>
+                  </div>
                 </div>
-                <div className="col-span-2">
-                  <Label htmlFor="accountHoldingBankName">Account Holding Bank Name *</Label>
-                  <Input
-                    id="accountHoldingBankName"
-                    value={accountHoldingBankName}
-                    onChange={(e) => setAccountHoldingBankName(e.target.value)}
-                    placeholder="Enter bank name (max 50 characters)"
-                    className="mt-1.5"
-                  />
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           {/* Product Details Tab */}
-          <TabsContent value="product" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="productTypes">Product Type *</Label>
-                  <Combobox
-                    options={products}
-                    value={productTypes}
-                    onValueChange={handleMultiSelect(setProductTypes)}
-                    multiple
-                    placeholder="Select Product Type"
-                    searchPlaceholder="Search type..."
-                  />
+          <TabsContent value="product" className="mt-0">
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">Product Details</h4>
                 </div>
-                <div>
-                  <Label htmlFor="productSource">Product Source *</Label>
-                  <Combobox
-                    options={product_sources}
-                    value={productSource}
-                    onValueChange={handleSingleSelect(setProductSource)}
-                    placeholder="Select product source"
-                    searchPlaceholder="Search source..."
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="paymentMode">Payment Mode *</Label>
-                  <Combobox
-                    options={payment_modes}
-                    value={paymentMode}
-                    onValueChange={handleSingleSelect(setPaymentMode)}
-                    placeholder="Select payment mode"
-                    searchPlaceholder="Search mode..."
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="deliveryChannel">Delivery Channel *</Label>
-                  <Combobox
-                    options={delivery_channels}
-                    value={deliveryChannel}
-                    onValueChange={handleSingleSelect(setDeliveryChannel)}
-                    placeholder="Select delivery channel"
-                    searchPlaceholder="Search channel..."
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="expectedNoOfTransactions">Expected No of Transactions</Label>
-                  <Input
-                    id="expectedNoOfTransactions"
-                    type="number"
-                    placeholder="0"
-                    value={expectedNoOfTransactions}
-                    onChange={(e) => setExpectedNoOfTransactions(e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="expectedVolume">Expected Volume</Label>
-                  <Input
-                    id="expectedVolume"
-                    type="number"
-                    placeholder="0"
-                    value={expectedVolume}
-                    onChange={(e) => setExpectedVolume(e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label>Deal with Goods? *</Label>
-                  <RadioGroup value={dualUseGoods ? "yes" : "no"} onValueChange={handleBooleanRadio(setDualUseGoods)} className="flex gap-6 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="goods-yes" />
-                      <Label htmlFor="goods-yes" className="font-normal cursor-pointer">Yes</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <RequiredLabel text="Product Type" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={products}
+                      value={productTypes}
+                      onValueChange={handleMultiSelect(setProductTypes)}
+                      multiple
+                      placeholder="Select Product Type"
+                      searchPlaceholder="Search type..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Product Source" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={product_sources}
+                      value={productSource}
+                      onValueChange={handleSingleSelect(setProductSource)}
+                      placeholder="Select product source"
+                      searchPlaceholder="Search source..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Payment Mode" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={payment_modes}
+                      value={paymentMode}
+                      onValueChange={handleSingleSelect(setPaymentMode)}
+                      placeholder="Select payment mode"
+                      searchPlaceholder="Search mode..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Delivery Channel" className={FIELD_LABEL_CLASS} />
+                    <Combobox
+                      options={delivery_channels}
+                      value={deliveryChannel}
+                      onValueChange={handleSingleSelect(setDeliveryChannel)}
+                      placeholder="Select delivery channel"
+                      searchPlaceholder="Search channel..."
+                      className={FIELD_CLASS}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Expected No of Transactions" className={FIELD_LABEL_CLASS} />
+                    <input type="number" className={FIELD_CLASS} placeholder="0" value={expectedNoOfTransactions} onChange={e => setExpectedNoOfTransactions(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <RequiredLabel text="Expected Volume" className={FIELD_LABEL_CLASS} />
+                    <input type="number" className={FIELD_CLASS} placeholder="0" value={expectedVolume} onChange={e => setExpectedVolume(e.target.value)} />
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <RequiredLabel text="Deal with Dual-used Goods?" className={FIELD_LABEL_CLASS} />
+                    <div className="mt-2 flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="dealWithGoods" value="yes" checked={dualUseGoods} onChange={() => setDualUseGoods(true)} className="accent-primary" />
+                        <span className="text-sm font-medium">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="dealWithGoods" value="no" checked={!dualUseGoods} onChange={() => setDualUseGoods(false)} className="accent-primary" />
+                        <span className="text-sm font-medium">No</span>
+                      </label>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="goods-no" />
-                      <Label htmlFor="goods-no" className="font-normal cursor-pointer">No</Label>
-                    </div>
-                  </RadioGroup>
+                  </div>
                 </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
-          {/* AML Compliance Tab */}
-          <TabsContent value="aml" className="space-y-4">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>KYC Documents Collected</Label>
-                  <RadioGroup value={kycDocumentsCollected ? "yes" : "no"} onValueChange={handleBooleanRadio(setKycDocumentsCollected)} className="flex gap-4 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="kyc-yes" />
-                      <Label htmlFor="kyc-yes" className="font-normal cursor-pointer">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="kyc-no" />
-                      <Label htmlFor="kyc-no" className="font-normal cursor-pointer">No</Label>
-                    </div>
-                  </RadioGroup>
+          {/* AML Questionnaires Tab */}
+          <TabsContent value="aml" className="mt-0">
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <FileCheck className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-semibold text-lg text-foreground tracking-tight">AML Compliance Questionnaire</h4>
                 </div>
-                <div>
-                  <Label>Registered in GOAML</Label>
-                  <RadioGroup value={isRegisteredInGoaml ? "yes" : "no"} onValueChange={handleBooleanRadio(setIsRegisteredInGoaml)} className="flex gap-4 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="goaml-yes" />
-                      <Label htmlFor="goaml-yes" className="font-normal cursor-pointer">Yes</Label>
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <RequiredLabel text="Is entity registered in GOAML?" className={FIELD_LABEL_CLASS} />
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="isRegisteredGoAML" value="yes" checked={isRegisteredInGoaml} onChange={() => setIsRegisteredInGoaml(true)} className="accent-primary" />
+                        <span className="text-sm font-medium">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="isRegisteredGoAML" value="no" checked={!isRegisteredInGoaml} onChange={() => setIsRegisteredInGoaml(false)} className="accent-primary" />
+                        <span className="text-sm font-medium">No</span>
+                      </label>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="goaml-no" />
-                      <Label htmlFor="goaml-no" className="font-normal cursor-pointer">No</Label>
+                  </div>
+                  <div className="space-y-3">
+                    <RequiredLabel text="KYC documents collected with form?" className={FIELD_LABEL_CLASS} />
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="kycCollected" value="yes" checked={kycDocumentsCollected} onChange={() => setKycDocumentsCollected(true)} className="accent-primary" />
+                        <span className="text-sm font-medium">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="kycCollected" value="no" checked={!kycDocumentsCollected} onChange={() => setKycDocumentsCollected(false)} className="accent-primary" />
+                        <span className="text-sm font-medium">No</span>
+                      </label>
                     </div>
-                  </RadioGroup>
+                  </div>
+                  <div className="space-y-3 hidden">
+                    <RequiredLabel text="Is Entity Having Material Match" className={FIELD_LABEL_CLASS} />
+                    <p className="text-xs text-primary/80 mb-3">We don't Check adverse news feed</p>
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="isAdverseNews" value="yes" checked={hasAdverseNews} onChange={() => setHasAdverseNews(true)} className="accent-primary" />
+                        <span className="text-sm font-medium">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="isAdverseNews" value="no" checked={!hasAdverseNews} onChange={() => setHasAdverseNews(false)} className="accent-primary" />
+                        <span className="text-sm font-medium">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {Array.isArray(questionnaires) && questionnaires.length > 0 && (
+                    <>
+                      <div className="h-px bg-border/50 my-6"></div>
+                      <div className="space-y-4">
+                        {questionnaires.map((q) => (
+                          <div key={q.id} className="rounded-xl border border-border/60 bg-background/50 p-5 shadow-sm">
+                            <div className="text-sm font-semibold text-foreground mb-3">{q.category ? `${q.category}: ` : ""}{q.question} <span className="text-destructive">*</span></div>
+                            <div className="flex items-center gap-6">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`q-${q.id}`}
+                                  value="yes"
+                                  checked={questionnaireAnswers[q.id] === 1}
+                                  onChange={() => setQuestionnaireAnswer(q.id, 1)}
+                                  className="accent-primary"
+                                />
+                                <span className="text-sm font-medium">Yes</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`q-${q.id}`}
+                                  value="no"
+                                  checked={questionnaireAnswers[q.id] === 0}
+                                  onChange={() => setQuestionnaireAnswer(q.id, 0)}
+                                  className="accent-primary"
+                                />
+                                <span className="text-sm font-medium">No</span>
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div>
-                  <Label>Adverse News</Label>
-                  <RadioGroup value={hasAdverseNews ? "yes" : "no"} onValueChange={handleBooleanRadio(setHasAdverseNews)} className="flex gap-4 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="adverse-yes" />
-                      <Label htmlFor="adverse-yes" className="font-normal cursor-pointer">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="adverse-no" />
-                      <Label htmlFor="adverse-no" className="font-normal cursor-pointer">No</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
 
           {/* Partner/Representative Tab */}
-          <TabsContent value="related" className="space-y-4">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <Label>Partner/Representative/Authorized Person Details</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addRelatedPerson}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Another Representative
-                </Button>
-              </div>
-              
-              {relatedPersons.map((person, index) => (
-                <Card key={index} className="p-4 mb-4 bg-slate-50">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-semibold text-sm flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      UBO {index + 1}
-                    </h4>
-                    {relatedPersons.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeRelatedPerson(index)}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </Button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs">Type *</Label>
-                      <Combobox
-                        options={[
-                          { value: "Individual", label: "Individual" },
-                          { value: "Entity", label: "Entity" },
-                        ]}
-                        value={person.type}
-                        onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "type", v)}
-                        placeholder="Select type"
-                        searchPlaceholder="Search type..."
-                      />
+          <TabsContent value="related" className="mt-0">
+            <Card className={CARD_STYLE}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <Label>Partner/Representative/Authorized Person Details</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addRelatedPerson}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Another Representative
+                  </Button>
+                </div>
+                
+                {relatedPersons.map((person, index) => (
+                  <Card key={index} className="p-4 mb-4 bg-slate-50">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        <User className="w-5 h-5 text-primary" />
+                        UBO {index + 1}
+                      </h4>
+                      {relatedPersons.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeRelatedPerson(index)}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </Button>
+                      )}
                     </div>
-                    <div>
-                      <Label className="text-xs">Name *</Label>
-                      <Input
-                        value={person.name}
-                        onChange={(e) => updateRelatedPerson(index, "name", e.target.value)}
-                        placeholder="Enter Name"
-                        className="mt-1"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <RequiredLabel text="Type" className={FIELD_LABEL_CLASS} />
+                        <Combobox
+                          options={[
+                            { value: "Individual", label: "Individual" },
+                            { value: "Entity", label: "Entity" },
+                          ]}
+                          value={person.type}
+                          onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "type", v)}
+                          placeholder="Select type"
+                          searchPlaceholder="Search type..."
+                        />
+                      </div>
+                      <div>
+                        <RequiredLabel text="Name" className={FIELD_LABEL_CLASS} />
+                        <Input
+                          value={person.name}
+                          onChange={(e) => updateRelatedPerson(index, "name", e.target.value)}
+                          placeholder="Enter Name"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <RequiredLabel text="Politically Exposed Person (PEP)?" className={FIELD_LABEL_CLASS} />
+                        <RadioGroup 
+                          value={person.is_pep ? "yes" : "no"} 
+                          onValueChange={(v) => updateRelatedPerson(index, "is_pep", v === "yes")} 
+                          className="flex gap-6 mt-1"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id={`pep-yes-${index}`} />
+                            <Label htmlFor={`pep-yes-${index}`} className="font-normal cursor-pointer text-xs">Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id={`pep-no-${index}`} />
+                            <Label htmlFor={`pep-no-${index}`} className="font-normal cursor-pointer text-xs">No</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      <div>
+                        <RequiredLabel className={FIELD_LABEL_CLASS} text="Nationality" />
+                        <Combobox
+                          options={countries}
+                          value={person.nationality}
+                          onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "nationality", v)}
+                          placeholder="Select nationality"
+                          searchPlaceholder="Search nationality..."
+                        />
+                      </div>
+                      <div>
+                        <RequiredLabel text="ID Type" className={FIELD_LABEL_CLASS} />
+                        <Combobox
+                          options={idTypes}
+                          value={person.id_type}
+                          onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "id_type", v)}
+                          placeholder="Passport"
+                          searchPlaceholder="Search type..."
+                        />
+                      </div>
+                      <div>
+                        <RequiredLabel text="ID No/License No" className={FIELD_LABEL_CLASS} />
+                        <Input
+                          value={person.id_no}
+                          onChange={(e) => updateRelatedPerson(index, "id_no", e.target.value)}
+                          placeholder="Enter ID License No"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <RequiredLabel text="ID Issue Date" className={FIELD_LABEL_CLASS} />
+                        <Input
+                          type="date"
+                          placeholder="mm/dd/yyyy"
+                          value={person.id_issue}
+                          onChange={(e) => updateRelatedPerson(index, "id_issue", e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <RequiredLabel text="ID Expiry Date" className={FIELD_LABEL_CLASS} />
+                        <Input
+                          type="date"
+                          placeholder="mm/dd/yyyy"
+                          value={person.id_expiry}
+                          onChange={(e) => updateRelatedPerson(index, "id_expiry", e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <RequiredLabel text="Date of Birth" className={FIELD_LABEL_CLASS} />
+                        <Input
+                          type="date"
+                          placeholder="mm/dd/yyyy"
+                          value={person.dob}
+                          onChange={(e) => updateRelatedPerson(index, "dob", e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <RequiredLabel text="Role" className={FIELD_LABEL_CLASS} />
+                        <Combobox
+                          options={roles}
+                          value={person.role}
+                          onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "role", v)}
+                          placeholder="UBO"
+                          searchPlaceholder="Search role..."
+                        />
+                      </div>
+                      <div>
+                        <RequiredLabel text="Percentage of Share" className={FIELD_LABEL_CLASS} />
+                        <Input
+                          value={person.ownership_percentage}
+                          onChange={(e) => updateRelatedPerson(index, "ownership_percentage", e.target.value)}
+                          placeholder="Enter Percentage (0-100)"
+                          className="mt-1"
+                        />
+                      </div>
                     </div>
-                    <div className="col-span-2">
-                      <Label className="text-xs">Previously Exposed Person (PEP)? *</Label>
-                      <RadioGroup 
-                        value={person.is_pep ? "yes" : "no"} 
-                        onValueChange={(v) => updateRelatedPerson(index, "is_pep", v === "yes")} 
-                        className="flex gap-6 mt-1"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="yes" id={`pep-yes-${index}`} />
-                          <Label htmlFor={`pep-yes-${index}`} className="font-normal cursor-pointer text-xs">Yes</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="no" id={`pep-no-${index}`} />
-                          <Label htmlFor={`pep-no-${index}`} className="font-normal cursor-pointer text-xs">No</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                    <div>
-                      <Label className="text-xs">Nationality</Label>
-                      <Combobox
-                        options={countries}
-                        value={person.nationality}
-                        onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "nationality", v)}
-                        placeholder="Select nationality"
-                        searchPlaceholder="Search nationality..."
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">ID Type *</Label>
-                      <Combobox
-                        options={idTypes}
-                        value={person.id_type}
-                        onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "id_type", v)}
-                        placeholder="Passport"
-                        searchPlaceholder="Search type..."
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">ID No/License No *</Label>
-                      <Input
-                        value={person.id_no}
-                        onChange={(e) => updateRelatedPerson(index, "id_no", e.target.value)}
-                        placeholder="Enter ID License No"
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">ID Issue Date *</Label>
-                      <Input
-                        type="date"
-                        placeholder="mm/dd/yyyy"
-                        value={person.id_issue}
-                        onChange={(e) => updateRelatedPerson(index, "id_issue", e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">ID Expiry Date *</Label>
-                      <Input
-                        type="date"
-                        placeholder="mm/dd/yyyy"
-                        value={person.id_expiry}
-                        onChange={(e) => updateRelatedPerson(index, "id_expiry", e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Date of Birth *</Label>
-                      <Input
-                        type="date"
-                        placeholder="mm/dd/yyyy"
-                        value={person.dob}
-                        onChange={(e) => updateRelatedPerson(index, "dob", e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Role *</Label>
-                      <Combobox
-                        options={roles}
-                        value={person.role}
-                        onValueChange={(v) => typeof v === "string" && updateRelatedPerson(index, "role", v)}
-                        placeholder="UBO"
-                        searchPlaceholder="Search role..."
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Percentage of Share *</Label>
-                      <Input
-                        value={person.ownership_percentage}
-                        onChange={(e) => updateRelatedPerson(index, "ownership_percentage", e.target.value)}
-                        placeholder="Enter Percentage (0-100)"
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))}
+              </CardContent>
             </Card>
           </TabsContent>
 
@@ -1779,7 +2178,7 @@ function CorporateEditForm({
                   />
                 </div> */}
                 <div className="col-span-2">
-                  <Label htmlFor="remarks">Remarks</Label>
+                  <label className={FIELD_LABEL_CLASS}>Remarks</label>
                   <Textarea
                     id="remarks"
                     value={remarks}
@@ -1794,30 +2193,76 @@ function CorporateEditForm({
           </TabsContent>
 
           {/* Documents Tab */}
-          <TabsContent value="documents" className="space-y-4">
-            <Card className="p-6">
-              <div className="space-y-4">
-                <Label>Upload Documents</Label>
-                <div className="border-2 border-dashed rounded-lg p-4">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    multiple
-                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  />
-                  <Button type="button" variant="outline" onClick={openFilePicker} className="w-full">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Choose Files
-                  </Button>
-                  {files.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {files.map((f, i) => (
-                        <div key={i} className="text-sm text-muted-foreground">{f.name}</div>
-                      ))}
-                    </div>
-                  )}
+          <TabsContent value="documents" className="mt-0">
+            <Card className="p-6 bg-blue-50/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Upload className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold">Upload Documents</h4>
+              </div>
+
+              {/* Existing Documents */}
+              {existingDocuments.length > 0 && (
+                <div className="mb-6">
+                  <Label className="text-sm font-medium mb-3 block">Existing Documents</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {existingDocuments.map((doc: any, idx: number) => (
+                      <div key={doc.id || idx} className="border rounded-lg p-3 bg-white relative group">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-red-100 hover:bg-red-200"
+                          onClick={() => deleteExistingDocument(doc.id)}
+                        >
+                          <Trash2 className="w-3 h-3 text-red-600" />
+                        </Button>
+                        {doc.file_url && /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.file_name || "") ? (
+                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                            <img
+                              src={doc.file_url}
+                              alt={doc.file_name || "Document"}
+                              className="w-full h-24 object-cover rounded mb-2"
+                            />
+                          </a>
+                        ) : (
+                          <a
+                            href={doc.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center h-24 bg-gray-100 rounded mb-2"
+                          >
+                            <FileCheck className="w-8 h-8 text-gray-400" />
+                          </a>
+                        )}
+                        <p className="text-xs text-gray-600 truncate">{doc.file_name || "Document"}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload New Documents */}
+              <div
+                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer"
+                onClick={openFilePicker}
+              >
+                <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                <p className="text-sm text-blue-600 mb-1">Add Documents</p>
+                <p className="text-xs text-muted-foreground">Max 5 files, each up to 2MB (Images, PDFs, Docs)</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv,.txt,.gif,.bmp,.tiff,.svg,.webp,.heic"
+                  onChange={handleFileChange}
+                  className="mt-2 hidden"
+                />
+                <div className="mt-2 flex flex-col items-center gap-1">
+                  {files.map((file, idx) => (
+                    <span key={idx} className="text-xs text-gray-700">
+                      {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                    </span>
+                  ))}
                 </div>
               </div>
             </Card>
