@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import Image from "next/image"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,10 +13,33 @@ import { useToast } from "@/components/ui/use-toast"
 import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 import { motion, type Variants } from "framer-motion"
 
+// Background images array - supports WebP, JPG, PNG, etc.
+const BACKGROUND_IMAGES = [
+  // "/login-bg.png",
+  "/login-bg-2.webp",
+  "/login-bg-3.webp",
+  // "/login-bg-4.jpg",
+  // "/login-bg-5.jpg",
+]
+
+// Fallback JPG versions if WebP fails
+const FALLBACK_IMAGES = [
+  "/login-bg.jpg"
+]
+
+// Fallback gradient colors
+const FALLBACK_GRADIENTS = [
+  "from-indigo-900 via-indigo-800 to-indigo-900",
+  "from-slate-900 via-slate-800 to-slate-900",
+  "from-violet-900 via-violet-800 to-violet-900",
+  "from-purple-900 via-purple-800 to-purple-900",
+  "from-blue-900 via-blue-800 to-blue-900",
+]
+
 const PAGE_CLASS =
   "relative grid min-h-screen place-items-center overflow-hidden px-4 py-6 sm:px-6 lg:px-8"
 const CARD_STYLE =
-  "relative mx-auto w-full max-w-sm rounded-[2.5rem] border border-slate-200 bg-white p-7 shadow-[0_40px_100px_-20px_rgba(15,23,42,0.18)] sm:p-8"
+  "relative mx-auto w-full max-w-sm rounded-[2.5rem] border border-slate-200 bg-white/95 backdrop-blur-sm p-7 shadow-[0_40px_100px_-20px_rgba(15,23,42,0.18)] sm:p-8"
 const FIELD_LABEL_CLASS = "ml-1 text-[11px] font-bold uppercase tracking-[0.25em] text-indigo-950/80"
 const FIELD_CLASS =
   "h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-indigo-950 shadow-sm outline-none transition placeholder:text-slate-500 hover:border-indigo-300 focus-visible:border-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-500/20"
@@ -68,6 +90,86 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const { toast } = useToast()
 
+  // Background slider state
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [imagesLoaded, setImagesLoaded] = useState<boolean[]>([])
+  const [imageUrls, setImageUrls] = useState<string[]>(BACKGROUND_IMAGES)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  // Preload and test images - try WebP first, fallback to JPG
+  useEffect(() => {
+    const testAndLoadImages = async () => {
+      const results: boolean[] = []
+      const finalUrls: string[] = []
+
+      for (let i = 0; i < BACKGROUND_IMAGES.length; i++) {
+        const webpUrl = BACKGROUND_IMAGES[i]
+        const fallbackUrl = FALLBACK_IMAGES[i] || BACKGROUND_IMAGES[i]
+        
+        const isWebPAvailable = await testImageUrl(webpUrl)
+        
+        if (isWebPAvailable) {
+          results.push(true)
+          finalUrls.push(webpUrl)
+        } else {
+          // Try fallback JPG
+          const isJpgAvailable = await testImageUrl(fallbackUrl)
+          if (isJpgAvailable) {
+            results.push(true)
+            finalUrls.push(fallbackUrl)
+          } else {
+            results.push(false)
+            finalUrls.push(webpUrl) // Keep original, will use gradient fallback
+          }
+        }
+      }
+      
+      setImagesLoaded(results)
+      setImageUrls(finalUrls)
+    }
+
+    testAndLoadImages()
+  }, [])
+
+  // Helper function to test if an image URL loads successfully
+  const testImageUrl = (url: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (typeof window === "undefined") {
+        resolve(false)
+        return
+      }
+      
+      const img = new window.Image()
+      img.onload = () => resolve(true)
+      img.onerror = () => resolve(false)
+      img.src = url
+      
+      // Timeout for slow loading images
+      setTimeout(() => resolve(false), 5000)
+    })
+  }
+
+  // Auto-slide background images every 5 seconds
+  useEffect(() => {
+    if (BACKGROUND_IMAGES.length <= 1) return
+
+    const interval = setInterval(() => {
+      setIsTransitioning(true)
+      setTimeout(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % BACKGROUND_IMAGES.length)
+        setTimeout(() => {
+          setIsTransitioning(false)
+        }, 100)
+      }, 50)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const currentImage = imageUrls[currentImageIndex]
+  const imageLoaded = imagesLoaded[currentImageIndex]
+  const fallbackGradient = FALLBACK_GRADIENTS[currentImageIndex % FALLBACK_GRADIENTS.length]
+
   const handleOpenForgot = () => {
     setShowForgot(true)
   }
@@ -103,14 +205,12 @@ export default function LoginPage() {
           description: "Login successful!",
         })
 
-        // Redirect based on user role
         const userRole = data.user.role?.toLowerCase().trim()
         if (userRole === "admin") {
           router.push("/dashboard/admin")
         } else if (userRole === "company admin") {
           router.push("/dashboard/profile")
         } else {
-          // Default redirect for other roles
           router.push("/dashboard/profile")
         }
         router.refresh()
@@ -120,7 +220,6 @@ export default function LoginPage() {
         toast({
           title: "Login Failed",
           description: errorMsg,
-          // variant: "destructive",
         })
       }
     } catch (error: any) {
@@ -129,7 +228,6 @@ export default function LoginPage() {
       toast({
         title: "Login Failed",
         description: errorMsg,
-        // variant: "destructive",
       })
       console.error("An error occurred during login:", error)
     } finally {
@@ -152,6 +250,7 @@ export default function LoginPage() {
           title: "Success",
           description: data.message || "Password reset instructions sent to your email.",
         })
+        handleCloseForgot()
       } else {
         toast({
           title: "Error",
@@ -177,17 +276,75 @@ export default function LoginPage() {
 
   return (
     <div className={PAGE_CLASS}>
-      <Image
-        src="/login-bg.png"
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="pointer-events-none absolute inset-0 z-0 object-cover object-center select-none"
-      />
+      {/* Background Image Slider */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            isTransitioning ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          {imageLoaded ? (
+            <>
+              {/* Try WebP with picture element for better browser support */}
+              <picture className="absolute inset-0">
+                <source srcSet={currentImage} type="image/webp" />
+                <source srcSet={currentImage.replace('.webp', '.jpg')} type="image/jpeg" />
+                <img
+                  src={currentImage}
+                  alt="Background"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  onError={(e) => {
+                    // If WebP fails, try JPG
+                    const target = e.target as HTMLImageElement
+                    const jpgUrl = currentImage.replace('.webp', '.jpg')
+                    if (target.src !== jpgUrl) {
+                      target.src = jpgUrl
+                    }
+                  }}
+                />
+              </picture>
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(49,46,129,0.44)_0%,rgba(67,56,202,0.14)_48%,rgba(129,140,248,0.04)_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.04)_0%,rgba(15,23,42,0.12)_58%,rgba(15,23,42,0.28)_100%)]" />
+            </>
+          ) : (
+            <div className={`absolute inset-0 bg-gradient-to-br ${fallbackGradient}`}>
+              <div className="absolute inset-0 bg-black/40" />
+            </div>
+          )}
+        </div>
 
-      <div className="absolute inset-0 z-[1] bg-[linear-gradient(135deg,rgba(49,46,129,0.44)_0%,rgba(67,56,202,0.14)_48%,rgba(129,140,248,0.04)_100%)]" />
-      <div className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(15,23,42,0.04)_0%,rgba(15,23,42,0.12)_58%,rgba(15,23,42,0.28)_100%)]" />
+        {/* Image counter/dots indicator - only if multiple images */}
+        {BACKGROUND_IMAGES.length > 1 && (
+          <>
+            <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+              {BACKGROUND_IMAGES.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setIsTransitioning(true)
+                    setTimeout(() => {
+                      setCurrentImageIndex(index)
+                      setTimeout(() => {
+                        setIsTransitioning(false)
+                      }, 100)
+                    }, 50)
+                  }}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    currentImageIndex === index
+                      ? "w-6 bg-white/80"
+                      : "w-2 bg-white/40 hover:bg-white/60"
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+
+            <div className="absolute bottom-6 right-6 z-10 rounded-full bg-black/40 px-3 py-1 text-xs text-white/80 backdrop-blur-sm">
+              {currentImageIndex + 1} / {BACKGROUND_IMAGES.length}
+            </div>
+          </>
+        )}
+      </div>
 
       <motion.div 
         className="relative z-10 mx-auto w-full max-w-sm"

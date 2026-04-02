@@ -16,6 +16,16 @@ type ScreeningLog = {
   screening_type: string
   is_match: boolean | number | string
   screening_date: string
+  screening_report?: Array<{
+    id: number
+    screening_log_id: number
+    file_path: string
+    file_name: string
+    mime_type: string
+    size: number
+    created_at: string
+    updated_at: string
+  }>
   user?: {
     id: number
     name: string
@@ -189,19 +199,19 @@ export default function ScreeningLogsPage() {
     setCurrentPage(1)
   }
 
-  const handleDownloadReport = async (logId: number, searchString: string) => {
-    if (downloadingLogId) return
-    setDownloadingLogId(logId)
+  const handleDownloadReport = async (reportId: number, fileName: string, filePath: string) => {
+    if (downloadingLogId === reportId) return
+    setDownloadingLogId(reportId)
 
     try {
-      const res = await fetch(`/api/screening-reports/${logId}`, {
+      const res = await fetch(`/api/screening-reports/download/${reportId}`, {
         method: "GET",
         credentials: "include",
       })
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({} as { message?: string }))
-        const msg = errorData?.message || "This log has no file available for download."
+        const msg = errorData?.message || "This report is not available for download."
         toast({
           title: "Report not found",
           description: msg,
@@ -211,17 +221,22 @@ export default function ScreeningLogsPage() {
 
       const contentType = res.headers.get("content-type") || ""
 
-      if (contentType.includes("application/pdf")) {
+      if (contentType.includes("application/pdf") || contentType.includes("application/octet-stream")) {
         // Direct PDF binary response
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `${searchString.replace(/\s+/g, "_")}_report.pdf`
+        a.download = fileName || `report_${reportId}.pdf`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
+        
+        toast({
+          title: "Download started",
+          description: `Downloading ${fileName}`,
+        })
       } else {
         const data = await res.json()
         if (data?.data?.file_url) {
@@ -229,7 +244,7 @@ export default function ScreeningLogsPage() {
         } else {
           toast({
             title: "Report unavailable",
-            description: "No report file is available for this screening log.",
+            description: "No report file is available.",
           })
         }
       }
@@ -402,7 +417,7 @@ export default function ScreeningLogsPage() {
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Search String</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.08em] text-muted-foreground">Screening Type</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Result</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Report</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Reports</th>
                 </tr>
               </thead>
               <tbody>
@@ -442,23 +457,36 @@ export default function ScreeningLogsPage() {
                         })()}
                       </td>
                       <td className="px-4 py-3">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className={`border-border/70 bg-background/90 text-xs font-semibold ${downloadingLogId === log.id ? "h-8 rounded-full px-3" : "h-8 w-8 rounded-full p-0"
-                            }`}
-                          disabled={downloadingLogId === log.id}
-                          onClick={() => handleDownloadReport(log.id, log.search_string)}
-                          aria-label={downloadingLogId === log.id ? "Downloading..." : "Download"}
-                          title={downloadingLogId === log.id ? undefined : "Download"}
-                        >
-                          {downloadingLogId === log.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Download className="w-4 h-4" />
-                          )}
-                          {downloadingLogId === log.id ? "Downloading..." : null}
-                        </Button>
+                        {log.screening_report && log.screening_report.length > 0 ? (
+                          <div className="flex flex-col gap-1.5">
+                            {log.screening_report.map((report) => (
+                              <button
+                                key={report.id}
+                                type="button"
+                                onClick={() => handleDownloadReport(report.id, report.file_name, report.file_path)}
+                                disabled={downloadingLogId === report.id}
+                                className="group inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                                title={`Download ${report.file_name}`}
+                              >
+                                {downloadingLogId === report.id ? (
+                                  <>
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                                    <span className="underline decoration-dotted underline-offset-2">Downloading...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Download className="h-3.5 w-3.5 shrink-0 group-hover:translate-y-0.5 transition-transform" />
+                                    <span className="underline decoration-dotted underline-offset-2 group-hover:decoration-solid break-words max-w-[200px]">
+                                      {report.file_name}
+                                    </span>
+                                  </>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No reports</span>
+                        )}
                       </td>
                     </tr>
                   ))

@@ -27,7 +27,7 @@ const DETAIL_RISK_SCORE_CIRCLE_CLASS = "inline-flex h-12 w-12 shrink-0 items-cen
 const ACTION_BUTTON_CLASS =
   "h-9 rounded-full border-border/70 bg-background/90 px-7 has-[>svg]:px-6 text-xs font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
 const ACTION_PRIMARY_BUTTON_CLASS =
-  "h-9 rounded-full bg-primary px-7 has-[>svg]:px-6 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
+  "h-9 rounded-full bg-primary/70 px-7 has-[>svg]:px-6 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
   const ACTION_DELETE_BUTTON_CLASS =
   "h-9 rounded-full bg-red-500 px-7 has-[>svg]:px-6 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-red-800 hover:shadow-md"
 const ACTION_ICON_BUTTON_CLASS =
@@ -360,6 +360,7 @@ export default function CustomersPage() {
                     <th className="px-4 py-3 text-left font-bold text-xs uppercase tracking-[0.12em] text-muted-foreground">Status</th>
                     <th className="px-4 py-3 text-left font-bold text-xs uppercase tracking-[0.12em] text-muted-foreground">Created Date</th>
                     <th className="px-4 py-3 text-left font-bold text-xs uppercase tracking-[0.12em] text-muted-foreground">Risk Score</th>
+                    <th className="px-4 py-3 text-left font-bold text-xs uppercase tracking-[0.12em] text-muted-foreground">Action</th>
                   </tr>
                 </thead>
                 <tbody className="[&_tr:last-child]:border-b-0">
@@ -434,6 +435,49 @@ export default function CustomersPage() {
                                   <span>Not Scored</span>
                                 </span>
                               )}
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <div className="flex flex-col gap-2">
+                                {user?.role !== "Analyst" && (
+                                  <Link href={`/dashboard/onboarding/customer/edit/${customer.id}`} className="w-full">
+                                    <Button className={`${ACTION_PRIMARY_BUTTON_CLASS} w-full`}>
+                                      <PencilLine className="h-3.5 w-3.5" />
+                                      Edit Information
+                                    </Button>
+                                  </Link>
+                                )}
+
+                                <Button
+                                  className={`${ACTION_PRIMARY_BUTTON_CLASS} w-full`}
+                                  onClick={async () => {
+                                    const customerData = detailsById[customer.id]
+                                    if (customerData) {
+                                      const user_customer = customerData.user_customer
+                                      generateCustomerPDF({ ...customerData, user_customer })
+                                    } else {
+                                      // Fetch data first if not expanded
+                                      try {
+                                        const res = await fetch(`/api/onboarding/customers/${customer.id}`, { credentials: "include" })
+                                        const json = await res.json()
+                                        if (json.status) {
+                                          const data = json.data
+                                          const user_customer = data.user_customer
+                                          setDetailsById(prev => ({ ...prev, [customer.id]: data }))
+                                          generateCustomerPDF({ ...data, user_customer })
+                                        }
+                                      } catch (err) {
+                                        toast({
+                                          title: "Error",
+                                          description: "Failed to fetch customer data for PDF generation",
+                                        })
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <Download className="h-3.5 w-3.5" />
+                                  Download
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                           {isExpanded && (
@@ -585,7 +629,7 @@ export default function CustomersPage() {
                                               {expandedStatus}
                                             </span>
                                           </div>
-                                          <div className="flex flex-wrap items-center justify-end gap-2">
+                                          {/* <div className="flex flex-wrap items-center justify-end gap-2">
                                             {user?.role !== "Analyst" && (
                                               <Link href={`/dashboard/onboarding/customer/edit/${customer.id}`}>
                                                 <Button className={ACTION_PRIMARY_BUTTON_CLASS}>
@@ -612,7 +656,7 @@ export default function CustomersPage() {
                                             >
                                               <X className="h-3.5 w-3.5" />
                                             </Button>
-                                          </div>
+                                          </div> */}
                                         </div>
                                         {isCorporate ? (
                                           <Tabs defaultValue="company-info" className="p-4">

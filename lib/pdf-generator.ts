@@ -187,11 +187,11 @@ export async function generateCustomerPDF(data: any) {
     // ensure room for title + at least a couple table rows
     y = ensureSpace(y, minAfter)
 
-    doc.setFont(PDF_FONT_PRIMARY, "normal")
-    doc.setFontSize(10)
-    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
+    doc.setFont(PDF_FONT_PRIMARY, "bold")
+    doc.setFontSize(13)
+    // doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
     doc.text(title, margin, y)
-    doc.setTextColor(0, 0, 0)
+    doc.setTextColor(40, 40, 40)
 
     // return with extra spacing so the next table doesn't collide with the title
     return y + 3 + TITLE_GAP
@@ -227,10 +227,10 @@ export async function generateCustomerPDF(data: any) {
       styles: gridStyles as any,
       body,
       columnStyles: {
-        0: { cellWidth: 32 },
-        1: { cellWidth: 58, fontStyle: "bold" },
-        2: { cellWidth: 32 },
-        3: { cellWidth: contentWidth - (32 + 58 + 32), fontStyle: "bold" },
+        0: { cellWidth: 32, fontStyle: "bold" },
+        1: { cellWidth: 58, fontStyle: "normal" },
+        2: { cellWidth: 32, fontStyle: "bold" },
+        3: { cellWidth: contentWidth - (32 + 58 + 32), fontStyle: "normal" },
       },
       margin: { left: margin, right: margin },
     })
@@ -247,8 +247,8 @@ export async function generateCustomerPDF(data: any) {
       styles: gridStyles as any,
       body: pairs.map(([k, v]) => [k, toValue(v)]),
       columnStyles: {
-        0: { cellWidth: 70 },
-        1: { cellWidth: contentWidth - 70, fontStyle: "bold" },
+        0: { cellWidth: 70, fontStyle: "bold" },
+        1: { cellWidth: contentWidth - 70, fontStyle: "normal" },
       },
       didParseCell: (data: any) => {
         if (options?.coloredRows && options.coloredRows.includes(data.row.index) && data.column.index === 1) {
@@ -272,8 +272,8 @@ export async function generateCustomerPDF(data: any) {
       head: [head],
       body,
       headStyles: {
-        fillColor: [245, 245, 245] as any,
-        textColor: [0, 0, 0] as any,
+        fillColor: [93, 50, 145] as any,
+        textColor: [255, 255, 255] as any,
         fontStyle: "bold",
       },
       margin: { left: margin, right: margin },
@@ -285,7 +285,23 @@ export async function generateCustomerPDF(data: any) {
   const riskAssessmentTable = (y: number, details: any[]) => {
     if (!Array.isArray(details) || details.length === 0) return y
 
-    const rows = details.map((item: any) => [
+    // Filter out individual UBO entries, keep only UBO Average Risk
+    const filteredDetails = details.filter((item: any) => {
+      const category = (item.category || "").toLowerCase()
+      // Exclude individual UBO entries (e.g., "UBO 1", "UBO 2"), but include "UBO Average Risk"
+      // Keep entries that don't start with "ubo " OR entries that contain "average"
+      if (category.includes("average")) {
+        return true // Keep UBO Average Risk
+      }
+      if (category.startsWith("ubo ") && /ubo\s+\d+/i.test(category)) {
+        return false // Remove individual UBO entries like "UBO 1", "UBO 2"
+      }
+      return true // Keep all other categories
+    })
+
+    if (filteredDetails.length === 0) return y
+
+    const rows = filteredDetails.map((item: any) => [
       item.category || "-",
       item.details || "-",
       item.risk_score?.toString() || "-",
@@ -305,8 +321,8 @@ export async function generateCustomerPDF(data: any) {
       head: [["Category", "Details", "Risk Score", "Risk Type"]],
       body: rows,
       headStyles: {
-        fillColor: [245, 245, 245] as any,
-        textColor: [0, 0, 0] as any,
+        fillColor: [93, 50, 145] as any,
+        textColor: [255, 255, 255] as any,
         fontStyle: "bold",
         fontSize: 8,
       },
@@ -335,14 +351,14 @@ export async function generateCustomerPDF(data: any) {
 
     doc.setFontSize(8.5)
     doc.setTextColor(120, 120, 120)
-    doc.setFont(PDF_FONT_PRIMARY, "normal")
+    doc.setFont(PDF_FONT_PRIMARY, "bold")
     doc.text(
       `Generated Date: ${new Date().toLocaleDateString()} | Reference ID: AMLM-CDD-KYC-CORP-${String(data.id || "0000").padStart(4, "0")}`,
       pageWidth / 2,
       yPos,
       { align: "center" }
     )
-    doc.setTextColor(0, 0, 0)
+    doc.setTextColor(40, 40, 40)
     yPos += 10
 
     // Page 1 sections
@@ -418,15 +434,17 @@ export async function generateCustomerPDF(data: any) {
 
       // Render as a table to support multiple UBOS
       const uboRows = ubos.map((ubo: any) => [
-        ubo?.name || [ubo?.first_name, ubo?.last_name].filter(Boolean).join(" ") || "-",
+        ubo?.name || "-",
         ubo?.nationality || ubo?.country || "-",
         (ubo?.ownership_percentage ?? ubo?.share_percentage ?? ubo?.ownership ?? "-").toString(),
         ubo?.control_type || ubo?.role || "-",
+        ubo?.id_type || "-",
+        ubo?.id_no || ubo?.id_number || "-",
         ubo?.is_pep ? "Yes" : "No",
       ])
 
       // simpleTable does its own ensureSpace, but we also ensured above for the title
-      yPos = simpleTable(yPos, ["UBO Name", "Nationality", "Ownership %", "Control Type", "PEP"], uboRows)
+      yPos = simpleTable(yPos, ["UBO Name", "Nationality", "Ownership %", "Control Type", "ID Type", "ID Number", "PEP"], uboRows)
     }
 
     yPos = sectionTitle("Risk Assessment Summary", yPos)
