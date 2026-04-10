@@ -5,18 +5,55 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Search, Users, Building2, Globe, Calendar, Ship } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { Combobox } from "@/components/ui/combobox"
+import { useSearchParams } from "next/navigation"
 
 type TabKey = "individual" | "entity" | "vessel"
 type Country = { id: number; name: string; sortname?: string; phoneCode?: string; currency?: string }
 type ComboboxOption = { value: string; label: string }
+
 function toMessage(e: unknown) {
   if (e instanceof Error) return e.message
   return typeof e === "string" ? e : "Unknown error"
+}
+
+function normalizeGenderValue(value: string | null) {
+  const normalized = String(value || "").trim().toLowerCase()
+
+  if (normalized === "male") return "Male"
+  if (normalized === "female") return "Female"
+  if (normalized === "unknown") return "Unknown"
+
+  return String(value || "").trim()
+}
+
+function applyIndividualPrefill(prefill: Record<string, string>, setters: {
+  setTab: (value: TabKey) => void
+  setIName: (value: string) => void
+  setIDob: (value: string) => void
+  setIGender: (value: string) => void
+  setINationality: (value: string) => void
+}) {
+  setters.setTab("individual")
+  setters.setIName(prefill.name || "")
+  setters.setIDob(prefill.dob || "")
+  setters.setIGender(normalizeGenderValue(prefill.gender || ""))
+  setters.setINationality(prefill.nationality || "")
+}
+
+function applyEntityPrefill(prefill: Record<string, string>, setters: {
+  setTab: (value: TabKey) => void
+  setEName: (value: string) => void
+  setECountry: (value: string) => void
+  setEAddress: (value: string) => void
+}) {
+  setters.setTab("entity")
+  setters.setEName(prefill.name || "")
+  setters.setECountry(prefill.country || "")
+  setters.setEAddress(prefill.address || "")
 }
 
 function clampPercent(value: string) {
@@ -38,7 +75,7 @@ const TABS_BAR_CLASS =
   "sticky top-0 z-20 mb-4 rounded-2xl border border-border/50 bg-background/80 px-2 py-3 backdrop-blur-md"
 const TABS_LIST_CLASS = "grid h-auto w-full grid-cols-1 gap-1 bg-transparent p-0 sm:grid-cols-3"
 const TABS_TRIGGER_CLASS =
-  "h-10 w-full justify-center rounded-xl px-3 text-sm font-medium text-muted-foreground transition data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+  "h-10 w-full justify-center rounded-xl px-3 text-sm font-medium bg-primary/30 text-black transition data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 
 const ConfidenceInput = React.memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
   const numValue = value === "" ? 10 : Number(value)
@@ -87,6 +124,7 @@ ConfidenceInput.displayName = "ConfidenceInput"
 
 export default function QuickScreeningPage() {
   const { toast } = useToast()
+  const searchParams = useSearchParams()
 
   const [tab, setTab] = React.useState<TabKey>("individual")
   const [countries, setCountries] = React.useState<Country[]>([])
@@ -112,6 +150,81 @@ export default function QuickScreeningPage() {
   const [vConfidence, setVConfidence] = React.useState("")
 
   const [searching, setSearching] = React.useState(false)
+
+  React.useEffect(() => {
+    const storedPrefill = sessionStorage.getItem("screening_prefill")
+    if (storedPrefill) {
+      try {
+        const parsed = JSON.parse(storedPrefill) as Record<string, string>
+
+        if (parsed.tab === "individual") {
+          applyIndividualPrefill(parsed, {
+            setTab,
+            setIName,
+            setIDob,
+            setIGender,
+            setINationality,
+          })
+          sessionStorage.removeItem("screening_prefill")
+          return
+        }
+
+        if (parsed.tab === "entity") {
+          applyEntityPrefill(parsed, {
+            setTab,
+            setEName,
+            setECountry,
+            setEAddress,
+          })
+          sessionStorage.removeItem("screening_prefill")
+          return
+        }
+      } catch {
+        sessionStorage.removeItem("screening_prefill")
+      }
+    }
+
+    if (!searchParams) return
+
+    const requestedTab = searchParams.get("tab")
+    if (requestedTab === "individual") {
+      applyIndividualPrefill(
+        {
+          tab: "individual",
+          name: searchParams.get("name") || "",
+          dob: searchParams.get("dob") || "",
+          gender: searchParams.get("gender") || "",
+          nationality: searchParams.get("nationality") || "",
+        },
+        {
+          setTab,
+          setIName,
+          setIDob,
+          setIGender,
+          setINationality,
+        }
+      )
+      return
+    }
+
+    if (requestedTab === "entity") {
+      applyEntityPrefill(
+        {
+          tab: "entity",
+          name: searchParams.get("name") || "",
+          country: searchParams.get("country") || "",
+          address: searchParams.get("address") || "",
+        },
+        {
+          setTab,
+          setEName,
+          setECountry,
+          setEAddress,
+        }
+      )
+    }
+  }, [searchParams])
+
   React.useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -292,16 +405,12 @@ export default function QuickScreeningPage() {
 
                   <div className={FIELD_GROUP_CLASS}>
                     <Label className={FIELD_LABEL_CLASS}>Gender</Label>
-                    <Select value={iGender} onValueChange={setIGender}>
-                      <SelectTrigger className={SELECT_TRIGGER_CLASS}>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="unknown">Unknown</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <select className={FIELD_CLASS} value={iGender} onChange={(e) => setIGender(e.target.value)}>
+                      <option value="">Select gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Unknown">Unknown</option>
+                    </select>
                   </div>
                 </div>
 

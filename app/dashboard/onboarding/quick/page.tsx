@@ -11,9 +11,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Combobox } from "@/components/ui/combobox"
 import { Card, CardContent } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
-import { User, Users, Upload, Download, Info, Loader2 } from "lucide-react"
+import { User, Users, Upload, Download, Info, Loader2, ScanLine } from "lucide-react"
 import { cn, formatContactNumber } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
+import Tesseract from "tesseract.js"
 
 type EntryType = "single" | "batch"
 
@@ -42,6 +43,109 @@ const screeningFuzziness = [
   { value: "Level 2", label: "Level 2" },
 ]
 
+const occupations = [
+  { value: "Accounting", label: "Accounting" },
+  { value: "Accounting/Auditing Firm", label: "Accounting/Auditing Firm" },
+  { value: "Advertising, Marketing and PR", label: "Advertising, Marketing and PR" },
+  { value: "Air Couriers and Cargo Services", label: "Air Couriers and Cargo Services" },
+  { value: "Bank/Financial Institute", label: "Bank/Financial Institute" },
+  { value: "Banking/Financial Institutions", label: "Banking/Financial Institutions" },
+  { value: "Business Services Other", label: "Business Services Other" },
+  { value: "CSP", label: "CSP" },
+  { value: "Charitable Organizations and Foundations", label: "Charitable Organizations and Foundations" },
+  { value: "Consulting/Freelancer", label: "Consulting/Freelancer" },
+  { value: "DPMS - Bullion Wholesale", label: "DPMS - Bullion Wholesale" },
+  { value: "DPMS - Factory, Workshop, Goldsmith", label: "DPMS - Factory, Workshop, Goldsmith" },
+  { value: "DPMS - Mining, Refining", label: "DPMS - Mining, Refining" },
+  { value: "DPMS - Retail Store", label: "DPMS - Retail Store" },
+  { value: "Data Analytics, Management and Internet", label: "Data Analytics, Management and Internet" },
+  { value: "Defense", label: "Defense" },
+  { value: "Education", label: "Education" },
+  { value: "Facilities Management and Maintenance", label: "Facilities Management and Maintenance" },
+  { value: "General Trading", label: "General Trading" },
+  { value: "Gold Bullion Trading", label: "Gold Bullion Trading" },
+  { value: "Government Service", label: "Government Service" },
+  { value: "HR and Recruiting Services", label: "HR and Recruiting Services" },
+  { value: "HealthCare", label: "HealthCare" },
+  { value: "IT and Network Services and Support", label: "IT and Network Services and Support" },
+  { value: "Jewellery Trading", label: "Jewellery Trading" },
+  { value: "Law Firm", label: "Law Firm" },
+  { value: "Law Firms / Notary Public", label: "Law Firms / Notary Public" },
+  { value: "Outside UAE", label: "Outside UAE" },
+  { value: "Owner/Partner/Director", label: "Owner/Partner/Director" },
+  { value: "Real Estate", label: "Real Estate" },
+  { value: "Real Estate Sales", label: "Real Estate Sales" },
+  { value: "Sale and Services", label: "Sale and Services" },
+  { value: "Self Employed", label: "Self Employed" },
+  { value: "Hawala and Exchange", label: "Hawala and Exchange" },
+  { value: "Others", label: "Others" },
+]
+
+const sourceOfIncome = [
+  { value: "Salary", label: "Salary" },
+  { value: "Perosonal Savings", label: "Perosonal Savings" },
+  { value: "Bank - Cash Withdrawal Slip", label: "Bank - Cash Withdrawal Slip" },
+  { value: "Funds from Dividend Payouts", label: "Funds from Dividend Payouts" },
+  { value: "End of Services Funds", label: "End of Services Funds" },
+  { value: "Business Proceeds", label: "Business Proceeds" },
+  { value: "Other sources", label: "Other sources" },
+  { value: "Gift", label: "Gift" },
+  { value: "Loan from Friends and Family", label: "Loan from Friends and Family" },
+  { value: "Loans from Bank", label: "Loans from Bank" },
+  { value: "Loan from Financial Institutions", label: "Loan from Financial Institutions" },
+  { value: "Lottery/Raffles", label: "Lottery/Raffles" },
+]
+
+const OCR_ARABIC_PHRASE_MAP: Array<[string, string]> = [
+  ["الشارقة-صناعية رقم 1", "Sharjah - Industrial Area No. 1"],
+  ["صناعية رقم 1", "Industrial Area No. 1"],
+  ["شارع الوحدة", "Al Wahda Street"],
+  ["محل رقم", "Shop No."],
+  ["صندوق البريد", "PO Box"],
+  ["الهاتف المتحرك", "Mobile"],
+  ["البريد الالكتروني", "Email"],
+  ["البريد الإلكتروني", "Email"],
+  ["أنشطة الرخصة", "License Activities"],
+  ["صياغة الذهب", "Goldsmithing"],
+  ["أطراف الرخصة", "License Members"],
+  ["رقم الهوية / الجواز", "ID / Passport No"],
+  ["اسم المستثمر", "Investor Name"],
+  ["رقم المستثمر", "Investor No"],
+  ["الجنسية", "Nationality"],
+  ["الصفة", "Type"],
+  ["الحصص", "Shares"],
+  ["وكيل خدمات", "Service Agent"],
+  ["وكيل خدمات محلي", "Local Service Agent"],
+  ["المالك", "Owner"],
+  ["الإمارات", "UAE"],
+  ["اليمن", "Yemen"],
+  ["الشارقة", "Sharjah"],
+  ["دبي", "Dubai"],
+  ["أبو ظبي", "Abu Dhabi"],
+  ["مكتب", "Office"],
+  ["شارع", "Street"],
+  ["طريق", "Road"],
+  ["مبنى", "Building"],
+  ["برج", "Tower"],
+  ["مركز", "Center"],
+  ["تجاري", "Commercial"],
+  ["العقارية", "Real Estate"],
+  ["مؤسسة", "Foundation"],
+  ["ملك", "Owned by"],
+  ["رقم", "No."],
+]
+
+const OCR_COUNTRY_MAP: Record<string, string> = {
+  "الإمارات": "UAE",
+  "الامارات": "UAE",
+  "اليمن": "Yemen",
+  "لبنان": "Lebanon",
+  "السعودية": "Saudi Arabia",
+  "مصر": "Egypt",
+  "الأردن": "Jordan",
+  "الاردن": "Jordan",
+}
+
 export default function QuickOnboardingPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -51,8 +155,12 @@ export default function QuickOnboardingPage() {
   const [isIdCardExpanded, setIsIdCardExpanded] = useState(false)
   const [idCardFile, setIdCardFile] = useState<File | null>(null)
 
+  // OCR states
+  const [ocrProcessing, setOcrProcessing] = useState(false)
+  const [ocrProgress, setOcrProgress] = useState(0)
+
   // Meta data
-  const [countries, setCountries] = useState<Array<{ value: string; label: string }>>([])
+  const [countries, setCountries] = useState<Array<{ value: string; label: string; code?: string; phoneCode?: string }>>([])
   const [countryCodes, setCountryCodes] = useState<Array<{ value: string; label: string }>>([])
   const [loading, setLoading] = useState(true)
 
@@ -63,9 +171,14 @@ export default function QuickOnboardingPage() {
   const [dob, setDob] = useState("")
   const [residentialStatus, setResidentialStatus] = useState("resident")
   const [address, setAddress] = useState("")
+  const [city, setCity] = useState("")
+  const [state, setState] = useState("")
+  const [country, setCountry] = useState("")
   const [nationality, setNationality] = useState("")
   const [countryCode, setCountryCode] = useState("")
   const [contactNo, setContactNo] = useState("")
+  const [occupation, setOccupation] = useState("")
+  const [sourceIncome, setSourceIncome] = useState("")
   const [idType, setIdType] = useState("")
   const [idNo, setIdNo] = useState("")
   const [idIssueDate, setIdIssueDate] = useState("")
@@ -156,12 +269,6 @@ export default function QuickOnboardingPage() {
     }
   }
 
-  const handleIdCardFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setIdCardFile(e.target.files[0])
-    }
-  }
-
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
@@ -173,6 +280,597 @@ export default function QuickOnboardingPage() {
     e.preventDefault()
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setIdCardFile(e.dataTransfer.files[0])
+    }
+  }
+
+  // Convert PDF to images
+  const convertPdfToImages = async (file: File): Promise<string[]> => {
+    // Dynamically import pdfjs-dist to avoid SSR issues
+    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
+    
+    // Set worker path
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/legacy/build/pdf.worker.min.mjs`
+    
+    const arrayBuffer = await file.arrayBuffer()
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+    const images: string[] = []
+
+    // Process each page of the PDF
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum)
+      const viewport = page.getViewport({ scale: 2.0 }) // Higher scale for better OCR
+
+      // Create canvas
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
+      canvas.height = viewport.height
+      canvas.width = viewport.width
+
+      if (context) {
+        // Render PDF page to canvas
+        await page.render({
+          canvasContext: context,
+          viewport: viewport,
+          canvas: canvas,
+        }).promise
+
+        // Convert canvas to data URL
+        images.push(canvas.toDataURL('image/png'))
+      }
+    }
+
+    return images
+  }
+
+  // OCR Processing Function
+  const processOCR = async (file: File) => {
+    setOcrProcessing(true)
+    setOcrProgress(0)
+
+    try {
+      let imagesToProcess: (File | string)[] = [file]
+      
+      // Check if file is PDF
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        toast({
+          title: "Converting PDF",
+          description: "Converting PDF to images for OCR processing...",
+        })
+        
+        // Convert PDF to images
+        const pdfImages = await convertPdfToImages(file)
+        imagesToProcess = pdfImages
+      }
+
+      let allText = ''
+      
+      // Process all images (either original image or converted PDF pages)
+      for (let i = 0; i < imagesToProcess.length; i++) {
+        const image = imagesToProcess[i]
+        
+        const result = await Tesseract.recognize(
+          image,
+          'eng+ara',
+          {
+            logger: (m) => {
+              if (m.status === 'recognizing text') {
+                const overallProgress = ((i / imagesToProcess.length) + (m.progress / imagesToProcess.length)) * 100
+                setOcrProgress(Math.round(overallProgress))
+              }
+            }
+          }
+        )
+
+        allText += result.data.text + '\n'
+      }
+      
+      console.log('OCR Result:', allText)
+      
+      // Parse and extract information from OCR text
+      await extractDataFromOCR(allText)
+      
+      toast({
+        title: "OCR Completed",
+        description: "Information extracted and populated in the form. Please verify the data.",
+      })
+    } catch (error: any) {
+      console.error('OCR Error:', error)
+      toast({
+        title: "OCR Failed",
+        description: error?.message || "Failed to process the image. Please try again.",
+      })
+    } finally {
+      setOcrProcessing(false)
+      setOcrProgress(0)
+    }
+  }
+
+  // Helper function to translate Arabic text to English using translation API
+  const translateArabicToEnglish = async (text: string): Promise<string> => {
+    const source = String(text || "")
+    if (!/[\u0600-\u06FF]/.test(source)) return source
+
+    let translatedText = source
+    for (const [arabic, english] of OCR_ARABIC_PHRASE_MAP.sort((a, b) => b[0].length - a[0].length)) {
+      translatedText = translatedText.replace(new RegExp(arabic, 'g'), english)
+    }
+
+    return translatedText
+  }
+
+  // Helper function to clean and extract English text from bilingual text
+  const extractEnglishText = (text: string): string => {
+    // Remove Arabic characters and extra whitespace
+    return text.replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g, '')
+      .replace(/\//g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+
+  const cleanOcrLine = (text: string): string => {
+    return String(text || "")
+      .replace(/[|]+/g, " ")
+      .replace(/[•·]+/g, " ")
+      .replace(/[_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+  }
+
+  const looksLikeAddressLine = (line: string): boolean => {
+    const value = cleanOcrLine(line)
+    if (!value || value.length < 6) return false
+
+    return /[\u0600-\u06FF]/.test(value)
+      || /(office|building|tower|center|centre|shop|floor|street|road|po box|p\.?o\.? box|parcel|block|deira|bur dubai|dubai|sharjah|abu dhabi|ajman|uae|emirates|maktab|commercial|real estate)/i.test(value)
+      || /(مكتب|مبنى|برج|مركز|تجاري|شارع|طريق|العقارية|دبي|الشارقة|أبو ظبي|الإمارات)/i.test(value)
+      || /\d{1,5}[\/-]\d{1,5}/.test(value)
+  }
+
+  const cleanupTranslatedAddress = (text: string): string => {
+    return String(text || "")
+      .replace(/\s*\/\s*/g, ", ")
+      .replace(/\s*,\s*/g, ", ")
+      .replace(/,{2,}/g, ",")
+      .replace(/\bNo\s*\.\s*/gi, "No. ")
+      .replace(/\bP\.?\s*O\.?\s*Box\b/gi, "PO Box")
+      .replace(/\bU\.?A\.?E\.?\b/gi, "UAE")
+      .replace(/\s+/g, " ")
+      .replace(/(^[,:\-\s]+|[,:\-\s]+$)/g, "")
+      .trim()
+  }
+
+  const normalizeExtractedAddress = (text: string): string => {
+    return String(text || "")
+      .replace(/\r/g, " ")
+      .replace(/\n+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+  }
+
+  const translateAddressToEnglish = async (text: string): Promise<string> => {
+    const source = cleanOcrLine(text)
+    if (!source) return ""
+
+    let result = source
+    if (/[\u0600-\u06FF]/.test(source)) {
+      result = await translateArabicToEnglish(source)
+    }
+
+    const englishOnly = extractEnglishText(result)
+    return cleanupTranslatedAddress(englishOnly || result)
+  }
+
+  const getEnglishCountry = (value: string): string => {
+    const text = cleanOcrLine(value)
+    if (!text) return ""
+    if (OCR_COUNTRY_MAP[text]) return OCR_COUNTRY_MAP[text]
+
+    const translated = extractEnglishText(text)
+    if (/\bUAE\b/i.test(translated)) return "UAE"
+    if (/\bYemen\b/i.test(translated)) return "Yemen"
+    if (/\bLebanon\b/i.test(translated)) return "Lebanon"
+    return translated || text
+  }
+
+  const looksLikeEnglishFullName = (value: string): boolean => {
+    const cleaned = cleanOcrLine(value)
+    if (!cleaned) return false
+    if (/(service agent|owner|manager|investor|nationality|shares|type|passport|license)/i.test(cleaned)) return false
+    if (!/[A-Z]/.test(cleaned)) return false
+
+    const words = cleaned.split(/\s+/).filter(Boolean)
+    return words.length >= 3 && words.every((word) => /^[A-Z][A-Z'-]*$/i.test(word))
+  }
+
+  const extractOwnerRowData = (lines: string[]) => {
+    const ownerIndex = lines.findIndex((line) => /(^|\b)(owner|المالك)(\b|$)/i.test(line))
+    if (ownerIndex === -1) return { ownerName: "", ownerNationality: "" }
+
+    const windowLines = lines.slice(Math.max(0, ownerIndex - 6), Math.min(lines.length, ownerIndex + 8))
+
+    const ownerName = windowLines
+      .map((line) => extractEnglishText(line))
+      .find((line) => looksLikeEnglishFullName(line)) || ""
+
+    const ownerNationality = windowLines
+      .map((line) => getEnglishCountry(line))
+      .find((line) => /^(UAE|Yemen|Lebanon|Saudi Arabia|Egypt|Jordan)$/i.test(line)) || ""
+
+    return { ownerName: cleanOcrLine(ownerName), ownerNationality: ownerNationality.trim() }
+  }
+
+  const extractTopBlockAddress = async (lines: string[]) => {
+    const topLines = lines.slice(0, Math.min(lines.length, 25))
+    const candidates = topLines.filter((line) => {
+      const value = cleanOcrLine(line)
+      if (!looksLikeAddressLine(value)) return false
+      if (/@/.test(value)) return false
+      if (/^\d[\d\s-]{6,}$/.test(value.replace(/\s+/g, ""))) return false
+      if (/(license activities|license members|email|mobile|po box|investor|owner|service agent)/i.test(extractEnglishText(value))) return false
+      return true
+    })
+
+    const best = candidates.sort((a, b) => b.length - a.length)[0]
+    return best ? normalizeExtractedAddress(best) : ""
+  }
+
+  const extractAddressBelowEmail = async (lines: string[]) => {
+    const emailIndex = lines.findIndex((line) => /@[\w.-]+\.[A-Za-z]{2,}/i.test(line))
+    if (emailIndex === -1) return ""
+
+    const collected: string[] = []
+    for (let i = emailIndex + 1; i < Math.min(emailIndex + 6, lines.length); i++) {
+      const line = cleanOcrLine(lines[i])
+      if (!line) continue
+      if (/(remarks|ملاحظات|phone|mobile|tel|contact|هاتف|po\s*box|p\.?o\.?\s*box|صندوق البريد)/i.test(line)) break
+
+      const isLabelOnly = /^(address|العنوان)$/i.test(line)
+      if (!isLabelOnly && looksLikeAddressLine(line)) {
+        collected.push(line)
+      } else if (collected.length > 0) {
+        break
+      }
+    }
+
+    if (collected.length === 0) return ""
+    return normalizeExtractedAddress(collected.join(", "))
+  }
+
+  // Extract data from OCR text
+  const extractDataFromOCR = async (text: string) => {
+    // Split text into lines for easier processing
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+    
+    console.log('Extracted lines:', lines)
+    
+    // Track if country code was set from mobile (to prevent nationality from overwriting)
+    let countryCodeSetFromMobile = false
+    
+    const { ownerName, ownerNationality } = extractOwnerRowData(lines)
+
+    // Extract Name - Enhanced to handle commercial licenses and share owner info
+    // Look for patterns like "KHALED KHODER AL AYCH" in Share/Owner section
+    let nameFound = false
+    if (ownerName) {
+      const nameParts = ownerName.split(/\s+/)
+      if (nameParts.length >= 2) {
+        setFirstName(nameParts[0])
+        setLastName(nameParts.slice(1).join(' '))
+        nameFound = true
+      }
+    }
+    const shareSectionLines = lines.filter((line) => /(shares?\s*owner|manager|مالك\s*حصص|مدير|nationality|الجنسية|role|صفة)/i.test(line))
+    
+    // Try to find name in Share/Owner section - specifically target the Name column
+    // Pattern: Look for uppercase English names after "Shares Owner" or similar headers
+    const shareSection = text.match(/(?:shares?\s*owner|manager|مالك\s*حصص|مدير)[\s\S]*?$/i)
+    if (shareSection) {
+      // Look for sequences of capitalized English words (names are usually in CAPS)
+      const capitalizedNames = shareSection[0].match(/\b[A-Z][A-Z]+(?:\s+[A-Z]+)+\b/g)
+      if (capitalizedNames && capitalizedNames.length > 0) {
+        // Get the first capitalized name sequence (likely the person's name)
+        let fullName = capitalizedNames[0].trim().replace(/\s+/g, ' ')
+        
+        // Filter out common non-name words
+        const excludeWords = ['SHARES', 'OWNER', 'MANAGER', 'NATIONALITY', 'ROLE', 'SHARE', 'NAME', 'LICENSE', 'LLC', 'COMPANY']
+        fullName = fullName.split(' ').filter(word => !excludeWords.includes(word)).join(' ')
+        
+        if (fullName) {
+          const nameParts = fullName.split(/\s+/)
+          if (nameParts.length >= 2) {
+            setFirstName(nameParts[0])
+            setLastName(nameParts.slice(1).join(' '))
+            nameFound = true
+          } else if (nameParts.length === 1) {
+            setFirstName(nameParts[0])
+            nameFound = true
+          }
+        }
+      }
+    }
+
+    if (!nameFound) {
+      const candidateLine = shareSectionLines.find((line) => {
+        const cleaned = cleanOcrLine(extractEnglishText(line))
+        if (!cleaned) return false
+        if (/(shares?|owner|manager|nationality|role|license|company|llc|name)/i.test(cleaned)) return false
+
+        const words = cleaned.split(/\s+/).filter(Boolean)
+        return words.length >= 2 && words.every((word) => /^[A-Z][A-Za-z'-]*$/.test(word))
+      })
+
+      if (candidateLine) {
+        const fullName = cleanOcrLine(extractEnglishText(candidateLine))
+        const nameParts = fullName.split(/\s+/)
+        if (nameParts.length >= 2) {
+          setFirstName(nameParts[0])
+          setLastName(nameParts.slice(1).join(' '))
+          nameFound = true
+        }
+      }
+    }
+    
+    // Fallback: look for general name patterns
+    if (!nameFound) {
+      const namePattern = /(?:name|holder|cardholder|الاسم)[:\s\/]+([A-Z][A-Za-z\s]+)/i
+      const nameMatch = text.match(namePattern)
+      if (nameMatch && nameMatch[1]) {
+        let fullName = extractEnglishText(nameMatch[1]).trim().replace(/\s+/g, ' ')
+        const nameParts = fullName.split(/\s+/)
+        if (nameParts.length >= 2) {
+          setFirstName(nameParts[0])
+          setLastName(nameParts.slice(1).join(' '))
+          nameFound = true
+        } else if (nameParts.length === 1) {
+          setFirstName(fullName)
+          nameFound = true
+        }
+      }
+    }
+
+    // Extract Email
+    const emailPattern = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/
+    const emailMatch = text.match(emailPattern)
+    if (emailMatch) {
+      setEmail(emailMatch[1])
+    }
+
+    // Extract Mobile Number - Enhanced for international formats
+    // Look for patterns like "971-52-5394394" or "+971 52 5394394"
+    let mobileFound = false
+    
+    // First try to find mobile with label
+    const mobilePattern = /(?:mobile[\s]+no|mobile|phone|tel|contact|هاتف\s*متحرك)[:\s]*([+]?[\d\s()-]+)/i
+    const mobileMatch = text.match(mobilePattern)
+    if (mobileMatch && mobileMatch[1]) {
+      const mobile = mobileMatch[1].replace(/[^\d+]/g, '')
+      if (mobile.length >= 9) { // Ensure we have a reasonable phone number
+        // Extract country code if present
+        if (mobile.startsWith('+')) {
+          const parts = mobile.match(/(\+\d{1,4})(\d+)/)
+          if (parts) {
+            setCountryCode(parts[1])
+            setContactNo(parts[2]) // Don't format yet, keep full number
+            countryCodeSetFromMobile = true
+            mobileFound = true
+          }
+        } else if (mobile.startsWith('971') || mobile.startsWith('966') || mobile.startsWith('965')) {
+          // Handle common Gulf country codes without +
+          setCountryCode('+' + mobile.substring(0, 3))
+          setContactNo(mobile.substring(3)) // Keep full number without formatting
+          countryCodeSetFromMobile = true
+          mobileFound = true
+        } else {
+          setContactNo(mobile)
+          mobileFound = true
+        }
+      }
+    }
+    
+    // If not found, try to find any phone number pattern (international format)
+    if (!mobileFound) {
+      const phonePattern = /(\d{3}[-\s]?\d{2}[-\s]?\d{7,8}|\+?\d{1,4}[\s-]?\d{2}[\s-]?\d{7,8})/
+      const phoneMatch = text.match(phonePattern)
+      if (phoneMatch) {
+        const phone = phoneMatch[0].replace(/[^\d+]/g, '')
+        if (phone.length >= 9) {
+          if (phone.startsWith('+')) {
+            const parts = phone.match(/(\+\d{1,4})(\d+)/)
+            if (parts) {
+              setCountryCode(parts[1])
+              setContactNo(parts[2])
+              countryCodeSetFromMobile = true
+              mobileFound = true
+            }
+          } else if (phone.startsWith('971') || phone.startsWith('966') || phone.startsWith('965')) {
+            setCountryCode('+' + phone.substring(0, 3))
+            setContactNo(phone.substring(3))
+            countryCodeSetFromMobile = true
+            mobileFound = true
+          } else {
+            setContactNo(phone)
+            mobileFound = true
+          }
+        }
+      }
+    }
+
+    // Extract Address - Keep Arabic text as-is
+    // Primary target: line right below email and before remarks section.
+    let addressFound = false
+
+    const addressBelowEmail = await extractAddressBelowEmail(lines)
+    if (addressBelowEmail) {
+      setAddress(addressBelowEmail)
+      addressFound = true
+    }
+
+    const sectionText = text.replace(/\r/g, '')
+    const emailSectionMatch = !addressFound ? sectionText.match(/(?:email|البريد\s*الإلكتروني)[\s\S]{0,120}?@[\w.-]+\.[A-Za-z]{2,}[\s\S]{0,220}/i) : null
+    if (emailSectionMatch) {
+      const emailSection = emailSectionMatch[0]
+      const sectionLines = emailSection
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+
+      const candidate = sectionLines.find((line) => {
+        const isEmailLine = /@[\w.-]+\.[A-Za-z]{2,}/i.test(line)
+        const isLabel = /^(email|البريد\s*الإلكتروني|address|العنوان|parcel\s*id|p\.?o\.?\s*box)$/i.test(line)
+        const isRemarks = /(remarks|ملاحظات)/i.test(line)
+        const hasAddressSignal = looksLikeAddressLine(line)
+        return !isEmailLine && !isLabel && !isRemarks && hasAddressSignal
+      })
+
+      if (candidate) {
+        setAddress(normalizeExtractedAddress(candidate))
+        addressFound = true
+      }
+    }
+
+    if (!addressFound) {
+      const topBlockAddress = await extractTopBlockAddress(lines)
+      if (topBlockAddress) {
+        setAddress(topBlockAddress)
+        addressFound = true
+      }
+    }
+
+    // Fallback 1: line immediately after any email line
+    if (!addressFound) {
+      const emailIndex = lines.findIndex((line) => /@[\w.-]+\.[A-Za-z]{2,}/i.test(line))
+      if (emailIndex !== -1) {
+        for (let i = emailIndex + 1; i < Math.min(emailIndex + 6, lines.length); i++) {
+          const line = lines[i]
+          if (/(remarks|ملاحظات)/i.test(line)) break
+          if (line.length < 4) continue
+
+          const isLabelOnly = /^(address|العنوان|parcel\s*id|p\.?o\.?\s*box)$/i.test(line)
+          const hasAddressSignal = looksLikeAddressLine(line)
+          if (!isLabelOnly && hasAddressSignal) {
+            setAddress(normalizeExtractedAddress(line.trim()))
+            addressFound = true
+            break
+          }
+        }
+      }
+    }
+
+    // Fallback 2: explicit address label extraction
+    if (!addressFound) {
+      const addressPattern = /(?:address|addr|العنوان)[:\s\/]+([\w\s,.-\u0600-\u06FF]+?)(?=\n(?:phone|mobile|email|p\.o|fax|remarks|ملاحظات)|$)/i
+      const addressMatch = text.match(addressPattern)
+      if (addressMatch && addressMatch[1]) {
+        const addr = addressMatch[1].trim()
+        if (addr) {
+          setAddress(normalizeExtractedAddress(addr))
+          addressFound = true
+        }
+      }
+    }
+
+    // Fallback 3: standalone address-like line
+    if (!addressFound) {
+      const addressLinePattern = /[\d-]+[\u0600-\u06FF\w\s,.-]*(?:مكتب|ملك|مؤسسة|مبنى|برج|مركز|تجاري|العقارية)[\u0600-\u06FF\w\s,.-]*/i
+      const foundLine = lines.find((line) => addressLinePattern.test(line))
+      if (foundLine) {
+        setAddress(normalizeExtractedAddress(foundLine.trim()))
+        addressFound = true
+      }
+    }
+
+    if (!addressFound) {
+      const licenseAddressLine = lines.find((line) => /(address|العنوان)/i.test(line) && looksLikeAddressLine(line))
+      if (licenseAddressLine) {
+        setAddress(normalizeExtractedAddress(licenseAddressLine))
+        addressFound = true
+      }
+    }
+    
+    // Don't auto-populate city - let user enter manually
+    // City extraction removed as per user request
+    
+    // Don't auto-populate state - let user enter manually
+    // State extraction removed as per user request
+    
+    // Don't auto-populate country - let user enter manually  
+    // Country extraction removed as per user request
+
+    // Extract Nationality - Enhanced for bilingual documents with translation
+    // Multiple patterns to handle different formats
+    let nationalityFound = false
+    if (ownerNationality) {
+      nationalityFound = true
+      setNationality(ownerNationality)
+
+      const matchingCountry = countries.find(c => 
+        c.value.toLowerCase() === ownerNationality.toLowerCase() || 
+        c.label.toLowerCase() === ownerNationality.toLowerCase()
+      )
+      if (matchingCountry && matchingCountry.phoneCode && !countryCodeSetFromMobile) {
+        setCountryCode(matchingCountry.phoneCode)
+      }
+    }
+    
+    // Pattern 1: Direct nationality label
+    const nationalityPattern1 = /(?:nationality|citizen|الجنسية)[:\s\/]+([\w\s\u0600-\u06FF]+?)(?=\n|\s{2,}|role|صفة|shares|owner|name|no\.|$)/i
+    const nationalityMatch1 = text.match(nationalityPattern1)
+    
+    // Pattern 2: Look in table format (common in commercial licenses)
+    const nationalityPattern2 = /([\w\s]+)\s*\/\s*[\u0600-\u06FF]+\s+(?:shares|owner|manager|100\.00%)/i
+    const nationalityMatch2 = text.match(nationalityPattern2)
+    
+    // Pattern 3: Look for country names directly (Lebanon, UAE, etc.)
+    const countryPattern = /\b(Lebanon|United Arab Emirates|UAE|Saudi Arabia|Egypt|Jordan|Kuwait|Qatar|Bahrain|Oman|Syria|Iraq|Yemen|Palestine|Morocco|Algeria|Tunisia|Libya|Sudan|India|Pakistan|Bangladesh|Philippines|Indonesia)\b/i
+    const countryMatch = text.match(countryPattern)
+    
+    let nat = ''
+    
+    if (nationalityMatch1 && nationalityMatch1[1]) {
+      nat = nationalityMatch1[1].trim()
+      nationalityFound = true
+    } else if (nationalityMatch2 && nationalityMatch2[1]) {
+      nat = nationalityMatch2[1].trim()
+      nationalityFound = true
+    } else if (countryMatch && countryMatch[1]) {
+      nat = countryMatch[1].trim()
+      nationalityFound = true
+    }
+    
+    if (nat && !nationalityFound) {
+      // Translate if Arabic
+      nat = await translateArabicToEnglish(nat)
+      
+      // Clean up common patterns (remove Arabic text after /)
+      nat = getEnglishCountry(nat).trim()
+      
+      if (nat) {
+        setNationality(nat)
+        
+        // Auto-set country code based on nationality ONLY if not already set from mobile number
+        // This prevents overwriting the country code extracted from the phone number
+        const matchingCountry = countries.find(c => 
+          c.value.toLowerCase() === nat.toLowerCase() || 
+          c.label.toLowerCase() === nat.toLowerCase() ||
+          c.value.toLowerCase().includes(nat.toLowerCase()) ||
+          nat.toLowerCase().includes(c.value.toLowerCase())
+        )
+        // Only set country code if it wasn't already set from mobile extraction
+        if (matchingCountry && matchingCountry.phoneCode && !countryCodeSetFromMobile) {
+          setCountryCode(matchingCountry.phoneCode)
+        }
+      }
+    }
+
+    // Don't extract ID details from OCR - removed as per user request
+    // Users should manually enter ID Type, ID No, ID Issue Date, and ID Expiry Date
+  }
+
+  const handleIdCardFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      setIdCardFile(file)
+      processOCR(file)
     }
   }
 
@@ -191,9 +889,14 @@ export default function QuickOnboardingPage() {
       'Email': email,
       'Date of Birth': dob,
       'Address': address,
+      'City': city,
+      'State': state,
+      'Country': country,
       'Nationality': nationality,
       'Country Code': countryCode,
       'Contact No': contactNo,
+      'Occupation': occupation,
+      'Source of Income': sourceIncome,
       'ID Type': idType,
       'ID No': idNo,
       'ID Issue Date': idIssueDate,
@@ -224,9 +927,14 @@ export default function QuickOnboardingPage() {
         dob,
         residential_status: residentialStatus,
         address,
+        city,
+        state,
+        country,
         nationality,
         country_code: countryCode,
         contact_no: contactNo,
+        occupation,
+        source_of_income: sourceIncome,
         id_type: idType,
         id_no: idNo,
         id_issue_date: idIssueDate,
@@ -359,6 +1067,91 @@ export default function QuickOnboardingPage() {
       {/* Single Entry Form */}
       {entryType === "single" && (
         <div className="space-y-6">
+          {/* OCR Upload Section */}
+          <Card className={CARD_STYLE}>
+            <CardContent className="p-8">
+              <div className="mb-6 flex items-center gap-2 border-b border-border/50 pb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <ScanLine className="w-4 h-4" />
+                </div>
+                <h4 className="text-lg font-semibold tracking-tight text-foreground">Smart ID Card Scanner (OCR)</h4>
+              </div>
+
+              <div className="mb-4 p-4 border border-primary/20 rounded-xl bg-primary/5">
+                <div className="flex items-start gap-3">
+                  <Info className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                  <div className="text-sm text-muted-foreground">
+                    <p className="font-semibold text-foreground mb-1">Upload your ID card for automatic data extraction</p>
+                    <p>Our OCR technology will automatically extract your personal information and populate the form below. Please verify the extracted data for accuracy.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className={cn(
+                  "group cursor-pointer rounded-2xl border-2 border-dashed transition-all p-10 text-center",
+                  ocrProcessing 
+                    ? "border-primary/50 bg-primary/10 cursor-not-allowed" 
+                    : "border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50"
+                )}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  if (!ocrProcessing) {
+                    handleIdCardDrop(e)
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      processOCR(e.dataTransfer.files[0])
+                    }
+                  }
+                }}
+                onClick={() => {
+                  if (!ocrProcessing) {
+                    document.getElementById("idCardUpload")?.click()
+                  }
+                }}
+              >
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-background shadow-sm transition-transform group-hover:scale-105">
+                  {ocrProcessing ? (
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  ) : (
+                    <ScanLine className="h-8 w-8 text-primary" />
+                  )}
+                </div>
+                
+                {ocrProcessing ? (
+                  <div className="space-y-3">
+                    <h5 className="font-semibold text-foreground">Processing ID Card...</h5>
+                    <div className="max-w-xs mx-auto">
+                      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                        <div 
+                          className="bg-primary h-full transition-all duration-300 rounded-full"
+                          style={{ width: `${ocrProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">{ocrProgress}% Complete</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <h5 className="mb-1 font-semibold text-foreground">Click to Upload ID Card</h5>
+                    <p className="text-sm text-muted-foreground">Supports JPG, PNG, PDF (Max 10MB)</p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {idCardFile ? `Selected: ${idCardFile.name}` : "Drag & drop your ID card here, or click to select"}
+                    </p>
+                  </>
+                )}
+
+                <input
+                  type="file"
+                  className="hidden"
+                  id="idCardUpload"
+                  accept="image/*,.pdf"
+                  onChange={handleIdCardFileChange}
+                  disabled={ocrProcessing}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <Card className={CARD_STYLE}>
               <CardContent className="space-y-10 p-8">
@@ -453,6 +1246,40 @@ export default function QuickOnboardingPage() {
                     </div>
 
                     <div className="space-y-2">
+                      <RequiredLabel htmlFor="city" text="City" className={FIELD_LABEL_CLASS} />
+                      <input
+                        id="city"
+                        placeholder="Enter city"
+                        className={FIELD_CLASS}
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <RequiredLabel htmlFor="state" text="State" className={FIELD_LABEL_CLASS} />
+                      <input
+                        id="state"
+                        placeholder="Enter state/emirate"
+                        className={FIELD_CLASS}
+                        value={state}
+                        onChange={(e) => setState(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <RequiredLabel htmlFor="country" text="Country" className={FIELD_LABEL_CLASS} />
+                      <Combobox
+                        options={countries}
+                        value={country}
+                        onValueChange={handleSingleSelect(setCountry)}
+                        placeholder="Select a country"
+                        searchPlaceholder="Search country..."
+                        className={FIELD_CLASS}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
                       <RequiredLabel htmlFor="nationality" text="Nationality" className={FIELD_LABEL_CLASS} />
                       <Combobox
                         options={countries}
@@ -483,6 +1310,30 @@ export default function QuickOnboardingPage() {
                         className={FIELD_CLASS}
                         value={contactNo}
                         onChange={(e) => setContactNo(formatContactNumber(e.target.value))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <RequiredLabel htmlFor="occupation" text="Occupation" className={FIELD_LABEL_CLASS} />
+                      <Combobox
+                        options={occupations}
+                        value={occupation}
+                        onValueChange={handleSingleSelect(setOccupation)}
+                        placeholder="Select an occupation"
+                        searchPlaceholder="Search occupation..."
+                        className={FIELD_CLASS}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <RequiredLabel htmlFor="sourceIncome" text="Source of Income" className={FIELD_LABEL_CLASS} />
+                      <Combobox
+                        options={sourceOfIncome}
+                        value={sourceIncome}
+                        onValueChange={handleSingleSelect(setSourceIncome)}
+                        placeholder="Select a source"
+                        searchPlaceholder="Search source..."
+                        className={FIELD_CLASS}
                       />
                     </div>
                   </div>

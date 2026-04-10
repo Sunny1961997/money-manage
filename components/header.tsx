@@ -18,6 +18,82 @@ import { Dispatch, SetStateAction } from "react"
 //     .join(" ")
 // }
 
+// function getHeaderMeta(pathname: string) {
+//   // 1. Clean segments and find the dashboard entry point
+//   const segments = pathname.split("/").filter(Boolean);
+//   const dashboardIndex = segments.indexOf("dashboard");
+
+//   // Extract segments after "/dashboard"
+//   let pathSegments = segments.slice(dashboardIndex + 1);
+
+//   // 2. Handle Dynamic IDs (e.g., /profile/1 or /customers/123)
+//   // We check if the last segment is a number or a UUID-like string
+//   const lastSegment = pathSegments[pathSegments.length - 1];
+//   const isId = lastSegment && (!isNaN(Number(lastSegment)) || lastSegment.length > 20);
+
+//   if (isId && pathSegments.length > 1) {
+//     pathSegments = pathSegments.slice(0, -1); // Remove the ID from the title logic
+//   }
+
+//   const pageSegment = pathSegments.join("/") || "overview";
+
+//   // 3. Map paths to their Display Titles
+//   const routeTitleMap: Record<string, string> = {
+//     // Basic Routes
+//     "profile": "User Profile",
+//     "account-stats": "Account Insights",
+//     "customers": "Client Records Management",
+//     "adverse-search": "Adverse Media Check",
+//     "screening-logs": "Audit Trail",
+//     "tickets": "Ticket",
+//     "change-password": "Change Password",
+
+//     // Onboarding Sub-routes
+//     "onboarding/customer": "Digital Onboarding",
+//     "onboarding/quick": "Quick Onboarding",
+
+//     // Screening Sub-routes
+//     "screening/quick": "Name and PEP Screening",
+//     "screening/entity": "Customer Screening Details", // Base pattern
+
+//     // Support Sub-routes
+//     "support/bot": "Automated Bot",
+
+//     // Admin Routes
+//     "admin": "Compliance Dashboard",
+//     "admin/companies": "Companies",
+//     "admin/company-users": "Company Users",
+//     "admin/users": "System Users",
+//     "admin/product": "Products",
+
+//     // Regulatory
+//     "goaml-reporting": "GoAML Reporting",
+
+    
+//   };
+
+//   // 4. Map the first segment to a Section Category
+//   const firstSegment = pathSegments[0];
+//   const secondSegment = pathSegments[1];
+//   const sectionMap: Record<string, string> = {
+//     "onboarding": "Customer Due Diligence",
+//     "screening": "Watchlist Screening",
+//     "support": "Support Center",
+//     "admin": "Administration",
+//     "goaml-reporting": "Regulatory Reporting"
+//   };
+
+//   // 5. Generate Final Title
+//   // If it's an ID route (like /profile/1), we can prefix it with "Details" or "Edit"
+//   const rawTitle = routeTitleMap[pageSegment] ?? toTitleCase(pageSegment.split('/').pop() || "Overview");
+//   const finalTitle = isId ? `${rawTitle} Details` : rawTitle;
+
+//   return {
+//     section: sectionMap[firstSegment] ?? "Dashboard",
+//     title: finalTitle,
+//   };
+// }
+
 function getHeaderMeta(pathname: string) {
   // 1. Clean segments and find the dashboard entry point
   const segments = pathname.split("/").filter(Boolean);
@@ -27,19 +103,17 @@ function getHeaderMeta(pathname: string) {
   let pathSegments = segments.slice(dashboardIndex + 1);
 
   // 2. Handle Dynamic IDs (e.g., /profile/1 or /customers/123)
-  // We check if the last segment is a number or a UUID-like string
   const lastSegment = pathSegments[pathSegments.length - 1];
   const isId = lastSegment && (!isNaN(Number(lastSegment)) || lastSegment.length > 20);
 
   if (isId && pathSegments.length > 1) {
-    pathSegments = pathSegments.slice(0, -1); // Remove the ID from the title logic
+    pathSegments = pathSegments.slice(0, -1);
   }
 
   const pageSegment = pathSegments.join("/") || "overview";
 
-  // 3. Map paths to their Display Titles
+  // 3. Exact match route titles
   const routeTitleMap: Record<string, string> = {
-    // Basic Routes
     "profile": "User Profile",
     "account-stats": "Account Insights",
     "customers": "Client Records Management",
@@ -47,29 +121,51 @@ function getHeaderMeta(pathname: string) {
     "screening-logs": "Audit Trail",
     "tickets": "Ticket",
     "change-password": "Change Password",
-
-    // Onboarding Sub-routes
     "onboarding/customer": "Digital Onboarding",
     "onboarding/quick": "Quick Onboarding",
-
-    // Screening Sub-routes
     "screening/quick": "Name and PEP Screening",
-
-    // Support Sub-routes
     "support/bot": "Automated Bot",
-
-    // Admin Routes
     "admin": "Compliance Dashboard",
     "admin/companies": "Companies",
     "admin/company-users": "Company Users",
     "admin/users": "System Users",
     "admin/product": "Products",
-
-    // Regulatory
     "goaml-reporting": "GoAML Reporting",
   };
 
-  // 4. Map the first segment to a Section Category
+  // 4. Wildcard patterns (order matters - put more specific patterns first)
+  const wildcardPatterns: { check: (segments: string[]) => boolean; title: string }[] = [
+    { 
+      check: (segments) => segments[0] === "screening" && segments[1] === "entity",
+      title: "Customer Screening Details"
+    },
+    // Add more patterns as needed:
+    // { 
+    //   check: (segments) => segments[0] === "admin" && segments[1] === "companies" && segments[2],
+    //   title: "Company Details"
+    // },
+    // { 
+    //   check: (segments) => segments[0] === "users" && segments[1],
+    //   title: "User Details"
+    // },
+  ];
+
+  // Check for wildcard match
+  let matchedTitle = null;
+  for (const pattern of wildcardPatterns) {
+    if (pattern.check(pathSegments)) {
+      matchedTitle = pattern.title;
+      break;
+    }
+  }
+
+  // Get the title
+  const rawTitle = matchedTitle ?? routeTitleMap[pageSegment] ?? toTitleCase(pageSegment.split('/').pop() || "Overview");
+  
+  // 5. Final title with "Details" suffix for ID routes (but not for wildcard matches)
+  const finalTitle = isId && !matchedTitle ? `${rawTitle} Details` : rawTitle;
+
+  // 6. Section mapping
   const firstSegment = pathSegments[0];
   const sectionMap: Record<string, string> = {
     "onboarding": "Customer Due Diligence",
@@ -79,16 +175,12 @@ function getHeaderMeta(pathname: string) {
     "goaml-reporting": "Regulatory Reporting"
   };
 
-  // 5. Generate Final Title
-  // If it's an ID route (like /profile/1), we can prefix it with "Details" or "Edit"
-  const rawTitle = routeTitleMap[pageSegment] ?? toTitleCase(pageSegment.split('/').pop() || "Overview");
-  const finalTitle = isId ? `${rawTitle} Details` : rawTitle;
-
   return {
     section: sectionMap[firstSegment] ?? "Dashboard",
     title: finalTitle,
   };
 }
+
 
 /** * Helper to capitalize fallback titles 
  * (e.g., "my-page" -> "My Page")

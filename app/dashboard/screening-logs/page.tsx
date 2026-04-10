@@ -75,6 +75,17 @@ function formatScreeningTypeLabel(type: string) {
     .join(" ")
 }
 
+function buildReportFileUrl(filePath: string) {
+  const trimmedPath = String(filePath || "").trim()
+  if (!trimmedPath) return ""
+
+  if (/^https?:\/\//i.test(trimmedPath)) {
+    return trimmedPath
+  }
+
+  return trimmedPath.replace(/^\/+/, "")
+}
+
 export default function ScreeningLogsPage() {
   const { toast } = useToast()
   const [logs, setLogs] = useState<ScreeningLog[]>([])
@@ -204,14 +215,25 @@ export default function ScreeningLogsPage() {
     setDownloadingLogId(reportId)
 
     try {
-      const res = await fetch(`/api/screening-reports/download/${reportId}`, {
+      const fileUrl = buildReportFileUrl(filePath)
+
+      if (!fileUrl) {
+        toast({
+          title: "Report unavailable",
+          description: "No file path is available for this report.",
+        })
+        return
+      }
+
+      const proxyUrl = `/api/screening-reports/download-by-path?path=${encodeURIComponent(fileUrl)}&fileName=${encodeURIComponent(fileName || "")}`
+
+      const res = await fetch(proxyUrl, {
         method: "GET",
         credentials: "include",
       })
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({} as { message?: string }))
-        const msg = errorData?.message || "This report is not available for download."
+        const msg = "This report is not available for download."
         toast({
           title: "Report not found",
           description: msg,
@@ -219,35 +241,20 @@ export default function ScreeningLogsPage() {
         return
       }
 
-      const contentType = res.headers.get("content-type") || ""
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = fileName || `report_${reportId}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
 
-      if (contentType.includes("application/pdf") || contentType.includes("application/octet-stream")) {
-        // Direct PDF binary response
-        const blob = await res.blob()
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = fileName || `report_${reportId}.pdf`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-        
-        toast({
-          title: "Download started",
-          description: `Downloading ${fileName}`,
-        })
-      } else {
-        const data = await res.json()
-        if (data?.data?.file_url) {
-          window.open(data.data.file_url, "_blank")
-        } else {
-          toast({
-            title: "Report unavailable",
-            description: "No report file is available.",
-          })
-        }
-      }
+      toast({
+        title: "Download started",
+        description: `Downloading ${fileName}`,
+      })
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error"
       toast({

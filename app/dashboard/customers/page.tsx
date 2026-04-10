@@ -66,6 +66,53 @@ function DetailGrid({ items }: { items: DetailItem[] }) {
   )
 }
 
+function buildQuickScreeningUrl(customer: any) {
+  const params = new URLSearchParams()
+
+  if (customer?.customer_type === "individual") {
+    const details = customer?.individual_detail || {}
+    const fullName = [details.first_name, details.last_name].filter(Boolean).join(" ").trim()
+
+    params.set("tab", "individual")
+    if (fullName) params.set("name", fullName)
+    if (details.dob) params.set("dob", String(details.dob))
+    if (details.gender) params.set("gender", String(details.gender))
+    if (details.nationality) params.set("nationality", String(details.nationality))
+  } else {
+    const details = customer?.corporate_detail || {}
+
+    params.set("tab", "entity")
+    if (details.company_name) params.set("name", String(details.company_name))
+    if (details.company_address) params.set("address", String(details.company_address))
+    if (details.country_incorporated) params.set("country", String(details.country_incorporated))
+  }
+
+  return `/dashboard/screening/quick?${params.toString()}`
+}
+
+function buildQuickScreeningPrefill(customer: any) {
+  if (customer?.customer_type === "individual") {
+    const details = customer?.individual_detail || {}
+    const fullName = [details.first_name, details.last_name].filter(Boolean).join(" ").trim()
+
+    return {
+      tab: "individual",
+      name: fullName,
+      dob: details.dob ? String(details.dob) : "",
+      gender: details.gender ? String(details.gender) : "",
+      nationality: details.nationality ? String(details.nationality) : "",
+    }
+  }
+
+  const details = customer?.corporate_detail || {}
+  return {
+    tab: "entity",
+    name: details.company_name ? String(details.company_name) : "",
+    address: details.company_address ? String(details.company_address) : "",
+    country: details.country_incorporated ? String(details.country_incorporated) : "",
+  }
+}
+
 export default function CustomersPage() {
   const { toast } = useToast()
   const [customers, setCustomers] = useState<any[]>([])
@@ -186,6 +233,7 @@ export default function CustomersPage() {
 
       if (json.status && json.data) {
         setCustomers(Array.isArray(json.data.items) ? json.data.items : [])
+        console.log("Fetched customers:", json.data.items);
         setTotal(Number(json.data.total || 0))
       } else {
         setCustomers([])
@@ -233,6 +281,34 @@ export default function CustomersPage() {
       }
     } catch {
       toast({ title: "Error", description: "Connection error" })
+    }
+  }
+
+  const handleScreeningRedirect = async (customer: any) => {
+    try {
+      const existing = detailsById[customer.id]
+      let customerData = existing
+
+      if (!customerData) {
+        const res = await fetch(`/api/onboarding/customers/${customer.id}`, { credentials: "include" })
+        const json = await res.json()
+
+        if (!json?.status || !json?.data) {
+          throw new Error(json?.message || "Failed to fetch customer details for screening")
+        }
+
+        customerData = json.data
+        setDetailsById((prev) => ({ ...prev, [customer.id]: customerData }))
+      }
+
+      sessionStorage.setItem("screening_prefill", JSON.stringify(buildQuickScreeningPrefill(customerData)))
+      window.location.href = buildQuickScreeningUrl(customerData)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to prepare screening details"
+      toast({
+        title: "Screening unavailable",
+        description: message,
+      })
     }
   }
 
@@ -476,6 +552,15 @@ export default function CustomersPage() {
                                 >
                                   <Download className="h-3.5 w-3.5" />
                                   Download
+                                </Button>
+
+                                <Button
+                                  className={`${ACTION_PRIMARY_BUTTON_CLASS} w-full`}
+                                  variant="outline"
+                                  onClick={() => void handleScreeningRedirect(customer)}
+                                >
+                                  <Search className="h-3.5 w-3.5" />
+                                  Screening
                                 </Button>
                               </div>
                             </td>

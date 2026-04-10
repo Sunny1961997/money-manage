@@ -211,7 +211,6 @@ const flaNavigation: NavItem[] = [
 function getNavigationByRole(user: any): NavItem[] {
   // Normalize role to lowercase for comparison
   const normalizedRole = (user?.role || "").toLowerCase().trim()
-  console.log("[Sidebar] Determining navigation for role:", normalizedRole)
 
   switch (normalizedRole) {
     case "admin":

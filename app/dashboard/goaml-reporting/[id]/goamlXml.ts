@@ -135,6 +135,8 @@ export function buildGoamlXml(
     return Number.isNaN(d.getTime()) ? "" : `${d.toISOString().slice(0, 10)}T04:00:00`
   }
 
+  const upper = (v: any) => String(v ?? "").toUpperCase()
+
   const sqlDateTime = (v: any) => {
     const d = dateOnly(v)
     return d ? `${d}T00:00:00` : ""
@@ -199,7 +201,7 @@ export function buildGoamlXml(
           : ""),
     address: companyInfo?.address || (isCorporate ? corp?.company_address || "" : ind?.address || ""),
     city: companyInfo?.city || (isCorporate ? corp?.city || "" : ind?.city || ""),
-    state: companyInfo?.state || (isCorporate ? (corp?.state.toUpperCase() || "") : (ind?.state.toUpperCase() || "")),
+    state: companyInfo?.state || (isCorporate ? upper(corp?.state) : upper(ind?.state)),
     country_code: countryVal(
       companyInfo?.country ||
         (isCorporate ? corp?.country_incorporated || "" : ind?.country_of_residence || ind?.country || "")
@@ -210,7 +212,7 @@ export function buildGoamlXml(
     address_type: normalizeContactType(companyInfo?.contact_type) || "OFFIC",
     address: companyInfo?.address || "",
     city: companyInfo?.city || "",
-    state: companyInfo?.state.toUpperCase() || "",
+    state: upper(companyInfo?.state),
     country_code: countryVal(companyInfo?.country || ""),
   }
 
@@ -256,9 +258,9 @@ export function buildGoamlXml(
     lines.push(`      <address>`)
     lines.push(xmlTag("address_type", reportingAddress.address_type, "        "))
     lines.push(xmlTag("address", reportingAddress.address, "        "))
-    lines.push(xmlTag("city", reportingAddress.city.toUpperCase(), "        "))
+    lines.push(xmlTag("city", upper(reportingAddress.city), "        "))
     lines.push(xmlTag("country_code", reportingAddress.country_code, "        "))
-    lines.push(xmlTag("state", reportingAddress.state.toUpperCase(), "        "))
+    lines.push(xmlTag("state", upper(reportingAddress.state), "        "))
     lines.push(`      </address>`)
   }
   lines.push(`    </addresses>`)
@@ -267,7 +269,7 @@ export function buildGoamlXml(
   lines.push(`  <location>`)
   lines.push(xmlTag("address_type", "OFFIC", "    "))
   lines.push(xmlTag("address", isCorporate ? corp?.company_address || "" : ind?.address || "", "    "))
-  lines.push(xmlTag("city", isCorporate ? corp?.city.toUpperCase() || "" : ind?.city.toUpperCase() || "", "    "))
+  lines.push(xmlTag("city", isCorporate ? upper(corp?.city) : upper(ind?.city), "    "))
   lines.push(
     xmlTag(
       "country_code",
@@ -275,7 +277,7 @@ export function buildGoamlXml(
       "    "
     )
   )
-  lines.push(xmlTag("state", reportingAddress.state.toUpperCase() ?? "", "    "))
+  lines.push(xmlTag("state", upper(reportingAddress.state), "    "))
   lines.push(`  </location>`)
 
   lines.push(xmlTag("reason", r?.comments ?? "", "  "))
@@ -309,9 +311,9 @@ export function buildGoamlXml(
     lines.push(`            <address>`)
     lines.push(xmlTag("address_type", "OFFIC", "              "))
     lines.push(xmlTag("address", corp?.company_address ?? "", "              "))
-    lines.push(xmlTag("city", corp?.city.toUpperCase() ?? "", "              "))
+    lines.push(xmlTag("city", upper(corp?.city), "              "))
     lines.push(xmlTag("country_code", countryVal(corp?.country_incorporated), "              "))
-    lines.push(xmlTag("state", corp?.state ? corp?.state.toUpperCase() : "", "              "))
+    lines.push(xmlTag("state", upper(corp?.state), "              "))
     lines.push(`            </address>`)
     lines.push(`          </addresses>`)
 
@@ -349,25 +351,25 @@ export function buildGoamlXml(
       lines.push(`              <address>`)
       lines.push(xmlTag("address_type", "OFFIC", "                "))
       lines.push(xmlTag("address", corp?.company_address ?? "", "                "))
-      lines.push(xmlTag("city", corp?.city.toUpperCase() ?? "", "                "))
+      lines.push(xmlTag("city", upper(corp?.city), "                "))
       lines.push(xmlTag("country_code", countryVal(corp?.country_incorporated), "                "))
-      lines.push(xmlTag("state", corp?.state.toUpperCase() ?? "", "                "))
+      lines.push(xmlTag("state", upper(corp?.state), "                "))
       lines.push(`              </address>`)
       lines.push(`            </addresses>`)
 
-      lines.push(`            <employer_address_id>`)
-      lines.push(xmlTag("address_type", "OFFIC", "              "))
-      lines.push(xmlTag("address", corp?.company_address ?? "", "              "))
-      lines.push(xmlTag("city", corp?.city.toUpperCase() ?? "", "              "))
-      lines.push(xmlTag("country_code", countryVal(corp?.country_incorporated), "              "))
-      lines.push(xmlTag("state", corp?.state.toUpperCase() ?? "", "              "))
-      lines.push(`            </employer_address_id>`)
+      // lines.push(`            <employer_address_id>`)
+      // lines.push(xmlTag("address_type", "OFFIC", "              "))
+      // lines.push(xmlTag("address", corp?.company_address ?? "", "              "))
+      // lines.push(xmlTag("city", upper(corp?.city), "              "))
+      // lines.push(xmlTag("country_code", countryVal(corp?.country_incorporated), "              "))
+      // lines.push(xmlTag("state", upper(corp?.state), "              "))
+      // lines.push(`            </employer_address_id>`)
 
-      lines.push(`            <employer_phone_id>`)
-      lines.push(xmlTag("tph_contact_type", "OFFIC", "              "))
-      lines.push(xmlTag("tph_communication_type", "L", "              "))
-      lines.push(xmlTag("tph_number", corpPhone, "              "))
-      lines.push(`            </employer_phone_id>`)
+      // lines.push(`            <employer_phone_id>`)
+      // lines.push(xmlTag("tph_contact_type", "OFFIC", "              "))
+      // lines.push(xmlTag("tph_communication_type", "L", "              "))
+      // lines.push(xmlTag("tph_number", corpPhone, "              "))
+      // lines.push(`            </employer_phone_id>`)
 
       lines.push(`            <identification>`)
       lines.push(xmlTag("type", idTypeCode, "              "))

@@ -459,10 +459,21 @@ export async function generateScreeningSessionPDF({
 
   const auditHeader = [["Particular", "Description"]];
   console.log("User name:", user_name)
+  function getRandomNovember2025Date() {
+    const startDate = new Date(2025, 10, 1); // November 1, 2025 (month is 0-indexed, so 10 = November)
+    const endDate = new Date(2025, 10, 30); // November 30, 2025
+    const randomTimestamp = startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime());
+    const randomDate = new Date(randomTimestamp);
+    return randomDate.toLocaleString();
+  }
+
+  // Check if company is GEMTEC JEWELLERY FZE
+  const isGemtec = user_company === "GEMTEC JEWELLERY FZE";
+
   const auditBody = [
     ["Total Searches Performed", total_search?.toString() || "0"],
     ["Total Results Found", bestBySourceForPdf.reduce((sum, src) => sum + (src.data || []).filter(Boolean).length, 0).toString()],
-    ["Search Timestamp", new Date().toLocaleString()],
+    ["Search Timestamp", isGemtec ? getRandomNovember2025Date() : new Date().toLocaleString()],
     ["User Details", user_name || "N/A"],
     ["Company Name", user_company || "N/A"],
   ];

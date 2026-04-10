@@ -26,7 +26,7 @@ type Company = {
   company_users_count?: number
 }
 
-const PAGE_CLASS = "space-y-8 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
+const PAGE_CLASS = "space-y-8 max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500"
 const CARD_STYLE =
   "rounded-3xl border border-border/50 bg-card/60 backdrop-blur-sm shadow-[0_22px_60px_-32px_oklch(0.28_0.06_260/0.45)] transition-all"
 const LABEL_CLASS = "text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground"
@@ -193,8 +193,8 @@ export default function CompaniesPage() {
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">License Number/Emirates ID</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Location</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Screenings</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Creation Date</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Expiry Date</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Subscription Creation Date</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Licence Expiry Date</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Status</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Actions</th>
                 </tr>

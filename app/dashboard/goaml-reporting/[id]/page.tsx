@@ -4,12 +4,14 @@ import type { ReactNode } from "react"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Download, FileText, Loader2, PencilLine } from "lucide-react"
+import { AlertTriangle, ArrowLeft, CheckCircle2, Download, FileText, Loader2, PencilLine, ShieldCheck } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { buildGoamlXml, buildGoamlXmlFilename, downloadXml } from "./goamlXml"
+import { buildGoamlXsdFilename, downloadXsd, fetchGoamlXsd, type GoamlXmlValidationResult, validateGoamlXmlAgainstXsd } from "./goamlXsd"
 import { useAuthStore } from "@/lib/store"
 import { formatDate } from "@/lib/date-format"
+import { useToast } from "@/components/ui/use-toast"
 
 type DetailFieldItem = {
   key: string
@@ -60,11 +62,15 @@ export default function ViewGoamlReportPage() {
   const router = useRouter()
   const params = useParams()
   const id = params?.id as string
+  const { toast } = useToast()
 
   const [report, setReport] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [xmlBusy, setXmlBusy] = useState(false)
+  const [xsdBusy, setXsdBusy] = useState(false)
+  const [validationBusy, setValidationBusy] = useState(false)
+  const [validationResult, setValidationResult] = useState<GoamlXmlValidationResult | null>(null)
   const [countryCodeByName, setCountryCodeByName] = useState<Record<string, string>>({})
 
   const { user } = useAuthStore()
@@ -137,6 +143,7 @@ export default function ViewGoamlReportPage() {
   }, [])
 
   const xmlFilename = useMemo(() => buildGoamlXmlFilename(report, id), [report, id])
+  const xsdFilename = useMemo(() => buildGoamlXsdFilename(report, id), [report, id])
 
   const handleBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -154,6 +161,57 @@ export default function ViewGoamlReportPage() {
       downloadXml(xmlFilename, xml)
     } finally {
       setXmlBusy(false)
+    }
+  }
+
+  const onGenerateXsd = async () => {
+    if (!report) return
+    setXsdBusy(true)
+    try {
+      const xsd = await fetchGoamlXsd()
+      downloadXsd(xsdFilename, xsd)
+    } catch (actionError) {
+      const message = actionError instanceof Error ? actionError.message : "Failed to generate XSD file"
+      console.error("Failed to generate XSD:", actionError)
+      toast({
+        title: "XSD download failed",
+        description: message,
+      })
+    } finally {
+      setXsdBusy(false)
+    }
+  }
+
+  const onValidateXml = async () => {
+    if (!report) return
+
+    setValidationBusy(true)
+
+    try {
+      const xml = buildGoamlXml(report, { countryCodeByName })
+      const result = await validateGoamlXmlAgainstXsd(xml)
+
+      setValidationResult(result)
+      toast({
+        title: result.valid ? "XML validation passed" : "XML validation failed",
+        description: result.valid
+          ? `${xmlFilename} matches the GOAML schema.`
+          : `${result.errors.length} schema issue${result.errors.length === 1 ? "" : "s"} found in ${xmlFilename}.`,
+      })
+    } catch (actionError) {
+      const message = actionError instanceof Error ? actionError.message : "Failed to validate XML against the GOAML schema"
+      console.error("Failed to validate XML:", actionError)
+      setValidationResult({
+        valid: false,
+        errors: [message],
+        rawOutput: message,
+      })
+      toast({
+        title: "XML validation could not run",
+        description: message,
+      })
+    } finally {
+      setValidationBusy(false)
     }
   }
 
@@ -444,6 +502,14 @@ export default function ViewGoamlReportPage() {
                 <Download className="h-4 w-4" />
                 {xmlBusy ? "Generating..." : "Generate XML"}
               </Button>
+              {/* <Button variant="outline" className="h-10 w-full rounded-xl sm:w-auto" onClick={onValidateXml} disabled={validationBusy}>
+                <ShieldCheck className="h-4 w-4" />
+                {validationBusy ? "Validating..." : "Validate XML"}
+              </Button> */}
+              {/* <Button variant="outline" className="h-10 w-full rounded-xl sm:w-auto" onClick={onGenerateXsd} disabled={xsdBusy}>
+                <Download className="h-4 w-4" />
+                {xsdBusy ? "Generating..." : "Generate XSD"}
+              </Button> */}
               {normalizedRole !== "analyst" && (
                 <Button asChild className="h-10 w-full rounded-xl sm:w-auto">
                   <Link href={`/dashboard/goaml-reporting/edit/${id}`}>
@@ -469,6 +535,48 @@ export default function ViewGoamlReportPage() {
               <p className="mt-1 text-sm font-semibold">{report.currency_code || "-"}</p>
             </div>
           </div>
+
+          {validationResult && (
+            <div
+              className={`mt-4 rounded-2xl border p-4 ${
+                validationResult.valid
+                  ? "border-emerald-200 bg-emerald-50/80"
+                  : "border-amber-200 bg-amber-50/80"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                    validationResult.valid
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+                  {validationResult.valid ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    {validationResult.valid
+                      ? "Generated XML is valid against the GOAML XSD"
+                      : "Generated XML failed GOAML XSD validation"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">Checked file: {xmlFilename}</p>
+
+                  {!validationResult.valid && validationResult.errors.length > 0 && (
+                    <ul className="mt-3 space-y-2 text-sm text-foreground">
+                      {validationResult.errors.slice(0, 5).map((message, index) => (
+                        <li key={`${index}-${message}`}>{message}</li>
+                      ))}
+                      {validationResult.errors.length > 5 && (
+                        <li>+ {validationResult.errors.length - 5} more validation issues</li>
+                      )}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
