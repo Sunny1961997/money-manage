@@ -146,6 +146,8 @@ const OCR_COUNTRY_MAP: Record<string, string> = {
   "الاردن": "Jordan",
 }
 
+const OCR_COUNTRY_REGEX = /\b(UAE|United Arab Emirates|Yemen|Lebanon|Saudi Arabia|Egypt|Jordan|Kuwait|Qatar|Bahrain|Oman|India|Bangladesh|Pakistan|Philippines|Indonesia)\b/i
+
 export default function QuickOnboardingPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -400,15 +402,22 @@ export default function QuickOnboardingPage() {
 
   // Helper function to clean and extract English text from bilingual text
   const extractEnglishText = (text: string): string => {
-    // Remove Arabic characters and extra whitespace
-    return text.replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g, '')
-      .replace(/\//g, ' ')
-      .replace(/\s+/g, ' ')
+    // Keep only useful English content from bilingual OCR lines.
+    return String(text || "")
+      .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "")
+      .replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g, " ")
+      .replace(/[،؛]/g, ",")
+      .replace(/\//g, " ")
+      .replace(/\s*,\s*/g, ", ")
+      .replace(/(?:,\s*){2,}/g, ", ")
+      .replace(/(^[,\s]+|[,\s]+$)/g, "")
+      .replace(/\s+/g, " ")
       .trim()
   }
 
   const cleanOcrLine = (text: string): string => {
     return String(text || "")
+      .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "")
       .replace(/[|]+/g, " ")
       .replace(/[•·]+/g, " ")
       .replace(/[_]+/g, " ")
@@ -536,6 +545,239 @@ export default function QuickOnboardingPage() {
     return normalizeExtractedAddress(collected.join(", "))
   }
 
+  const isLikelyPersonNameEnglish = (value: string): boolean => {
+    const cleaned = cleanOcrLine(extractEnglishText(value))
+    if (!cleaned) return false
+    if (/(owner|owners|manager|managers|shareholder|nationality|passport|license|members|service|agent|shares|investor|address|email|mobile)/i.test(cleaned)) return false
+
+    const words = cleaned.split(/\s+/).filter(Boolean)
+    if (words.length < 2 || words.length > 8) return false
+    return words.every((word) => /^[A-Za-z][A-Za-z'-]*$/.test(word))
+  }
+
+  const splitNameParts = (fullName: string) => {
+    const words = cleanOcrLine(fullName).split(/\s+/).filter(Boolean)
+    if (words.length === 0) return { first: "", last: "" }
+    if (words.length === 1) return { first: words[0], last: "" }
+    return { first: words[0], last: words.slice(1).join(" ") }
+  }
+
+  const extractPreferredNameFromOCR = (lines: string[], fullText: string) => {
+    const candidates: Array<{ value: string; priority: number }> = []
+
+    const addCandidate = (value: string, priority: number) => {
+      let cleaned = cleanOcrLine(extractEnglishText(value))
+
+      // Remove leading country token if OCR row is like: "Owner Yemen NAMRAN ..."
+      cleaned = cleaned.replace(/^(UAE|United Arab Emirates|Yemen|Lebanon|Saudi Arabia|Egypt|Jordan)\s+/i, "")
+
+      if (isLikelyPersonNameEnglish(cleaned)) {
+        candidates.push({ value: cleaned, priority })
+      }
+    }
+
+    // Pattern: OWNER(S) MADHAV SHARMA
+    const ownerInline = fullText.match(/owner\(s\)\s*[:\-]?\s*([A-Z][A-Za-z'\-\s]{2,})/i)
+    if (ownerInline?.[1]) {
+      addCandidate(ownerInline[1], 100)
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = cleanOcrLine(lines[i])
+      const english = cleanOcrLine(extractEnglishText(line))
+
+      // Owners first, then managers fallback
+      if (/(^|\b)(owners?|المالك|المالكون)(\b|$)/i.test(line)) {
+        addCandidate(english.replace(/\bowners?\b/i, ""), 95)
+        addCandidate(lines[i + 1] || "", 92)
+        addCandidate(lines[i + 2] || "", 90)
+      }
+
+      if (/(^|\b)(managers?|المديرون)(\b|$)/i.test(line)) {
+        addCandidate(english.replace(/\bmanagers?\b/i, ""), 85)
+        addCandidate(lines[i + 1] || "", 83)
+        addCandidate(lines[i + 2] || "", 80)
+      }
+
+      // License members rows: prefer Owner, fallback Service Agent Local
+      if (/\bowner\b/i.test(english)) {
+        const ownerInlineName = english.match(/\bowner\b\s*(?:UAE|United Arab Emirates|Yemen|Lebanon|Saudi Arabia|Egypt|Jordan)?\s*([A-Z][A-Za-z'\-\s]{4,})$/i)
+        if (ownerInlineName?.[1]) {
+          addCandidate(ownerInlineName[1], 96)
+        }
+        addCandidate(lines[i + 1] || "", 88)
+        addCandidate(lines[i + 2] || "", 86)
+      }
+      if (/service\s*agent(\s*local)?/i.test(english)) {
+        const serviceInlineName = english.match(/service\s*agent(?:\s*local)?\s*(?:UAE|United Arab Emirates|Yemen|Lebanon|Saudi Arabia|Egypt|Jordan)?\s*([A-Z][A-Za-z'\-\s]{4,})$/i)
+        if (serviceInlineName?.[1]) {
+          addCandidate(serviceInlineName[1], 84)
+        }
+        addCandidate(lines[i + 1] || "", 78)
+        addCandidate(lines[i + 2] || "", 76)
+      }
+
+      // Shareholder row: Name 100 % Nationality Passport
+      const shareholderRow = english.match(/^([A-Za-z][A-Za-z'\-\s]{3,})\s+\d{1,3}(?:\.\d+)?\s*%\s+([A-Za-z][A-Za-z\s]{2,})\s+([A-Z0-9\-]{5,})$/i)
+      if (shareholderRow?.[1]) {
+        addCandidate(shareholderRow[1], 89)
+      }
+
+      // Generic upper-case full-name line, often appears after owner row
+      if (isLikelyPersonNameEnglish(english) && /^[A-Z\s'\-]+$/.test(english)) {
+        const prevContext = cleanOcrLine(extractEnglishText(lines[i - 1] || ""))
+        if (/(owner|license members|shareholder|manager|service agent)/i.test(prevContext)) {
+          addCandidate(english, 84)
+        }
+      }
+    }
+
+    if (candidates.length === 0) return ""
+    return candidates.sort((a, b) => b.priority - a.priority)[0].value
+  }
+
+  const extractNationalityAndIdFromOCR = (lines: string[], fullText: string) => {
+    let nationalityValue = ""
+    let idValue = ""
+
+    // Shareholder row pattern: Name 100 % Bangladesh EJ0726841
+    const shareholderMatch = fullText.match(/([A-Z][A-Za-z'\-\s]{2,})\s+\d{1,3}(?:\.\d+)?\s*%\s+([A-Za-z][A-Za-z\s]{2,})\s+([A-Z0-9\-]{5,})/i)
+    if (shareholderMatch) {
+      nationalityValue = shareholderMatch[2]
+      idValue = shareholderMatch[3]
+    }
+
+    for (const rawLine of lines) {
+      const line = cleanOcrLine(rawLine)
+      const english = cleanOcrLine(extractEnglishText(line))
+
+      if (!nationalityValue) {
+        const natInline = english.match(/\bnationality\b\s*[:\-]?\s*([A-Za-z\s]{2,})/i)
+        if (natInline?.[1]) nationalityValue = natInline[1].trim()
+
+        if (!nationalityValue && /(owner|service\s*agent|shareholder)/i.test(english)) {
+          const country = english.match(OCR_COUNTRY_REGEX)
+          if (country?.[1]) nationalityValue = country[1]
+        }
+      }
+
+      if (!idValue) {
+        const idMatches = line.match(/\b([A-Z]{1,2}\d{6,}|\d{7,18})\b/g)
+        if (idMatches && idMatches.length > 0 && /(passport|id|owner|shareholder|service\s*agent|investor)/i.test(english)) {
+          idValue = idMatches[idMatches.length - 1]
+        }
+      }
+    }
+
+    return {
+      nationalityValue: getEnglishCountry(nationalityValue),
+      idValue: cleanOcrLine(idValue),
+    }
+  }
+
+  const extractRoleBasedNationality = (lines: string[]) => {
+    let ownerNationality = ""
+    let serviceNationality = ""
+    let managerNationality = ""
+    const countryWord = "(UAE|United Arab Emirates|Yemen|Lebanon|Saudi Arabia|Egypt|Jordan|Kuwait|Qatar|Bahrain|Oman|India|Bangladesh|Pakistan|Philippines|Indonesia)"
+
+    for (const rawLine of lines) {
+      const english = cleanOcrLine(extractEnglishText(rawLine))
+      if (!english) continue
+
+      if (!ownerNationality && /\bowner\b/i.test(english)) {
+        const ownerMatch = english.match(new RegExp(`\\bowner\\b\\s*${countryWord}\\b`, "i"))
+          || english.match(new RegExp(`\\b${countryWord}\\b\\s*\\bowner\\b`, "i"))
+        if (ownerMatch?.[1]) {
+          ownerNationality = getEnglishCountry(ownerMatch[1])
+          continue
+        }
+      }
+
+      if (!serviceNationality && /service\s*agent/i.test(english)) {
+        const serviceMatch = english.match(new RegExp(`service\\s*agent(?:\\s*local)?\\s*${countryWord}\\b`, "i"))
+          || english.match(new RegExp(`\\b${countryWord}\\b\\s*service\\s*agent`, "i"))
+        if (serviceMatch?.[1]) {
+          serviceNationality = getEnglishCountry(serviceMatch[1])
+          continue
+        }
+      }
+
+      if (!managerNationality && /\bmanager\b/i.test(english)) {
+        const managerMatch = english.match(new RegExp(`\\bmanager\\b\\s*${countryWord}\\b`, "i"))
+          || english.match(new RegExp(`\\b${countryWord}\\b\\s*\\bmanager\\b`, "i"))
+        if (managerMatch?.[1]) {
+          managerNationality = getEnglishCountry(managerMatch[1])
+        }
+      }
+    }
+
+    return ownerNationality || serviceNationality || managerNationality || ""
+  }
+
+  const extractAddressFromAddressLabel = (lines: string[]) => {
+    // Structured address fields pattern
+    const getValueAfterLabel = (regex: RegExp) => {
+      const line = lines.find((l) => regex.test(l))
+      if (!line) return ""
+      const cleaned = cleanOcrLine(line)
+      const value = cleaned.replace(regex, "").replace(/^[:\-\s]+/, "").trim()
+      return extractEnglishText(value) || value
+    }
+
+    const premises = getValueAfterLabel(/.*premises\s*number\s*/i)
+    const building = getValueAfterLabel(/.*building\s*name\s*/i)
+    const district = getValueAfterLabel(/.*business\s*district\s*/i)
+    const makani = getValueAfterLabel(/.*makani\s*no\.?\s*/i)
+
+    const structured = [premises, building, district, makani].filter(Boolean)
+    if (structured.length > 0) {
+      return normalizeExtractedAddress(structured.join(", "))
+    }
+
+    const idx = lines.findIndex((line) => /(address|العنوان)/i.test(line))
+    if (idx === -1) return ""
+
+    const englishParts: string[] = []
+    const fallbackParts: string[] = []
+
+    for (let i = idx; i < Math.min(idx + 8, lines.length); i++) {
+      let line = cleanOcrLine(lines[i])
+      if (!line) continue
+      if (/(mobile|phone|tel|email|البريد\s*الإلكتروني|الهاتف|remarks|ملاحظات|issue\s*date|expiry\s*date|managers?|owners?|license\s*members|license\s*activities|المديرون|المالك|المالكون|تاريخ\s*الإصدار|تاريخ\s*الانتهاء)/i.test(line) && i > idx) break
+
+      line = line.replace(/\baddress\b/gi, "").replace(/العنوان/gi, "").replace(/^[:\-\s]+/, "").trim()
+      if (!line) continue
+
+      const english = cleanOcrLine(extractEnglishText(line))
+      if (english && /[A-Za-z]{2,}/.test(english)) {
+        englishParts.push(english)
+      } else {
+        fallbackParts.push(line)
+      }
+    }
+
+    const normalizeAddressOutput = (value: string) => {
+      const filtered = value
+        .split(",")
+        .map((segment) => cleanOcrLine(segment))
+        .filter(Boolean)
+        .filter((segment) => /[A-Za-z0-9\u0600-\u06FF]/.test(segment))
+        .filter((segment) => !/^(issue\s*date|expiry\s*date|managers?|owners?|license\s*members|license\s*activities)$/i.test(segment))
+        .join(", ")
+
+      return normalizeExtractedAddress(filtered)
+    }
+
+    if (englishParts.length > 0) {
+      return normalizeAddressOutput(englishParts.join(", "))
+    }
+    if (fallbackParts.length > 0) {
+      return normalizeAddressOutput(fallbackParts.join(", "))
+    }
+    return ""
+  }
+
   // Extract data from OCR text
   const extractDataFromOCR = async (text: string) => {
     // Split text into lines for easier processing
@@ -547,11 +789,23 @@ export default function QuickOnboardingPage() {
     let countryCodeSetFromMobile = false
     
     const { ownerName, ownerNationality } = extractOwnerRowData(lines)
+    const preferredName = extractPreferredNameFromOCR(lines, text)
+    const { nationalityValue, idValue } = extractNationalityAndIdFromOCR(lines, text)
+    const roleNationality = extractRoleBasedNationality(lines)
 
     // Extract Name - Enhanced to handle commercial licenses and share owner info
     // Look for patterns like "KHALED KHODER AL AYCH" in Share/Owner section
     let nameFound = false
-    if (ownerName) {
+    if (preferredName) {
+      const parts = splitNameParts(preferredName)
+      if (parts.first) {
+        setFirstName(parts.first)
+        setLastName(parts.last)
+        nameFound = true
+      }
+    }
+
+    if (!nameFound && ownerName) {
       const nameParts = ownerName.split(/\s+/)
       if (nameParts.length >= 2) {
         setFirstName(nameParts[0])
@@ -564,7 +818,7 @@ export default function QuickOnboardingPage() {
     // Try to find name in Share/Owner section - specifically target the Name column
     // Pattern: Look for uppercase English names after "Shares Owner" or similar headers
     const shareSection = text.match(/(?:shares?\s*owner|manager|مالك\s*حصص|مدير)[\s\S]*?$/i)
-    if (shareSection) {
+    if (!nameFound && shareSection) {
       // Look for sequences of capitalized English words (names are usually in CAPS)
       const capitalizedNames = shareSection[0].match(/\b[A-Z][A-Z]+(?:\s+[A-Z]+)+\b/g)
       if (capitalizedNames && capitalizedNames.length > 0) {
@@ -638,6 +892,65 @@ export default function QuickOnboardingPage() {
     // Extract Mobile Number - Enhanced for international formats
     // Look for patterns like "971-52-5394394" or "+971 52 5394394"
     let mobileFound = false
+
+    for (const rawLine of lines) {
+      const line = cleanOcrLine(rawLine)
+
+      // Pattern where number appears before Arabic label: "0504202821 الهاتف المتحرك"
+      const leadingNumberMobile = line.match(/(\d[\d\s\-()]{7,}\d)\s*(?:الهاتف\s*المتحرك|هاتف\s*متحرك|mobile\s*no|mobile|phone|tel|contact)/i)
+      if (leadingNumberMobile?.[1]) {
+        const mobile = leadingNumberMobile[1].replace(/[^\d+]/g, "")
+        if (mobile.length >= 9) {
+          if (mobile.startsWith("+")) {
+            const parts = mobile.match(/(\+\d{1,4})(\d+)/)
+            if (parts) {
+              setCountryCode(parts[1])
+              setContactNo(parts[2])
+              countryCodeSetFromMobile = true
+              mobileFound = true
+              break
+            }
+          } else if (mobile.startsWith("971") || mobile.startsWith("966") || mobile.startsWith("965")) {
+            setCountryCode("+" + mobile.substring(0, 3))
+            setContactNo(mobile.substring(3))
+            countryCodeSetFromMobile = true
+            mobileFound = true
+            break
+          } else {
+            setContactNo(mobile)
+            mobileFound = true
+            break
+          }
+        }
+      }
+
+      const labeledMobile = line.match(/(?:الهاتف\s*المتحرك|mobile\s*no|mobile|phone|tel|contact)\s*[:\-]?\s*([+]?\d[\d\s\-()]{7,}\d)/i)
+      if (labeledMobile?.[1]) {
+        const mobile = labeledMobile[1].replace(/[^\d+]/g, "")
+        if (mobile.length >= 9) {
+          if (mobile.startsWith("+")) {
+            const parts = mobile.match(/(\+\d{1,4})(\d+)/)
+            if (parts) {
+              setCountryCode(parts[1])
+              setContactNo(parts[2])
+              countryCodeSetFromMobile = true
+              mobileFound = true
+              break
+            }
+          } else if (mobile.startsWith("971") || mobile.startsWith("966") || mobile.startsWith("965")) {
+            setCountryCode("+" + mobile.substring(0, 3))
+            setContactNo(mobile.substring(3))
+            countryCodeSetFromMobile = true
+            mobileFound = true
+            break
+          } else {
+            setContactNo(mobile)
+            mobileFound = true
+            break
+          }
+        }
+      }
+    }
     
     // First try to find mobile with label
     const mobilePattern = /(?:mobile[\s]+no|mobile|phone|tel|contact|هاتف\s*متحرك)[:\s]*([+]?[\d\s()-]+)/i
@@ -673,7 +986,11 @@ export default function QuickOnboardingPage() {
       const phoneMatch = text.match(phonePattern)
       if (phoneMatch) {
         const phone = phoneMatch[0].replace(/[^\d+]/g, '')
-        if (phone.length >= 9) {
+        const digitCount = phone.replace(/\D/g, '').length
+        // Avoid picking long ID/passport numbers as phone fallback.
+        if (digitCount > 12) {
+          // Skip invalid generic fallback numbers.
+        } else if (phone.length >= 9) {
           if (phone.startsWith('+')) {
             const parts = phone.match(/(\+\d{1,4})(\d+)/)
             if (parts) {
@@ -695,11 +1012,22 @@ export default function QuickOnboardingPage() {
       }
     }
 
+    // If number was extracted without explicit code, default to UAE as requested.
+    if (mobileFound && !countryCodeSetFromMobile && !String(countryCode || "").trim()) {
+      setCountryCode("+971")
+    }
+
     // Extract Address - Keep Arabic text as-is
     // Primary target: line right below email and before remarks section.
     let addressFound = false
 
-    const addressBelowEmail = await extractAddressBelowEmail(lines)
+    const addressFromLabel = extractAddressFromAddressLabel(lines)
+    if (addressFromLabel) {
+      setAddress(addressFromLabel)
+      addressFound = true
+    }
+
+    const addressBelowEmail = !addressFound ? await extractAddressBelowEmail(lines) : ""
     if (addressBelowEmail) {
       setAddress(addressBelowEmail)
       addressFound = true
@@ -799,7 +1127,24 @@ export default function QuickOnboardingPage() {
     // Extract Nationality - Enhanced for bilingual documents with translation
     // Multiple patterns to handle different formats
     let nationalityFound = false
-    if (ownerNationality) {
+    if (roleNationality) {
+      nationalityFound = true
+      setNationality(roleNationality)
+    }
+
+    if (!nationalityFound && nationalityValue) {
+      nationalityFound = true
+      setNationality(nationalityValue)
+    }
+
+    if (idValue) {
+      setIdNo(idValue)
+      if (!idType) {
+        setIdType("Passport")
+      }
+    }
+
+    if (!nationalityFound && ownerNationality) {
       nationalityFound = true
       setNationality(ownerNationality)
 
